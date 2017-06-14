@@ -1,0 +1,708 @@
+{"feed": {
+   "opensearch:Query": {
+      "startPage": 1,
+      "role": "request",
+      "searchTerms": "productType:SLC AND filename:S1A*"
+   },
+   "author": {"name": "Sentinels Scientific Data Hub"},
+   "link": [
+      {
+         "rel": "self",
+         "href": "https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*&start=0&rows=5",
+         "type": "application/atom+xml"
+      },
+      {
+         "rel": "first",
+         "href": "https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*&start=0&rows=5",
+         "type": "application/atom+xml"
+      },
+      {
+         "rel": "next",
+         "href": "https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*&start=5&rows=5",
+         "type": "application/atom+xml"
+      },
+      {
+         "rel": "last",
+         "href": "https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*&start=280912&rows=5",
+         "type": "application/atom+xml"
+      },
+      {
+         "rel": "search",
+         "href": "opensearch_description.xml",
+         "type": "application/opensearchdescription+xml"
+      }
+   ],
+   "title": "Sentinels Scientific Data Hub search results for: productType:SLC AND filename:S1A*",
+   "opensearch:startIndex": 0,
+   "opensearch:totalResults": 280913,
+   "entry": [
+      {
+         "summary": "Date: 2017-06-01T05:38:29.184Z, Instrument: SAR-C SAR, Mode: VV VH, Satellite: Sentinel-1, Size: 7.63 GB",
+         "str": [
+            {
+               "name": "acquisitiontype",
+               "content": "NOMINAL"
+            },
+            {
+               "name": "filename",
+               "content": "S1A_IW_SLC__1SDV_20170601T053829_20170601T053856_016836_01BFD8_5BFC.SAFE"
+            },
+            {
+               "name": "gmlfootprint",
+               "content": "<gml:Polygon srsName=\"http://www.opengis.net/gml/srs/epsg.xml#4326\" xmlns:gml=\"http://www.opengis.net/gml\">\n   <gml:outerBoundaryIs>\n      <gml:LinearRing>\n         <gml:coordinates>62.300068,14.110105 62.748768,9.125550 64.355423,9.694651 63.893944,14.962797 62.300068,14.110105<\/gml:coordinates>\n      <\/gml:LinearRing>\n   <\/gml:outerBoundaryIs>\n<\/gml:Polygon>"
+            },
+            {
+               "name": "format",
+               "content": "SAFE"
+            },
+            {
+               "name": "identifier",
+               "content": "S1A_IW_SLC__1SDV_20170601T053829_20170601T053856_016836_01BFD8_5BFC"
+            },
+            {
+               "name": "instrumentshortname",
+               "content": "SAR-C SAR"
+            },
+            {
+               "name": "sensoroperationalmode",
+               "content": "IW"
+            },
+            {
+               "name": "instrumentname",
+               "content": "Synthetic Aperture Radar (C-band)"
+            },
+            {
+               "name": "swathidentifier",
+               "content": "IW1 IW2 IW3"
+            },
+            {
+               "name": "footprint",
+               "content": "POLYGON ((14.110105 62.300068,9.125550 62.748768,9.694651 64.355423,14.962797 63.893944,14.110105 62.300068))"
+            },
+            {
+               "name": "platformidentifier",
+               "content": "2014-016A"
+            },
+            {
+               "name": "orbitdirection",
+               "content": "DESCENDING"
+            },
+            {
+               "name": "polarisationmode",
+               "content": "VV VH"
+            },
+            {
+               "name": "productclass",
+               "content": "S"
+            },
+            {
+               "name": "producttype",
+               "content": "SLC"
+            },
+            {
+               "name": "platformname",
+               "content": "Sentinel-1"
+            },
+            {
+               "name": "size",
+               "content": "7.63 GB"
+            },
+            {
+               "name": "status",
+               "content": "ARCHIVED"
+            },
+            {
+               "name": "uuid",
+               "content": "8649e752-d6d0-4974-9ad4-8ae7ccf3a681"
+            }
+         ],
+         "date": [
+            {
+               "name": "ingestiondate",
+               "content": "2017-06-01T09:08:47.209Z"
+            },
+            {
+               "name": "beginposition",
+               "content": "2017-06-01T05:38:29.184Z"
+            },
+            {
+               "name": "endposition",
+               "content": "2017-06-01T05:38:56.173Z"
+            }
+         ],
+         "link": [
+            {"href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('8649e752-d6d0-4974-9ad4-8ae7ccf3a681')/$value"},
+            {
+               "rel": "alternative",
+               "href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('8649e752-d6d0-4974-9ad4-8ae7ccf3a681')/"
+            },
+            {
+               "rel": "icon",
+               "href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('8649e752-d6d0-4974-9ad4-8ae7ccf3a681')/Products('Quicklook')/$value"
+            }
+         ],
+         "id": "8649e752-d6d0-4974-9ad4-8ae7ccf3a681",
+         "title": "S1A_IW_SLC__1SDV_20170601T053829_20170601T053856_016836_01BFD8_5BFC",
+         "int": [
+            {
+               "name": "missiondatatakeid",
+               "content": 114648
+            },
+            {
+               "name": "orbitnumber",
+               "content": 16836
+            },
+            {
+               "name": "lastorbitnumber",
+               "content": 16836
+            },
+            {
+               "name": "relativeorbitnumber",
+               "content": 139
+            },
+            {
+               "name": "lastrelativeorbitnumber",
+               "content": 139
+            },
+            {
+               "name": "slicenumber",
+               "content": 8
+            }
+         ]
+      },
+      {
+         "summary": "Date: 2017-06-01T05:55:57.749Z, Instrument: SAR-C SAR, Mode: VV, Satellite: Sentinel-1, Size: 5.9 GB",
+         "str": [
+            {
+               "name": "acquisitiontype",
+               "content": "NOMINAL"
+            },
+            {
+               "name": "filename",
+               "content": "S1A_WV_SLC__1SSV_20170601T055557_20170601T061123_016836_01BFD9_7215.SAFE"
+            },
+            {
+               "name": "gmlfootprint",
+               "content": "<gml:Polygon srsName=\"http://www.opengis.net/gml/srs/epsg.xml#4326\" xmlns:gml=\"http://www.opengis.net/gml\">\n   <gml:outerBoundaryIs>\n      <gml:LinearRing>\n         <gml:coordinates>0.511604,-1.173266 0.550676,-1.355561 0.731509,-1.317824 0.692470,-1.135555 0.511604,-1.173266<\/gml:coordinates>\n      <\/gml:LinearRing>\n   <\/gml:outerBoundaryIs>\n<\/gml:Polygon>"
+            },
+            {
+               "name": "format",
+               "content": "SAFE"
+            },
+            {
+               "name": "identifier",
+               "content": "S1A_WV_SLC__1SSV_20170601T055557_20170601T061123_016836_01BFD9_7215"
+            },
+            {
+               "name": "instrumentshortname",
+               "content": "SAR-C SAR"
+            },
+            {
+               "name": "sensoroperationalmode",
+               "content": "WV"
+            },
+            {
+               "name": "instrumentname",
+               "content": "Synthetic Aperture Radar (C-band)"
+            },
+            {
+               "name": "swathidentifier",
+               "content": "WV1 WV2"
+            },
+            {
+               "name": "footprint",
+               "content": "POLYGON ((-1.173266 0.511604,-1.355561 0.550676,-1.317824 0.731509,-1.135555 0.692470,-1.173266 0.511604))"
+            },
+            {
+               "name": "platformidentifier",
+               "content": "2014-016A"
+            },
+            {
+               "name": "orbitdirection",
+               "content": "DESCENDING"
+            },
+            {
+               "name": "polarisationmode",
+               "content": "VV"
+            },
+            {
+               "name": "productclass",
+               "content": "S"
+            },
+            {
+               "name": "producttype",
+               "content": "SLC"
+            },
+            {
+               "name": "platformname",
+               "content": "Sentinel-1"
+            },
+            {
+               "name": "size",
+               "content": "5.9 GB"
+            },
+            {
+               "name": "status",
+               "content": "ARCHIVED"
+            },
+            {
+               "name": "uuid",
+               "content": "f83afbf3-cdb1-4eb9-9219-5ff5e4916cff"
+            }
+         ],
+         "date": [
+            {
+               "name": "ingestiondate",
+               "content": "2017-06-01T09:08:45.731Z"
+            },
+            {
+               "name": "beginposition",
+               "content": "2017-06-01T05:55:57.749Z"
+            },
+            {
+               "name": "endposition",
+               "content": "2017-06-01T06:11:23.457Z"
+            }
+         ],
+         "link": [
+            {"href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('f83afbf3-cdb1-4eb9-9219-5ff5e4916cff')/$value"},
+            {
+               "rel": "alternative",
+               "href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('f83afbf3-cdb1-4eb9-9219-5ff5e4916cff')/"
+            },
+            {
+               "rel": "icon",
+               "href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('f83afbf3-cdb1-4eb9-9219-5ff5e4916cff')/Products('Quicklook')/$value"
+            }
+         ],
+         "id": "f83afbf3-cdb1-4eb9-9219-5ff5e4916cff",
+         "title": "S1A_WV_SLC__1SSV_20170601T055557_20170601T061123_016836_01BFD9_7215",
+         "int": [
+            {
+               "name": "missiondatatakeid",
+               "content": 114649
+            },
+            {
+               "name": "orbitnumber",
+               "content": 16836
+            },
+            {
+               "name": "lastorbitnumber",
+               "content": 16836
+            },
+            {
+               "name": "relativeorbitnumber",
+               "content": 139
+            },
+            {
+               "name": "lastrelativeorbitnumber",
+               "content": 139
+            }
+         ]
+      },
+      {
+         "summary": "Date: 2017-06-01T06:28:12.43Z, Instrument: SAR-C SAR, Mode: VV, Satellite: Sentinel-1, Size: 3.05 GB",
+         "str": [
+            {
+               "name": "acquisitiontype",
+               "content": "NOMINAL"
+            },
+            {
+               "name": "filename",
+               "content": "S1A_WV_SLC__1SSV_20170601T062812_20170601T063618_016836_01BFDC_74DB.SAFE"
+            },
+            {
+               "name": "gmlfootprint",
+               "content": "<gml:Polygon srsName=\"http://www.opengis.net/gml/srs/epsg.xml#4326\" xmlns:gml=\"http://www.opengis.net/gml\">\n   <gml:outerBoundaryIs>\n      <gml:LinearRing>\n         <gml:coordinates>-60.869133,-166.942856 -60.793488,-166.582809 -60.960911,-166.436127 -61.036942,-166.797958 -60.869133,-166.942856<\/gml:coordinates>\n      <\/gml:LinearRing>\n   <\/gml:outerBoundaryIs>\n<\/gml:Polygon>"
+            },
+            {
+               "name": "format",
+               "content": "SAFE"
+            },
+            {
+               "name": "identifier",
+               "content": "S1A_WV_SLC__1SSV_20170601T062812_20170601T063618_016836_01BFDC_74DB"
+            },
+            {
+               "name": "instrumentshortname",
+               "content": "SAR-C SAR"
+            },
+            {
+               "name": "sensoroperationalmode",
+               "content": "WV"
+            },
+            {
+               "name": "instrumentname",
+               "content": "Synthetic Aperture Radar (C-band)"
+            },
+            {
+               "name": "swathidentifier",
+               "content": "WV1 WV2"
+            },
+            {
+               "name": "footprint",
+               "content": "POLYGON ((-166.942856 -60.869133,-166.582809 -60.793488,-166.436127 -60.960911,-166.797958 -61.036942,-166.942856 -60.869133))"
+            },
+            {
+               "name": "platformidentifier",
+               "content": "2014-016A"
+            },
+            {
+               "name": "orbitdirection",
+               "content": "ASCENDING"
+            },
+            {
+               "name": "polarisationmode",
+               "content": "VV"
+            },
+            {
+               "name": "productclass",
+               "content": "S"
+            },
+            {
+               "name": "producttype",
+               "content": "SLC"
+            },
+            {
+               "name": "platformname",
+               "content": "Sentinel-1"
+            },
+            {
+               "name": "size",
+               "content": "3.05 GB"
+            },
+            {
+               "name": "status",
+               "content": "ARCHIVED"
+            },
+            {
+               "name": "uuid",
+               "content": "8a1e13d9-5ad3-4147-9e50-a39434516352"
+            }
+         ],
+         "date": [
+            {
+               "name": "ingestiondate",
+               "content": "2017-06-01T09:06:23.555Z"
+            },
+            {
+               "name": "beginposition",
+               "content": "2017-06-01T06:28:12.43Z"
+            },
+            {
+               "name": "endposition",
+               "content": "2017-06-01T06:36:18.71Z"
+            }
+         ],
+         "link": [
+            {"href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('8a1e13d9-5ad3-4147-9e50-a39434516352')/$value"},
+            {
+               "rel": "alternative",
+               "href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('8a1e13d9-5ad3-4147-9e50-a39434516352')/"
+            },
+            {
+               "rel": "icon",
+               "href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('8a1e13d9-5ad3-4147-9e50-a39434516352')/Products('Quicklook')/$value"
+            }
+         ],
+         "id": "8a1e13d9-5ad3-4147-9e50-a39434516352",
+         "title": "S1A_WV_SLC__1SSV_20170601T062812_20170601T063618_016836_01BFDC_74DB",
+         "int": [
+            {
+               "name": "missiondatatakeid",
+               "content": 114652
+            },
+            {
+               "name": "orbitnumber",
+               "content": 16836
+            },
+            {
+               "name": "lastorbitnumber",
+               "content": 16836
+            },
+            {
+               "name": "relativeorbitnumber",
+               "content": 139
+            },
+            {
+               "name": "lastrelativeorbitnumber",
+               "content": 139
+            }
+         ]
+      },
+      {
+         "summary": "Date: 2017-06-01T06:36:39.481Z, Instrument: SAR-C SAR, Mode: VV, Satellite: Sentinel-1, Size: 2.38 GB",
+         "str": [
+            {
+               "name": "acquisitiontype",
+               "content": "NOMINAL"
+            },
+            {
+               "name": "filename",
+               "content": "S1A_S5_SLC__1SSV_20170601T063639_20170601T063658_016836_01BFDD_750B.SAFE"
+            },
+            {
+               "name": "gmlfootprint",
+               "content": "<gml:Polygon srsName=\"http://www.opengis.net/gml/srs/epsg.xml#4326\" xmlns:gml=\"http://www.opengis.net/gml\">\n   <gml:outerBoundaryIs>\n      <gml:LinearRing>\n         <gml:coordinates>-29.657562,-179.125946 -29.461590,-178.320267 -30.584333,-177.959167 -30.782877,-178.774048 -29.657562,-179.125946<\/gml:coordinates>\n      <\/gml:LinearRing>\n   <\/gml:outerBoundaryIs>\n<\/gml:Polygon>"
+            },
+            {
+               "name": "format",
+               "content": "SAFE"
+            },
+            {
+               "name": "identifier",
+               "content": "S1A_S5_SLC__1SSV_20170601T063639_20170601T063658_016836_01BFDD_750B"
+            },
+            {
+               "name": "instrumentshortname",
+               "content": "SAR-C SAR"
+            },
+            {
+               "name": "sensoroperationalmode",
+               "content": "SM"
+            },
+            {
+               "name": "instrumentname",
+               "content": "Synthetic Aperture Radar (C-band)"
+            },
+            {
+               "name": "swathidentifier",
+               "content": "S5"
+            },
+            {
+               "name": "footprint",
+               "content": "POLYGON ((-179.125946 -29.657562,-178.320267 -29.461590,-177.959167 -30.584333,-178.774048 -30.782877,-179.125946 -29.657562))"
+            },
+            {
+               "name": "platformidentifier",
+               "content": "2014-016A"
+            },
+            {
+               "name": "orbitdirection",
+               "content": "ASCENDING"
+            },
+            {
+               "name": "polarisationmode",
+               "content": "VV"
+            },
+            {
+               "name": "productclass",
+               "content": "S"
+            },
+            {
+               "name": "producttype",
+               "content": "SLC"
+            },
+            {
+               "name": "platformname",
+               "content": "Sentinel-1"
+            },
+            {
+               "name": "size",
+               "content": "2.38 GB"
+            },
+            {
+               "name": "status",
+               "content": "ARCHIVED"
+            },
+            {
+               "name": "uuid",
+               "content": "ee1b7b92-7835-4bcd-8bb4-087d60153e23"
+            }
+         ],
+         "date": [
+            {
+               "name": "ingestiondate",
+               "content": "2017-06-01T09:04:08.949Z"
+            },
+            {
+               "name": "beginposition",
+               "content": "2017-06-01T06:36:39.481Z"
+            },
+            {
+               "name": "endposition",
+               "content": "2017-06-01T06:36:58.368Z"
+            }
+         ],
+         "link": [
+            {"href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('ee1b7b92-7835-4bcd-8bb4-087d60153e23')/$value"},
+            {
+               "rel": "alternative",
+               "href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('ee1b7b92-7835-4bcd-8bb4-087d60153e23')/"
+            },
+            {
+               "rel": "icon",
+               "href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('ee1b7b92-7835-4bcd-8bb4-087d60153e23')/Products('Quicklook')/$value"
+            }
+         ],
+         "id": "ee1b7b92-7835-4bcd-8bb4-087d60153e23",
+         "title": "S1A_S5_SLC__1SSV_20170601T063639_20170601T063658_016836_01BFDD_750B",
+         "int": [
+            {
+               "name": "missiondatatakeid",
+               "content": 114653
+            },
+            {
+               "name": "orbitnumber",
+               "content": 16836
+            },
+            {
+               "name": "lastorbitnumber",
+               "content": 16836
+            },
+            {
+               "name": "relativeorbitnumber",
+               "content": 139
+            },
+            {
+               "name": "lastrelativeorbitnumber",
+               "content": 139
+            },
+            {
+               "name": "slicenumber",
+               "content": 1
+            }
+         ]
+      },
+      {
+         "summary": "Date: 2017-06-01T06:39:49.668Z, Instrument: SAR-C SAR, Mode: VV VH, Satellite: Sentinel-1, Size: 9.24 GB",
+         "str": [
+            {
+               "name": "acquisitiontype",
+               "content": "NOMINAL"
+            },
+            {
+               "name": "filename",
+               "content": "S1A_IW_SLC__1SDV_20170601T063949_20170601T064024_016836_01BFDE_1DF8.SAFE"
+            },
+            {
+               "name": "gmlfootprint",
+               "content": "<gml:Polygon srsName=\"http://www.opengis.net/gml/srs/epsg.xml#4326\" xmlns:gml=\"http://www.opengis.net/gml\">\n   <gml:outerBoundaryIs>\n      <gml:LinearRing>\n         <gml:coordinates>-17.579418,176.185028 -17.041985,178.488937 -19.158478,179.039505 -19.706120,176.705063 -17.579418,176.185028<\/gml:coordinates>\n      <\/gml:LinearRing>\n   <\/gml:outerBoundaryIs>\n<\/gml:Polygon>"
+            },
+            {
+               "name": "format",
+               "content": "SAFE"
+            },
+            {
+               "name": "identifier",
+               "content": "S1A_IW_SLC__1SDV_20170601T063949_20170601T064024_016836_01BFDE_1DF8"
+            },
+            {
+               "name": "instrumentshortname",
+               "content": "SAR-C SAR"
+            },
+            {
+               "name": "sensoroperationalmode",
+               "content": "IW"
+            },
+            {
+               "name": "instrumentname",
+               "content": "Synthetic Aperture Radar (C-band)"
+            },
+            {
+               "name": "swathidentifier",
+               "content": "IW1 IW2 IW3"
+            },
+            {
+               "name": "footprint",
+               "content": "POLYGON ((176.185028 -17.579418,178.488937 -17.041985,179.039505 -19.158478,176.705063 -19.706120,176.185028 -17.579418))"
+            },
+            {
+               "name": "platformidentifier",
+               "content": "2014-016A"
+            },
+            {
+               "name": "orbitdirection",
+               "content": "ASCENDING"
+            },
+            {
+               "name": "polarisationmode",
+               "content": "VV VH"
+            },
+            {
+               "name": "productclass",
+               "content": "S"
+            },
+            {
+               "name": "producttype",
+               "content": "SLC"
+            },
+            {
+               "name": "platformname",
+               "content": "Sentinel-1"
+            },
+            {
+               "name": "size",
+               "content": "9.24 GB"
+            },
+            {
+               "name": "status",
+               "content": "ARCHIVED"
+            },
+            {
+               "name": "uuid",
+               "content": "f943f556-f3a2-4b51-97b5-d4c1d054220d"
+            }
+         ],
+         "date": [
+            {
+               "name": "ingestiondate",
+               "content": "2017-06-01T08:56:31.787Z"
+            },
+            {
+               "name": "beginposition",
+               "content": "2017-06-01T06:39:49.668Z"
+            },
+            {
+               "name": "endposition",
+               "content": "2017-06-01T06:40:24.989Z"
+            }
+         ],
+         "link": [
+            {"href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('f943f556-f3a2-4b51-97b5-d4c1d054220d')/$value"},
+            {
+               "rel": "alternative",
+               "href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('f943f556-f3a2-4b51-97b5-d4c1d054220d')/"
+            },
+            {
+               "rel": "icon",
+               "href": "https://scihub.copernicus.eu/apihub/odata/v1/Products('f943f556-f3a2-4b51-97b5-d4c1d054220d')/Products('Quicklook')/$value"
+            }
+         ],
+         "id": "f943f556-f3a2-4b51-97b5-d4c1d054220d",
+         "title": "S1A_IW_SLC__1SDV_20170601T063949_20170601T064024_016836_01BFDE_1DF8",
+         "int": [
+            {
+               "name": "missiondatatakeid",
+               "content": 114654
+            },
+            {
+               "name": "orbitnumber",
+               "content": 16836
+            },
+            {
+               "name": "lastorbitnumber",
+               "content": 16836
+            },
+            {
+               "name": "relativeorbitnumber",
+               "content": 139
+            },
+            {
+               "name": "lastrelativeorbitnumber",
+               "content": 139
+            },
+            {
+               "name": "slicenumber",
+               "content": 1
+            }
+         ]
+      }
+   ],
+   "xmlns": "http://www.w3.org/2005/Atom",
+   "subtitle": "Displaying 0 to 4 of 280913 total results. Request done in 0 seconds.",
+   "opensearch:itemsPerPage": 5,
+   "id": "https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*",
+   "updated": "2017-06-04T14:15:48.718Z",
+   "xmlns:opensearch": "http://a9.com/-/spec/opensearch/1.1/"
+}}
