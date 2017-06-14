@@ -176,9 +176,43 @@ class sentinel(esa):
 
         uri_root = self.uri_opendata
 
+        print('. downloading products:')
         # --- loop though products
         for i, prod in enumerate(productlist):
-            print(i)
+            product_title = productlist[i]['title']
+            product_uuid = productlist[i]['uuid']
+
+            print('   | ' + product_title)
+
+            # --- build query string depending on product part to download
+            part_to_download = 'quicklook'
+            if part_to_download == 'fullproduct':
+                uri = '{0}({1})/$value'.format(uri_root, product_uuid)
+                fname = product_title + '.zip'
+
+            elif part_to_download == 'quicklook':
+                uri = "{0}('{1}')/Nodes('{2}.SAFE')/Nodes('preview')/Nodes('quick-look.png')/$value".format(uri_root, product_uuid, product_title)
+                fname = product_title + '_quicklook.png'
+
+            # --- query product
+            try:
+                r = requests.get(uri, auth=(self.user, self.pwd))
+                r.raise_for_status()
+            except requests.exceptions.Timeout:
+                print('ERROR: Timeout')
+                sys.exit(1)
+            except requests.exceptions.TooManyRedirects:
+                print('ERROR: TooManyRedirects')
+                sys.exit(1)
+            except requests.exceptions.HTTPError:
+                print('ERROR: HTTPError')
+                sys.exit(1)
+
+            # --- download product
+            with open(fname, 'wb') as fd:
+                fd.write(r.content)
+                # for chunk in r.iter_content(chunk_size=1024):
+                #     fd.write(chunk)
 
     def print_product_summary(self, productlist):
         """Print summary of queried products.
