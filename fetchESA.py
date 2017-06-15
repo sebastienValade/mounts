@@ -1,6 +1,7 @@
 import requests
 import xml.etree.ElementTree as ET
 import sys
+import logging
 
 
 class esa:
@@ -79,31 +80,31 @@ class sentinel(esa):
         try:
             req = requests.get(self.uri_opensearch, params=optns_fmtd)
         except requests.exceptions.ConnectionError:
-            print('ERROR: ConnectionError')
+            logging.error('ConnectionError')
             sys.exit(1)
 
-        print('. query url: ' + req.url)
+        logging.info('query url: ' + req.url)
 
         # --- send request
-        print('. querying DataHub archive')
+        logging.info('querying DataHub archive')
         try:
             resp = requests.get(req.url, auth=(self.user, self.pwd))
             resp.raise_for_status()
         except requests.exceptions.Timeout:
-            print('ERROR: Timeout')
+            logging.error('Timeout')
             sys.exit(1)
         except requests.exceptions.TooManyRedirects:
-            print('ERROR: TooManyRedirects')
+            logging.error('TooManyRedirects')
             sys.exit(1)
         except requests.exceptions.HTTPError:
-            print('ERROR: HTTPError')
+            logging.error('HTTPError')
             sys.exit(1)
 
         # --- write request output to file
         if export_result is not None:
             with open('OSquery_results.' + export_fmt, 'w') as f:
                 f.write(resp.text)
-            print('. query search results saved to %s file' % (export_fmt))
+            logging.info('. query search results saved to %s file' % (export_fmt))
 
         # --- parse request output
         if export_fmt == 'xml':
@@ -165,7 +166,7 @@ class sentinel(esa):
     def parse_json(self, resp):
         """Parse query response formatted in json."""
 
-        print('ERROR: JSON parsing not implemented yet.')
+        print('JSON parsing not implemented yet.')
         productlist = []
         return productlist
         # import json
@@ -176,7 +177,8 @@ class sentinel(esa):
 
         uri_root = self.uri_opendata
 
-        print('. downloading products:')
+        logging.info('downloading products:')
+
         # --- loop though products
         for i, prod in enumerate(productlist):
             product_title = productlist[i]['title']
@@ -199,14 +201,15 @@ class sentinel(esa):
                 r = requests.get(uri, auth=(self.user, self.pwd))
                 r.raise_for_status()
             except requests.exceptions.Timeout:
-                print('ERROR: Timeout')
-                sys.exit(1)
+                logging.error('Timeout')
+                continue
             except requests.exceptions.TooManyRedirects:
-                print('ERROR: TooManyRedirects')
-                sys.exit(1)
+                logging.error('TooManyRedirects')
+                continue
             except requests.exceptions.HTTPError:
-                print('ERROR: HTTPError')
-                sys.exit(1)
+                logging.error('HTTPError')
+                logging.error('uri = ' + uri)
+                continue
 
             # --- download product
             with open(fname, 'wb') as fd:
@@ -219,7 +222,7 @@ class sentinel(esa):
         Input argument = product list returned by 'parse_xml' or 'parse_json' method.
         """
 
-        print('. queried product summary:')
+        logging.info('queried product summary:')
 
         for i, prod in enumerate(productlist):
             prodsummary = productlist[i]['summary']

@@ -1,5 +1,10 @@
 import fetchESA
+import logging
 
+
+# --- set logging behaviour
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+logging.info('Started')
 
 obj = fetchESA.sentinel()
 
@@ -21,10 +26,12 @@ optns = {
     'maxrecords': 3}
 
 # --- query product
-productlist = obj.product_search(optns, export_result=1)
+productlist = obj.product_search(optns, export_result=None)
 
 # print(productlist[0]['title'])
 # print(productlist[0]['uuid'])
 
 # --- download product
 obj.product_fetch(productlist)
+
+logging.info('Finished')

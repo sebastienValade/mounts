@@ -1,144 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?><feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns="http://www.w3.org/2005/Atom">
 <title>Sentinels Scientific Data Hub search results for: productType:SLC AND filename:S1A*</title>
-<subtitle>Displaying 0 to 2 of 287726 total results. Request done in 0.439 seconds.</subtitle>
-<updated>2017-06-14T09:31:02.637Z</updated>
+<subtitle>Displaying 0 to 2 of 288393 total results. Request done in 0 seconds.</subtitle>
+<updated>2017-06-15T09:43:59.876Z</updated>
 <author>
 <name>Sentinels Scientific Data Hub</name>
 </author>
 <id>https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*</id>
-<opensearch:totalResults>287726</opensearch:totalResults>
+<opensearch:totalResults>288393</opensearch:totalResults>
 <opensearch:startIndex>0</opensearch:startIndex>
 <opensearch:itemsPerPage>3</opensearch:itemsPerPage>
 <opensearch:Query role="request" searchTerms="productType:SLC AND filename:S1A*" startPage="1"/>
 <link rel="self" type="application/atom+xml" href="https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*&amp;start=0&amp;rows=3"/>
 <link rel="first" type="application/atom+xml" href="https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*&amp;start=0&amp;rows=3"/>
 <link rel="next" type="application/atom+xml" href="https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*&amp;start=3&amp;rows=3"/>
-<link rel="last" type="application/atom+xml" href="https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*&amp;start=287725&amp;rows=3"/>
+<link rel="last" type="application/atom+xml" href="https://scihub.copernicus.eu/apihub/search?q=productType:SLC AND filename:S1A*&amp;start=288392&amp;rows=3"/>
 <link rel="search" type="application/opensearchdescription+xml" href="opensearch_description.xml"/>
 <entry>
-<title>S1A_IW_SLC__1SDV_20170613T214837_20170613T214904_017021_01C597_41DD</title>
-<link href="https://scihub.copernicus.eu/apihub/odata/v1/Products('0cafb30b-77d1-45e5-9b5c-c24808dc775b')/$value"/>
-<link rel="alternative" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('0cafb30b-77d1-45e5-9b5c-c24808dc775b')/"/>
-<link rel="icon" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('0cafb30b-77d1-45e5-9b5c-c24808dc775b')/Products('Quicklook')/$value"/>
-<id>0cafb30b-77d1-45e5-9b5c-c24808dc775b</id>
-<summary>Date: 2017-06-13T21:48:37.811Z, Instrument: SAR-C SAR, Mode: VV VH, Satellite: Sentinel-1, Size: 7.22 GB</summary>
+<title>S1A_WV_SLC__1SSV_20170615T045714_20170615T050422_017040_01C627_C535</title>
+<link href="https://scihub.copernicus.eu/apihub/odata/v1/Products('fa8fe5b5-3f93-4081-bba9-4ef4726bca15')/$value"/>
+<link rel="alternative" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('fa8fe5b5-3f93-4081-bba9-4ef4726bca15')/"/>
+<link rel="icon" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('fa8fe5b5-3f93-4081-bba9-4ef4726bca15')/Products('Quicklook')/$value"/>
+<id>fa8fe5b5-3f93-4081-bba9-4ef4726bca15</id>
+<summary>Date: 2017-06-15T04:57:14.572Z, Instrument: SAR-C SAR, Mode: VV, Satellite: Sentinel-1, Size: 2.76 GB</summary>
 <str name="acquisitiontype">NOMINAL</str>
-<str name="filename">S1A_IW_SLC__1SDV_20170613T214837_20170613T214904_017021_01C597_41DD.SAFE</str>
+<str name="filename">S1A_WV_SLC__1SSV_20170615T045714_20170615T050422_017040_01C627_C535.SAFE</str>
 <str name="gmlfootprint">&lt;gml:Polygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326" xmlns:gml="http://www.opengis.net/gml"&gt;
    &lt;gml:outerBoundaryIs&gt;
       &lt;gml:LinearRing&gt;
-         &lt;gml:coordinates&gt;54.615276,-62.931446 55.020882,-59.009430 53.408684,-58.590752 53.007053,-62.361687 54.615276,-62.931446&lt;/gml:coordinates&gt;
+         &lt;gml:coordinates&gt;25.971020,-165.387390 26.007608,-165.185593 25.827372,-165.145294 25.790783,-165.346756 25.971020,-165.387390&lt;/gml:coordinates&gt;
       &lt;/gml:LinearRing&gt;
    &lt;/gml:outerBoundaryIs&gt;
 &lt;/gml:Polygon&gt;</str>
 <str name="format">SAFE</str>
-<str name="identifier">S1A_IW_SLC__1SDV_20170613T214837_20170613T214904_017021_01C597_41DD</str>
-<date name="ingestiondate">2017-06-14T04:24:39.629Z</date>
+<str name="identifier">S1A_WV_SLC__1SSV_20170615T045714_20170615T050422_017040_01C627_C535</str>
+<date name="ingestiondate">2017-06-15T09:32:17.685Z</date>
 <str name="instrumentshortname">SAR-C SAR</str>
-<str name="sensoroperationalmode">IW</str>
+<str name="sensoroperationalmode">WV</str>
 <str name="instrumentname">Synthetic Aperture Radar (C-band)</str>
-<str name="swathidentifier">IW1 IW2 IW3</str>
-<str name="footprint">POLYGON ((-62.931446 54.615276,-59.009430 55.020882,-58.590752 53.408684,-62.361687 53.007053,-62.931446 54.615276))</str>
-<int name="missiondatatakeid">116119</int>
+<str name="swathidentifier">WV1 WV2</str>
+<str name="footprint">POLYGON ((-165.387390 25.971020,-165.185593 26.007608,-165.145294 25.827372,-165.346756 25.790783,-165.387390 25.971020))</str>
+<int name="missiondatatakeid">116263</int>
 <str name="platformidentifier">2014-016A</str>
-<int name="orbitnumber">17021</int>
-<int name="lastorbitnumber">17021</int>
+<int name="orbitnumber">17040</int>
+<int name="lastorbitnumber">17040</int>
 <str name="orbitdirection">ASCENDING</str>
-<str name="polarisationmode">VV VH</str>
+<str name="polarisationmode">VV</str>
 <str name="productclass">S</str>
 <str name="producttype">SLC</str>
-<int name="relativeorbitnumber">149</int>
-<int name="lastrelativeorbitnumber">149</int>
+<int name="relativeorbitnumber">168</int>
+<int name="lastrelativeorbitnumber">168</int>
 <str name="platformname">Sentinel-1</str>
-<date name="beginposition">2017-06-13T21:48:37.811Z</date>
-<date name="endposition">2017-06-13T21:49:04.782Z</date>
-<str name="size">7.22 GB</str>
-<int name="slicenumber">9</int>
+<date name="beginposition">2017-06-15T04:57:14.572Z</date>
+<date name="endposition">2017-06-15T05:04:22.254Z</date>
+<str name="size">2.76 GB</str>
 <str name="status">ARCHIVED</str>
-<str name="uuid">0cafb30b-77d1-45e5-9b5c-c24808dc775b</str>
+<str name="uuid">fa8fe5b5-3f93-4081-bba9-4ef4726bca15</str>
 </entry>
 <entry>
-<title>S1A_IW_SLC__1SDV_20170613T214747_20170613T214815_017021_01C597_DBE6</title>
-<link href="https://scihub.copernicus.eu/apihub/odata/v1/Products('07a39a45-2d60-4608-9555-11c70bf1c243')/$value"/>
-<link rel="alternative" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('07a39a45-2d60-4608-9555-11c70bf1c243')/"/>
-<link rel="icon" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('07a39a45-2d60-4608-9555-11c70bf1c243')/Products('Quicklook')/$value"/>
-<id>07a39a45-2d60-4608-9555-11c70bf1c243</id>
-<summary>Date: 2017-06-13T21:47:47.224Z, Instrument: SAR-C SAR, Mode: VV VH, Satellite: Sentinel-1, Size: 7.5 GB</summary>
+<title>S1A_IW_SLC__1SDV_20170615T052128_20170615T052156_017040_01C629_E561</title>
+<link href="https://scihub.copernicus.eu/apihub/odata/v1/Products('3ca9bc64-d354-4c34-a37e-7c35ca5bd3e7')/$value"/>
+<link rel="alternative" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('3ca9bc64-d354-4c34-a37e-7c35ca5bd3e7')/"/>
+<link rel="icon" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('3ca9bc64-d354-4c34-a37e-7c35ca5bd3e7')/Products('Quicklook')/$value"/>
+<id>3ca9bc64-d354-4c34-a37e-7c35ca5bd3e7</id>
+<summary>Date: 2017-06-15T05:21:28.787Z, Instrument: SAR-C SAR, Mode: VV VH, Satellite: Sentinel-1, Size: 7.95 GB</summary>
 <str name="acquisitiontype">NOMINAL</str>
-<str name="filename">S1A_IW_SLC__1SDV_20170613T214747_20170613T214815_017021_01C597_DBE6.SAFE</str>
+<str name="filename">S1A_IW_SLC__1SDV_20170615T052128_20170615T052156_017040_01C629_E561.SAFE</str>
 <str name="gmlfootprint">&lt;gml:Polygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326" xmlns:gml="http://www.opengis.net/gml"&gt;
    &lt;gml:outerBoundaryIs&gt;
       &lt;gml:LinearRing&gt;
-         &lt;gml:coordinates&gt;51.652802,-61.911175 52.052219,-58.254181 50.381966,-57.848000 49.985092,-61.373127 51.652802,-61.911175&lt;/gml:coordinates&gt;
+         &lt;gml:coordinates&gt;64.238167,19.277958 64.703354,13.937708 66.364952,14.586280 65.883148,20.268665 64.238167,19.277958&lt;/gml:coordinates&gt;
       &lt;/gml:LinearRing&gt;
    &lt;/gml:outerBoundaryIs&gt;
 &lt;/gml:Polygon&gt;</str>
 <str name="format">SAFE</str>
-<str name="identifier">S1A_IW_SLC__1SDV_20170613T214747_20170613T214815_017021_01C597_DBE6</str>
-<date name="ingestiondate">2017-06-14T04:21:29.271Z</date>
+<str name="identifier">S1A_IW_SLC__1SDV_20170615T052128_20170615T052156_017040_01C629_E561</str>
+<date name="ingestiondate">2017-06-15T09:10:41.942Z</date>
 <str name="instrumentshortname">SAR-C SAR</str>
 <str name="sensoroperationalmode">IW</str>
 <str name="instrumentname">Synthetic Aperture Radar (C-band)</str>
 <str name="swathidentifier">IW1 IW2 IW3</str>
-<str name="footprint">POLYGON ((-61.911175 51.652802,-58.254181 52.052219,-57.848000 50.381966,-61.373127 49.985092,-61.911175 51.652802))</str>
-<int name="missiondatatakeid">116119</int>
+<str name="footprint">POLYGON ((19.277958 64.238167,13.937708 64.703354,14.586280 66.364952,20.268665 65.883148,19.277958 64.238167))</str>
+<int name="missiondatatakeid">116265</int>
 <str name="platformidentifier">2014-016A</str>
-<int name="orbitnumber">17021</int>
-<int name="lastorbitnumber">17021</int>
-<str name="orbitdirection">ASCENDING</str>
+<int name="orbitnumber">17040</int>
+<int name="lastorbitnumber">17040</int>
+<str name="orbitdirection">DESCENDING</str>
 <str name="polarisationmode">VV VH</str>
 <str name="productclass">S</str>
 <str name="producttype">SLC</str>
-<int name="relativeorbitnumber">149</int>
-<int name="lastrelativeorbitnumber">149</int>
+<int name="relativeorbitnumber">168</int>
+<int name="lastrelativeorbitnumber">168</int>
 <str name="platformname">Sentinel-1</str>
-<date name="beginposition">2017-06-13T21:47:47.224Z</date>
-<date name="endposition">2017-06-13T21:48:15.136Z</date>
-<str name="size">7.5 GB</str>
+<date name="beginposition">2017-06-15T05:21:28.787Z</date>
+<date name="endposition">2017-06-15T05:21:56.732Z</date>
+<str name="size">7.95 GB</str>
 <int name="slicenumber">7</int>
 <str name="status">ARCHIVED</str>
-<str name="uuid">07a39a45-2d60-4608-9555-11c70bf1c243</str>
+<str name="uuid">3ca9bc64-d354-4c34-a37e-7c35ca5bd3e7</str>
 </entry>
 <entry>
-<title>S1A_IW_SLC__1SDV_20170613T214514_20170613T214544_017021_01C597_05BA</title>
-<link href="https://scihub.copernicus.eu/apihub/odata/v1/Products('c8493b14-e0d9-40b5-8b26-a9c6d4dd9475')/$value"/>
-<link rel="alternative" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('c8493b14-e0d9-40b5-8b26-a9c6d4dd9475')/"/>
-<link rel="icon" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('c8493b14-e0d9-40b5-8b26-a9c6d4dd9475')/Products('Quicklook')/$value"/>
-<id>c8493b14-e0d9-40b5-8b26-a9c6d4dd9475</id>
-<summary>Date: 2017-06-13T21:45:14.568Z, Instrument: SAR-C SAR, Mode: VV VH, Satellite: Sentinel-1, Size: 8.02 GB</summary>
+<title>S1A_IW_SLC__1SDV_20170615T052154_20170615T052221_017040_01C629_3204</title>
+<link href="https://scihub.copernicus.eu/apihub/odata/v1/Products('9415edbf-103f-4bec-87ea-f27e5d5ef7c6')/$value"/>
+<link rel="alternative" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('9415edbf-103f-4bec-87ea-f27e5d5ef7c6')/"/>
+<link rel="icon" href="https://scihub.copernicus.eu/apihub/odata/v1/Products('9415edbf-103f-4bec-87ea-f27e5d5ef7c6')/Products('Quicklook')/$value"/>
+<id>9415edbf-103f-4bec-87ea-f27e5d5ef7c6</id>
+<summary>Date: 2017-06-15T05:21:54.57Z, Instrument: SAR-C SAR, Mode: VV VH, Satellite: Sentinel-1, Size: 7.65 GB</summary>
 <str name="acquisitiontype">NOMINAL</str>
-<str name="filename">S1A_IW_SLC__1SDV_20170613T214514_20170613T214544_017021_01C597_05BA.SAFE</str>
+<str name="filename">S1A_IW_SLC__1SDV_20170615T052154_20170615T052221_017040_01C629_3204.SAFE</str>
 <str name="gmlfootprint">&lt;gml:Polygon srsName="http://www.opengis.net/gml/srs/epsg.xml#4326" xmlns:gml="http://www.opengis.net/gml"&gt;
    &lt;gml:outerBoundaryIs&gt;
       &lt;gml:LinearRing&gt;
-         &lt;gml:coordinates&gt;42.627468,-59.258720 43.021145,-56.190193 41.231060,-55.809875 40.836811,-58.790665 42.627468,-59.258720&lt;/gml:coordinates&gt;
+         &lt;gml:coordinates&gt;62.772850,18.476992 63.225815,13.405316 64.831924,13.986965 64.365440,19.352863 62.772850,18.476992&lt;/gml:coordinates&gt;
       &lt;/gml:LinearRing&gt;
    &lt;/gml:outerBoundaryIs&gt;
 &lt;/gml:Polygon&gt;</str>
 <str name="format">SAFE</str>
-<str name="identifier">S1A_IW_SLC__1SDV_20170613T214514_20170613T214544_017021_01C597_05BA</str>
-<date name="ingestiondate">2017-06-14T04:21:25.572Z</date>
+<str name="identifier">S1A_IW_SLC__1SDV_20170615T052154_20170615T052221_017040_01C629_3204</str>
+<date name="ingestiondate">2017-06-15T09:10:40.317Z</date>
 <str name="instrumentshortname">SAR-C SAR</str>
 <str name="sensoroperationalmode">IW</str>
 <str name="instrumentname">Synthetic Aperture Radar (C-band)</str>
 <str name="swathidentifier">IW1 IW2 IW3</str>
-<str name="footprint">POLYGON ((-59.258720 42.627468,-56.190193 43.021145,-55.809875 41.231060,-58.790665 40.836811,-59.258720 42.627468))</str>
-<int name="missiondatatakeid">116119</int>
+<str name="footprint">POLYGON ((18.476992 62.772850,13.405316 63.225815,13.986965 64.831924,19.352863 64.365440,18.476992 62.772850))</str>
+<int name="missiondatatakeid">116265</int>
 <str name="platformidentifier">2014-016A</str>
-<int name="orbitnumber">17021</int>
-<int name="lastorbitnumber">17021</int>
-<str name="orbitdirection">ASCENDING</str>
+<int name="orbitnumber">17040</int>
+<int name="lastorbitnumber">17040</int>
+<str name="orbitdirection">DESCENDING</str>
 <str name="polarisationmode">VV VH</str>
 <str name="productclass">S</str>
 <str name="producttype">SLC</str>
-<int name="relativeorbitnumber">149</int>
-<int name="lastrelativeorbitnumber">149</int>
+<int name="relativeorbitnumber">168</int>
+<int name="lastrelativeorbitnumber">168</int>
 <str name="platformname">Sentinel-1</str>
-<date name="beginposition">2017-06-13T21:45:14.568Z</date>
-<date name="endposition">2017-06-13T21:45:44.398Z</date>
-<str name="size">8.02 GB</str>
-<int name="slicenumber">1</int>
+<date name="beginposition">2017-06-15T05:21:54.57Z</date>
+<date name="endposition">2017-06-15T05:22:21.557Z</date>
+<str name="size">7.65 GB</str>
+<int name="slicenumber">8</int>
 <str name="status">ARCHIVED</str>
-<str name="uuid">c8493b14-e0d9-40b5-8b26-a9c6d4dd9475</str>
+<str name="uuid">9415edbf-103f-4bec-87ea-f27e5d5ef7c6</str>
 </entry>
 </feed>
