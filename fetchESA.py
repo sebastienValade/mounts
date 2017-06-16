@@ -4,7 +4,7 @@ import sys
 import logging
 
 
-class esa:
+class Esa:
     """
     Parent class
     """
@@ -18,15 +18,36 @@ class esa:
         """Set ESA apihub authentification username and password."""
         self.user = user
         self.pwd = pwd
+        
+
+class Product(object):
+    
+    def __init__(self, **kwargs):
+        self.uid = kwargs['uuid']
+        self.polarisationmode = None
+        self.quicklook = None
+        
+    
+    def getQuicklook(self, filename):
+        pass
+   
+    def getSLC(self, filename):
+        pass
+    
+
+class SLC(Product):
+    pass
 
 
-class sentinel(esa):
+class Sentinel(Esa):
     """
     Child class inheriting from esa()
     """
 
     uri_opensearch = 'https://scihub.copernicus.eu/apihub/search'
     uri_opendata = 'https://scihub.copernicus.eu/apihub/odata/v1/Products'
+    
+    platformname = 'Sentinel-1'
 
     def __init__(self):
         esa.__init__(self)
@@ -70,7 +91,14 @@ class sentinel(esa):
         optns_fmtd['q'] = ' AND '.join(key_q)
         return optns_fmtd, export_fmt
 
-    def product_search(self, optns, export_result=None):
+    
+    
+    # def product_search(self, optns, export_result=None):
+    def product_search(self,
+                       area_of_interest,
+                       polarisationmode='VV',
+                       format='json',
+                       export_result=None):
         # """Query Open Search API to discover products in the Data Hub archive"""
 
         # --- format query options
@@ -86,19 +114,10 @@ class sentinel(esa):
         logging.info('query url: ' + req.url)
 
         # --- send request
-        logging.info('querying DataHub archive')
-        try:
-            resp = requests.get(req.url, auth=(self.user, self.pwd))
-            resp.raise_for_status()
-        except requests.exceptions.Timeout:
-            logging.error('Timeout')
-            sys.exit(1)
-        except requests.exceptions.TooManyRedirects:
-            logging.error('TooManyRedirects')
-            sys.exit(1)
-        except requests.exceptions.HTTPError:
-            logging.error('HTTPError')
-            sys.exit(1)
+        logging.info('Querying DataHub archive')
+
+        resp = requests.get(req.url, auth=(self.user, self.pwd))
+        resp.raise_for_status()
 
         # --- write request output to file
         if export_result is not None:
@@ -159,7 +178,7 @@ class sentinel(esa):
                 value = child.text
                 D[param] = value
 
-            productlist.append(D)
+            productlist.append(Product(D))
 
         return productlist
 
