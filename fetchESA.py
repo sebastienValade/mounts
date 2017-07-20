@@ -25,8 +25,11 @@ class sentinel(esa):
     Child class inheriting from esa()
     """
 
-    uri_opensearch = 'https://scihub.copernicus.eu/apihub/search'
-    uri_opendata = 'https://scihub.copernicus.eu/apihub/odata/v1/Products'
+    # NB: 2017-07-19: apihub not working, dhus working
+    # uri_opensearch = 'https://scihub.copernicus.eu/apihub/search'
+    # uri_opendata = 'https://scihub.copernicus.eu/apihub/odata/v1/Products'
+    uri_opensearch = 'https://scihub.copernicus.eu/dhus/search'
+    uri_opendata = 'https://scihub.copernicus.eu/dhus/odata/v1/Products'
 
     def __init__(self):
         esa.__init__(self)
@@ -199,6 +202,7 @@ class sentinel(esa):
             # --- query product
             try:
                 r = requests.get(uri, auth=(self.user, self.pwd))
+                logging.info('query url: ' + r.url)
                 r.raise_for_status()
             except requests.exceptions.Timeout:
                 logging.error('Timeout')

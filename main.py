@@ -4,7 +4,8 @@ import logging
 
 # --- set logging behaviour
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-logging.info('Started')
+logging.getLogger('requests').setLevel(logging.ERROR)
+logging.info('>> script started')
 
 obj = fetchESA.sentinel()
 
@@ -23,7 +24,7 @@ obj.query_auth('sebastien.valade', 'wave*worm')
 optns = {
     'filename': 'S1A*',
     'productType': 'SLC',
-    'maxrecords': 3}
+    'maxrecords': 1}
 
 # --- query product
 productlist = obj.product_search(optns, export_result=None)
