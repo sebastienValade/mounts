@@ -4,7 +4,7 @@ import sys
 import logging
 
 
-class esa:
+class Esa:
     """
     Parent class
     """
@@ -20,9 +20,9 @@ class esa:
         self.pwd = pwd
 
 
-class sentinel(esa):
+class Product(Esa):
     """
-    Child class inheriting from esa()
+    Child class inheriting from Esa()
     """
 
     # NB: 2017-07-19: apihub not working, dhus working
@@ -32,7 +32,7 @@ class sentinel(esa):
     uri_opendata = 'https://scihub.copernicus.eu/dhus/odata/v1/Products'
 
     def __init__(self):
-        esa.__init__(self)
+        Esa.__init__(self)
 
     def format_query_optns(self, optns):
 

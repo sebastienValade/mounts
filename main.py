@@ -1,14 +1,13 @@
 import fetchESA
 import logging
 
-# AHAHAH
 
 # --- set logging behaviour
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 logging.getLogger('requests').setLevel(logging.ERROR)
 logging.info('>> script started')
 
-obj = fetchESA.sentinel()
+obj = fetchESA.Product()
 
 
 # --- set query authentification
@@ -25,7 +24,7 @@ obj.query_auth('sebastien.valade', 'wave*worm')
 optns = {
     'filename': 'S1A*',
     'productType': 'SLC',
-    'maxrecords': 1}
+    'maxrecords': 3}
 
 # --- query product
 productlist = obj.product_search(optns, export_result=None)
