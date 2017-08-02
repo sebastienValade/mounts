@@ -1,4 +1,3 @@
-# --------------------------------
-#              MOUNTS
-#   Monitoring UnresT from Space 
-# --------------------------------
+# MOUNTS
+# Monitoring Unrest from Space 
+# -----------------------------
