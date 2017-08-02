@@ -1,0 +1,26 @@
+# product search options
+#    'filename'
+#    'platformname': Sentinel-1 | Sentinel-2
+#    'format': 'json'
+#    'polarisationmode'
+#    'productType'
+#    'footprint': [lat, lon] | [lon1, lat1, lon2, lat2, ...]
+
+optn_search:
+  filename: S1A*
+  productType: SLC
+  footprint: [-1.5220282208917981, 29.24981117248535]
+  #ingestiondate: "[2017-01-01T00:00:00.000Z TO 2017-02-01T00:00:00.000Z]"
+  maxrecords: 1
+  #orderby: ingestiondate asc
+  #footprint: [14.309692382812498, 38.285624966683756, 15.281982421875002, 38.285624966683756, 15.281982421875002, 38.9380483825641, 14.309692382812498, 38.9380483825641, 14.309692382812498, 38.285624966683756]
+
+optn_download:
+  productPart: fullproduct # quicklook | fullproduct
+  #download_dir: '/home/khola/xxx'
+
+optn_processing:
+  - crop
+  - thermal_noise_removal
+  - thermal_calibration
+  - filter_speckle
