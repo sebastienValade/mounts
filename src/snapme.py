@@ -150,6 +150,7 @@ def subset(obj, polygon_wkt=None, north_bound=None, west_bound=None, south_bound
     if polygon_wkt is None:
         if all(v is not None for v in [north_bound, west_bound, south_bound, east_bound]):
             polygon_wkt = "POLYGON((" + str(west_bound) + ' ' + str(south_bound) + ', ' + str(east_bound) + ' ' + str(south_bound) + ', ' + str(east_bound) + ' ' + str(north_bound) + ', ' + str(west_bound) + ' ' + str(north_bound) + ', ' + str(west_bound) + ' ' + str(south_bound) + '))'
+            # print(polygon_wkt)
         else:
             print('enter valid polygon bounds')
             quit()
@@ -326,12 +327,25 @@ def topo_phase_removal(obj):
                                                     Default value is 'false'.
         - tileExtensionPercent=<string>      Define extension of tile for DEM simulation (optimization parameter).
                                                     Default value is '100'.
+        - topoPhaseBandName=<string>         The topographic phase band name.
+                                                    Default value is 'topo_phase'.
     """
 
     logging.info('gpt operator = TopoPhaseRemoval')
 
     parameters = HashMap()
+    parameters.put('demName', 'SRTM 3Sec')
+    parameters.put('orbitDegree', 3)
+    parameters.put('tileExtensionPercent', '100')
+    new_topoPhaseBandName = 'topo_phase'
+    parameters.put('topoPhaseBandName', new_topoPhaseBandName)
+
     result = GPF.createProduct('TopoPhaseRemoval', parameters, obj)
+
+    # - print created band
+    band_list = get_bandnames(result)
+    matching = [b for b in band_list if new_topoPhaseBandName in b]
+    logging.info('new band created: "' + matching[0] + '"')
 
     return result
 
@@ -363,7 +377,7 @@ def goldstein_phase_filtering(obj):
     return result
 
 
-def terrain_correction(obj):
+def terrain_correction(obj, sourceBands):
     """"Range Doppler method for orthorectification.
 
     Parameter Options: (gpt -h Terrain-Correction)
@@ -431,14 +445,14 @@ def terrain_correction(obj):
 
     logging.info('gpt operator = Terrain-Correction')
 
+    # --- check if source bands valid
+    r, sourceBands_valid = is_bandinproduct(obj, sourceBands)
+
+    # --- format python list to string
+    sourceBands_valid_str = ','.join(sourceBands_valid)
+
     parameters = HashMap()
-
-    print('---> warning: check if selected source band valid')
-    print('---> selected band = ' + 'phase')
-    print('---> available bands = ')
-    get_bandnames(obj)
-
-    parameters.put('sourceBands', 'phase')
+    parameters.put('sourceBands', sourceBands_valid_str)
     result = GPF.createProduct('Terrain-Correction', parameters, obj)
 
     return result
@@ -477,11 +491,13 @@ def print_engineConfig():
     print('parallelism', EngineConfig.instance().preferences().get('snap.parallelism', None))
 
 
-def get_bandnames(obj):
+def get_bandnames(obj, print_bands=None):
 
     r = obj.getBandNames()
     r = list(r)
-    print(r)
+
+    if print_bands:
+        print(r)
 
     return r
 
@@ -509,25 +525,74 @@ def read_xmlnodes(obj):
 ####################################################################
 
 
-def plotBand(obj, band_name, fout=None):
+def plotBand(obj, band_name, cmap=None, f_out=None, p_out=None):
 
     logging.info('plotting band')
 
-    band = obj.getBand(band_name)
+    # - check if band_name valid
+    r, band_name_valid = is_bandinproduct(obj, band_name)
 
-    # --- get band dimensions
-    w, h = get_rasterDim(obj, band_name)
+    for bname in band_name_valid:
+        # ON SECOND ITERATION BAND RESULSTS NONE.... WHY?
 
-    # band_data = np.zeros(w * h, np.float32)
-    # band.readPixels(0, 0, w, h, band_data)
-    band_data = np.zeros(w * h, np.float32)
-    band.readPixels(0, 0, w, h, band_data)
+        # - get band data
+        band = obj.getBand(bname)
 
-    obj.dispose()
-    band_data.shape = h, w
-    imgplot = plt.imshow(band_data)
+        if band is None:
+            logging.info('warning: band "' + bname + '" is None')
+            logging.info('=> this is a bug in my script!')
+            continue
 
-    if fout is None:
-        fout = 'band_' + band_name + '.png'
+        # --- get band dimensions
+        w, h = get_rasterDim(obj, bname)
 
-    imgplot.write_png(fout)
+        band_data = np.zeros(w * h, np.float32)
+        band.readPixels(0, 0, w, h, band_data)
+
+        obj.dispose()
+        band_data.shape = h, w
+        imgplot = plt.imshow(band_data, cmap=cmap)
+
+        if f_out is None:
+            f_out = 'band_' + bname + '.png'
+        else:
+            f_out = f_out + '.png'
+
+        if p_out is None:
+            p_out = '../data/'
+
+        imgplot.write_png(p_out + f_out)
+
+
+def is_bandinproduct(obj, band_name):
+    """Check if band name is in product.
+
+    Arguments:
+        obj       <product obj>
+        band_name <string, or list of string>
+
+    Returns:
+        is_band = list of 0 1 values whether band name in product (1) or not (0)
+        band_name_valid = list of queried bands with only valid names
+    """
+
+    # --- check input
+    if isinstance(band_name, str):
+        band_name = [band_name]
+
+    # --- get bands available in product
+    product_bands = get_bandnames(obj)
+
+    is_band = []
+    band_name_valid = []
+
+    # --- loop through bands to check
+    for bname in band_name:
+        if bname in product_bands:
+            is_band.append(1)
+            band_name_valid.append(bname)
+        else:
+            logging.info('warning: band "' + bname + '" not in product')
+            is_band.append(0)
+
+    return is_band, band_name_valid
