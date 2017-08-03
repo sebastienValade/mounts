@@ -16,7 +16,8 @@ obj.query_auth('sebastien.valade', 'wave*worm')
 
 
 # - read config file
-obj.read_configfile('./conf/config.yml')
+conffile = 'config_ertaale.yml'
+obj.read_configfile('./conf/' + conffile)
 
 
 # --- scihub query
@@ -26,4 +27,4 @@ productlist = obj.scihub_search(export_result=None)
 # productlist[0].getQuicklook()
 
 # --- scihub download
-obj.scihub_download(productlist)
+# obj.scihub_download(productlist)

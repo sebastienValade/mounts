@@ -1,0 +1,69 @@
+>> Copernicus Open Access Hub documentation:
+https://scihub.copernicus.eu/userguide/3FullTextSearch
+
+
+# ... to implement (from Sentinel_download.py) ...
+--dhus                Try dhus interface when apihub is not working
+
+# ----- FILE NAME OPTIONS
+filename		= Search based on the product filename, expressed according to the product naming convention
+			= MMM_BB_TTR_LFPP_YYYMMDDTHHMMSS_YYYYMMDDTHHMMSS_OOOOO_DDDDD_CCCC
+
+
+
+# ----- GEOGRAPHIC OPTIONS
+footprint 		= Geographical search of the products whose footprint intersects or is included in a specific geographic type.
+
+
+
+# ----- SENSOR and ACQUISITION OPTIONS
+
+platformname 		= Satellite Platform name (regardless of the serial identifier, e.g. A, B, C ...)
+			= Sentinel-1, Sentinel-2
+
+producttype		= output product type
+			= SLC, GRD, OCN, S2MSI1C 
+			
+polarisationmode 	= valid polarisations for the S1 SAR instrument
+			= HH, VV, HV, VH, HH HV, VV VH
+
+sensoroperationalmode 	= SAR instrument imaging modes
+			= SM, IW, EW
+
+orbitdirection		= direction of the orbit (ascending, descending)
+			= Ascending, Descending
+			
+swathidentifier 	= swath identifiers for the Sentinel-1 SAR instrument. 
+			  S1-S6 swaths apply to SM products
+			  IW, IW1-3 swaths apply to IW products (IW is used for detected IW products where the 3 swaths are merged into one image)
+			  EW, EW1-5 swaths apply to EW products (EW is used for detected EW products where the 5 swaths are merged into one image)
+
+cloudcoverpercentage 	= Percentage of cloud coverage of the product for each area covered by a reference band
+			= 50 | [0 TO 100]
+
+
+
+# ----- DATE OPTIONS
+beginposition 		= time interval search based on the Sensing start Time of the products. 
+endposition		= time interval search based on the Sensing start Time of the products. 
+ingestiondate 		= time interval search based on the time of publication of the product on the Data Hub.
+			
+			= [<timestamp> TO <timestamp>]
+
+			The <timestamp> value can be expressed in one of the the following formats:
+			    (ISO8601) yyyy-MM-ddThh:mm:ss.SSSZ
+			    NOW
+			    NOW-<n>MINUTE(S)
+			    NOW-<n>HOUR(S)
+			    NOW-<n>DAY(S)
+			    NOW-<n>MONTH(S)
+
+
+
+# ----- PAGING OPTIONS
+maxrecords		= number of results listed per page 
+orderby	 		= order result by
+			    beginposition asc 	=> sorts results by sensing date arranged in ascending order
+			    beginposition desc 	=> sorts results by sensing date arranged in descending order
+			    ingestiondate asc 	=> sorts results by ingestion date arranged in ascending order
+			    ingestiondate desc 	=> sorts results by ingestion date arranged in descending order 

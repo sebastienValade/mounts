@@ -151,6 +151,8 @@ class Scihub(Esa):
         # --- send request
         logging.info('querying DataHub archive')
         try:
+            print(req.url)
+
             resp = requests.get(req.url, auth=(self.user, self.pwd))
             resp.raise_for_status()
         except requests.exceptions.RequestException as e:  # base-class exception handling all cases
@@ -171,8 +173,10 @@ class Scihub(Esa):
         elif export_fmt == 'json':
             productlist = self.parse_json(resp)
 
-        # --- print product summary
-        self.print_product_summary(productlist)
+        # --- print product summary/title
+        print('WARNING: list results in the same product!!!')
+        # self.print_product_summary(productlist)
+        self.print_product_title(productlist)
 
         return productlist
 
@@ -319,6 +323,10 @@ class Scihub(Esa):
             objprod.store_metadata(D)
             productlist.append(objprod)
 
+            print('-------')
+            print('debug: appending this product:')
+            print('debug: ' + productlist[-1].metadata.title)
+
         # print('==================>')
         # print(productlist[0].metadata.title)
         # print(productlist[1].metadata.title)
@@ -345,6 +353,16 @@ class Scihub(Esa):
 
         for i, prod in enumerate(productlist):
             print('   | ' + productlist[i].metadata.summary)
+
+    def print_product_title(self, productlist):
+        """Print summary of queried products.
+        Input argument = product list returned by 'parse_xml' or 'parse_json' method.
+        """
+
+        logging.info('queried product title:')
+
+        for i, prod in enumerate(productlist):
+            print('   | ' + productlist[i].metadata.title)
 
 
 def chk_dir(d):

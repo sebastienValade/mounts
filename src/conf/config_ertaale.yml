@@ -1,0 +1,19 @@
+# ERTA ALE
+
+# ----> erta ale (after 20170101 and before 20170401)
+# python Sentinel_download.py --lat 13.60 --lon 40.66 -d 20170101 -f 20170401 -a apihub_seb.txt -s S1*SLC -n  
+# python Sentinel_download.py --lat 13.60 --lon 40.66 -d 20170101 -f 20170401 -a apihub_seb.txt -s S1*SLC__1SSV -w /home/khola/DATA/data_satellite/ERTAALE/new
+
+
+optn_search:
+  #filename: S1*SLC__1SSV*
+  platformname: Sentinel-2
+  #productType: SLC
+  #polarisationmode: VV
+  #sensoroperationalmode: IW
+  footprint: [13.60, 40.66]
+  ingestiondate: "[2017-01-01T00:00:00.000Z TO 2017-04-01T00:00:00.000Z]"
+
+  maxrecords: 50
+  #orderby: ingestiondate asc
+  #foot
