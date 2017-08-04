@@ -1,0 +1,38 @@
+# configuration template
+
+
+# === search query options (scihub)
+optn_search:
+  
+  # - filename option
+  filename: S1*SLC__1SSV*
+
+  # - sensor/acquisition options
+  platformname: Sentinel-1            # Sentinel-1, Sentinel-2
+  productType: SLC                    # SLC, GRD, OCN, S2MSI1C 
+  polarisationmode: VV                # HH, VV, HV, VH, HH HV, VV VH
+  sensoroperationalmode: IW           # SM, IW, EW
+  orbitdirection: Ascending           # Ascending, Descending
+  swathidentifier: IW                 # S1-S6, IW, IW1-3, EW, EW1-5
+
+  # - geographic options 
+  footprint: [13.60, 40.66]           # [lat, lon], [lon1, lat1, lon2, lat2, ...]
+
+  # - date options
+  ingestiondate: "[2017-01-01T00:00:00.000Z TO 2017-04-01T00:00:00.000Z]"
+
+  # - paging options
+  maxrecords: 50
+  orderby: ingestiondate desc         #ingestiondate asc, ingestiondate desc, beginposition asc, beginposition desc
+
+
+
+# === download options
+optn_download:
+  product_node: quicklook             # S1 options: quicklook, fullproduct
+  download_dir: '../data/'
+
+
+
+# === processing options
+optn_processing:

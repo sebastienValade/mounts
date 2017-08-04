@@ -15,7 +15,7 @@ logging.info('>> script started')
 gpt.print_engineConfig()
 
 
-# --- simulate product
+# --- simulate downloaded product
 path = os.environ['HOME'] + '/DATA/data_satellite/'
 master = fetchme.Product()
 master.path_and_file = path + 'S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE.zip'
@@ -29,10 +29,8 @@ s = gpt.read_product(slave)
 
 
 # --- split product
-subswath_name = 'IW2'
-polarisation = 'VV'
-m = gpt.topsar_split(m, subswath_name, polarisation)
-s = gpt.topsar_split(s, subswath_name, polarisation)
+m = gpt.topsar_split(m, subswath='IW2')
+s = gpt.topsar_split(s, subswath='IW2')
 
 
 # --- apply orbit file
@@ -82,8 +80,10 @@ gpt.plotBand(p_subset, sourceBands[2], cmap='binary')
 
 ##########
 
-# # --- get band names
-# gpt.get_bandnames(p)
+# Raster -> collocate => collocate S1 (terrain corrected) and S2
+
+# # --- print band names
+# gpt.get_bandnames(p, print_bands=1)
 
 # # --- print raster dimensions
 # gpt.print_rasterDim(p, 'Phase_ifg_IW2_VV_11Jan2017_11Jan2017')

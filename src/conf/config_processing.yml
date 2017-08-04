@@ -1,0 +1,21 @@
+optn_processing:
+  - operator: read_product
+    path_and_file: '/home/sebastien/DATA/data_satellite/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE.zip'
+  - operator: topsar_split
+    subswath: IW2
+  - operator: apply_orbit_file
+  - operator: subset
+    north_bound: 13.55
+    west_bound: 40.64
+    south_bound: 13.62
+    east_bound: 40.715
+  - operator: plotBand
+    cmap: gist_rainbow
+    band_name: Intensity_IW2_VV
+
+  #- operator: back_geocoding
+  #- operator: interferogram
+  #- operator: deburst
+  #- operator: topo_phase_removal
+  #- operator: goldstein_phase_filtering
+  #- operator: terrain_correction

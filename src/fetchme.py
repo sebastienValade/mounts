@@ -3,8 +3,8 @@ import os
 import logging
 import requests
 import xml.etree.ElementTree as ET
-import yaml
 from tqdm import tqdm
+import utilityme as utils
 
 
 class Esa:
@@ -23,8 +23,7 @@ class Esa:
         self.pwd = pwd
 
     def read_configfile(self, configfile):
-        with open(configfile, 'r') as ymlfile:
-            self.cfg = yaml.load(ymlfile)
+        self.cfg = utils.read_configfile(configfile)
 
 
 class Product(Esa):
@@ -97,7 +96,8 @@ class Product(Esa):
         if 'download_dir' in self.cfg['optn_download']:
             p = self.cfg['optn_download']['download_dir']
         else:
-            p = os.getcwd()
+            # p = os.getcwd()
+            p = '../data/'
         p = chk_dir(p)
 
         # --- send request
@@ -105,7 +105,7 @@ class Product(Esa):
             r = requests.get(uri, auth=(self.user, self.pwd), stream=True)
             r.raise_for_status()
         except requests.exceptions.RequestException as e:  # base-class exception handling all cases
-            logging.info('--> request error: ' + e)
+            logging.info('--> request error')
             logging.info('--> uri = ' + uri)
 
         # --- download product
@@ -134,7 +134,7 @@ class Scihub(Esa):
     def __init__(self):
         Esa.__init__(self)
 
-    def scihub_search(self, export_result=None):
+    def scihub_search(self, export_result=None, print_url=None):
         # """Query Open Search API to discover products in the Data Hub archive"""
 
         # --- format query options
@@ -142,21 +142,23 @@ class Scihub(Esa):
         optns_fmtd, export_fmt = self.format_query_optns(optns)
 
         # --- create url query string, parsing formated query options
+        logging.info('generating request (requests lib)')
         try:
             req = requests.get(self.uri_opensearch, params=optns_fmtd)
         except requests.exceptions.ConnectionError:
             logging.error('ConnectionError')
             sys.exit(1)
 
+        if print_url is not None:
+            print('query url = ' + req.url)
+
         # --- send request
         logging.info('querying DataHub archive')
         try:
-            print(req.url)
-
             resp = requests.get(req.url, auth=(self.user, self.pwd))
             resp.raise_for_status()
         except requests.exceptions.RequestException as e:  # base-class exception handling all cases
-            logging.info('--> request error: ' + e)
+            logging.info('--> request error')
             logging.info('--> query url = ' + req.url)
             logging.info('--> exiting script')
             sys.exit(1)
@@ -172,6 +174,11 @@ class Scihub(Esa):
             productlist = self.parse_xml(resp)
         elif export_fmt == 'json':
             productlist = self.parse_json(resp)
+
+        # print('======')
+        # print('debug: ' + productlist[-2].metadata.title)
+        # print('debug: ' + productlist[-1].metadata.title)
+        # print('======')
 
         # --- print product summary/title
         print('WARNING: list results in the same product!!!')
@@ -193,7 +200,7 @@ class Scihub(Esa):
         logging.info('downloading products:')
 
         # --- loop though products
-        part_to_download = self.cfg['optn_download']['productPart']
+        part_to_download = self.cfg['optn_download']['product_node']
         for i, prod in enumerate(productlist):
             try:
                 if part_to_download == 'quicklook':
@@ -324,8 +331,9 @@ class Scihub(Esa):
             productlist.append(objprod)
 
             print('-------')
-            print('debug: appending this product:')
-            print('debug: ' + productlist[-1].metadata.title)
+            print('debug: appending "' + D['title'] + '"')
+            # print('debug: ' + productlist[0].metadata.title)
+            # print('debug: ' + productlist[-1].metadata.title)
 
         # print('==================>')
         # print(productlist[0].metadata.title)

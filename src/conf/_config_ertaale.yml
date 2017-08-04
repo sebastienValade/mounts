@@ -6,8 +6,12 @@
 
 
 optn_search:
+  filename: S1*
   #filename: S1*SLC__1SSV*
-  platformname: Sentinel-2
+  #filename: S2A_MSI*
+  #ingestiondate: "[2017-01-25T00:00:00.000Z TO 2017-02-15T00:00:00.000Z]"
+
+  #platformname: Sentinel-2
   #productType: SLC
   #polarisationmode: VV
   #sensoroperationalmode: IW
@@ -16,4 +20,3 @@ optn_search:
 
   maxrecords: 50
   #orderby: ingestiondate asc
-  #foot

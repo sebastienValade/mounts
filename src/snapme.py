@@ -1,12 +1,11 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-# import snappy
 from snappy import GPF
 from snappy import ProductIO
 from snappy import HashMap
-# from snappy import jpy
 import logging
+import utilityme as utils
 
 
 # --- load all available gpf operators
@@ -18,8 +17,8 @@ GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis()
 # It depends on the operator and parameter if a default value exists.
 # Even if all parameters have a default value, an empty HashMap needs to be used.
 
-# import snappy
-# HashMap = snappy.jpy.get_type('java.util.HashMap')
+# from snappy import jpy
+# HashMap = jpy.get_type('java.util.HashMap')
 
 
 # --- various (not fully understood)
@@ -36,21 +35,43 @@ GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis()
 # writer_spi_it = ProductIOPlugInManager.getInstance().getAllWriterPlugIns()
 
 
-def read_product(obj):
+def read_product(*args, **kwargs):
     """Open product.
 
     Arguments:
-        obj {string} -- accepts .zip file (S1), or unzipped .SAFE directory (S1+S2)
+    Accepts .zip file (S1), or unzipped .SAFE directory (S1+S2)
+
+    *args
+        object from class fetchme.Product() with attribute 'path_and_file'
+
+    **kwargs:
+        path_and_file <string>
 
     Returns:
         product
+
+    Examples:
+        # EX1: case where argument a keyword argument
+        import snapme as gpt
+        p = gpt.read_product(path_and_file = '/path/file.zip')
+
+        # EX2: case where argument is an object with attribute 'path_and_file'
+        import fetchme
+        import snapme as gpt
+        obj = fetchme.Product()
+        obj.path_and_file = '/home/sebastien/DATA/data_satellite/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE.zip'
+        p = gpt.read_product(obj)
     """
 
     logging.info('reading product')
 
-    # file_manifest = obj.path_and_file + '/manifest.safe'
-    path_and_file = obj.path_and_file
-    p = ProductIO.readProduct(path_and_file)
+    if hasattr(args[0], 'path_and_file'):
+        pnf = args[0].path_and_file
+
+    if 'path_and_file' in kwargs:
+        pnf = kwargs['path_and_file']
+
+    p = ProductIO.readProduct(pnf)
 
     return p
 
@@ -162,32 +183,39 @@ def subset(obj, polygon_wkt=None, north_bound=None, west_bound=None, south_bound
     return result
 
 
-def topsar_split(obj, subswath_name, polarisation):
+def topsar_split(obj,
+                 subswath='IW1',
+                 polarisation='VV'):
     """
     Parameter Options: (gpt -h TOPSAR-Split)
-  -PfirstBurstIndex=<integer>                           The first burst index
-                                                        Valid interval is [1, *).
-                                                        Default value is '1'.
-  -PlastBurstIndex=<integer>                            The last burst index
-                                                        Valid interval is [1, *).
+    - firstBurstIndex=<integer>                         The first burst index
+                                                            Valid interval is [1, *).
+                                                            Default value is '1'.
+    - lastBurstIndex=<integer>                          The last burst index
+                                                            Valid interval is [1, *).
                                                         Default value is '9999'.
-  -PselectedPolarisations=<string,string,string,...>    The list of polarisations
-  -Psubswath=<string>                                   The list of source bands.
-  -PwktAoi=<string>                                     WKT polygon to be used for selecting bursts
+    - selectedPolarisations=<string,string,string,...>  The list of polarisations
+    - subswath=<string>                                     The list of source bands.
+    - wktAoi=<string>                                       WKT polygon to be used for selecting bursts
     """
 
     logging.info('gpt operator = TOPSAR-Split')
 
     parameters = HashMap()
-    parameters.put('subswath', subswath_name)
+    parameters.put('subswath', subswath)
     parameters.put('selectedPolarisations', polarisation)
     result = GPF.createProduct('TOPSAR-Split', parameters, obj)
 
     return result
 
 
-def apply_orbit_file(obj):
+def apply_orbit_file(obj,
+                     continueOnFail=False,
+                     orbitType='Sentinel Precise (Auto Download)',
+                     polyDegree=3):
     """
+    NB: aux files automatically downloaded are stored in ".snap/auxdata/Orbits/Sentinel-1/POEORB/S1A/"
+
     Parameter Options: (gpt -h Apply-Orbit-File)
         - continueOnFail=<boolean>    Sets parameter 'continueOnFail' to <boolean>.
                                         Default value is 'false'.
@@ -198,20 +226,26 @@ def apply_orbit_file(obj):
                                         Default value is '3'.
     """
 
-    # NB: aux files automatically downloaded are stored in ".snap/auxdata/Orbits/Sentinel-1/POEORB/S1A/"
-
     logging.info('gpt operator = Apply-Orbit-File')
 
     parameters = HashMap()
-    # parameters.put('orbitType', "Sentinel Precise (Auto Download)")
-    # parameters.put("Orbit State Vectors", "Sentinel Precise (Auto Download)")
-    # parameters.put("Polynomial Degree", 3)
+    parameters.put('orbitType', orbitType)
+    parameters.put('polyDegree', polyDegree)
+    parameters.put('continueOnFail', continueOnFail)
+
     result = GPF.createProduct('Apply-Orbit-File', parameters, obj)
 
     return result
 
 
-def back_geocoding(obj_master, obj_slave):
+def back_geocoding(obj_master, obj_slave,
+                   demName='SRTM 3Sec',
+                   demResamplingMethod='BICUBIC_INTERPOLATION',
+                   resamplingType='BISINC_5_POINT_INTERPOLATION',
+                   disableReramp=False,
+                   maskOutAreaWithoutElevation=True,
+                   outputRangeAzimuthOffset=False,
+                   outputDerampDemodPhase=False):
     """Product back-geocoding.
 
     NB: master image = oldest, slave image = newest
@@ -239,11 +273,19 @@ def back_geocoding(obj_master, obj_slave):
     logging.info('gpt operator = Back-Geocoding')
 
     parameters = HashMap()
-    parameters.put("Digital Elevation Model", "SRTM 3Sec (Auto Download)")
-    parameters.put("DEM Resampling Method", "BICUBIC_INTERPOLATION")
-    parameters.put("Resampling Type", "BISINC_5_POINT_INTERPOLATION")
-    parameters.put("Mask out areas with no elevation", True)
-    parameters.put("Output Deramp and Demod Phase", False)
+    parameters.put('demName', demName)
+    parameters.put('demResamplingMethod', demResamplingMethod)
+    parameters.put('resamplingType', resamplingType)
+    parameters.put('disableReramp', disableReramp)
+    parameters.put('maskOutAreaWithoutElevation', maskOutAreaWithoutElevation)
+    parameters.put('outputRangeAzimuthOffset', outputRangeAzimuthOffset)
+    parameters.put('outputDerampDemodPhase', outputDerampDemodPhase)
+
+    # parameters.put("Digital Elevation Model", "SRTM 3Sec (Auto Download)")
+    # parameters.put("DEM Resampling Method", "BICUBIC_INTERPOLATION")
+    # parameters.put("Resampling Type", "BISINC_5_POINT_INTERPOLATION")
+    # parameters.put("Mask out areas with no elevation", True)
+    # parameters.put("Output Deramp and Demod Phase", False)
 
     # NB: list of products in reverse order: [slave=newest, master=oldest]
     prods = []
@@ -268,7 +310,16 @@ def deburst(obj):
     return result
 
 
-def interferogram(obj):
+def interferogram(obj,
+                  cohWinAz=10,
+                  cohWinRg=10,
+                  includeCoherence=True,
+                  orbitDegree=3,
+                  squarePixel=True,
+                  srpNumberPoints=501,
+                  srpPolynomialDegree=5,
+                  subtractFlatEarthPhase=True,
+                  ):
     """"
     Parameter Options: (gpt -h Interferogram)
         - cohWinAz=<int>                      Size of coherence estimation window in Azimuth direction
@@ -295,22 +346,36 @@ def interferogram(obj):
     logging.info('gpt operator = Interferogram')
 
     parameters = HashMap()
-    parameters.put('Subtract flat-earth phase', True)
-    parameters.put('Degree of "Flat Earth" polynomial', 5)
-    parameters.put('Number of "Flat Earth" estimation points', 501)
-    parameters.put('Orbit interpolation degree', 3)
-    parameters.put('Include coherence estimation', True)
-    parameters.put('Square Pixel', False)
-    parameters.put('Independent Window Sizes', False)
-    parameters.put('Coherence Azimuth Window Size', 10)
-    parameters.put('Coherence Range Window Size', 10)
+    parameters.put('subtractFlatEarthPhase', subtractFlatEarthPhase)
+    parameters.put('srpPolynomialDegree', srpPolynomialDegree)
+    parameters.put('srpNumberPoints', srpNumberPoints)
+    parameters.put('orbitDegree', orbitDegree)
+    parameters.put('includeCoherence', includeCoherence)
+    parameters.put('squarePixel', squarePixel)
+    parameters.put('cohWinAz', cohWinAz)
+    parameters.put('cohWinRg', cohWinRg)
+
+    # parameters.put('Subtract flat-earth phase', True)
+    # parameters.put('Degree of "Flat Earth" polynomial', 5)
+    # parameters.put('Number of "Flat Earth" estimation points', 501)
+    # parameters.put('Orbit interpolation degree', 3)
+    # parameters.put('Include coherence estimation', True)
+    # parameters.put('Square Pixel', False)
+    # parameters.put('Independent Window Sizes', False)
+    # parameters.put('Coherence Azimuth Window Size', 10)
+    # parameters.put('Coherence Range Window Size', 10)
 
     result = GPF.createProduct('Interferogram', parameters, obj)
 
     return result
 
 
-def topo_phase_removal(obj):
+def topo_phase_removal(obj,
+                       demName='SRTM 3Sec',
+                       orbitDegree=3,
+                       tileExtensionPercent='100',
+                       topoPhaseBandName='topo_phase'
+                       ):
     """"
     Parameter Options: (gpt -h TopoPhaseRemoval)
         - demName=<string>                   The digital elevation model.
@@ -334,23 +399,27 @@ def topo_phase_removal(obj):
     logging.info('gpt operator = TopoPhaseRemoval')
 
     parameters = HashMap()
-    parameters.put('demName', 'SRTM 3Sec')
-    parameters.put('orbitDegree', 3)
-    parameters.put('tileExtensionPercent', '100')
-    new_topoPhaseBandName = 'topo_phase'
-    parameters.put('topoPhaseBandName', new_topoPhaseBandName)
+    parameters.put('demName', demName)
+    parameters.put('orbitDegree', orbitDegree)
+    parameters.put('tileExtensionPercent', tileExtensionPercent)
+    parameters.put('topoPhaseBandName', topoPhaseBandName)  # root name for new created band
 
     result = GPF.createProduct('TopoPhaseRemoval', parameters, obj)
 
     # - print created band
     band_list = get_bandnames(result)
-    matching = [b for b in band_list if new_topoPhaseBandName in b]
+    matching = [b for b in band_list if topoPhaseBandName in b]
     logging.info('new band created: "' + matching[0] + '"')
 
     return result
 
 
-def goldstein_phase_filtering(obj):
+def goldstein_phase_filtering(obj,
+                              alpha=1.0,
+                              coherenceThreshold=0.2,
+                              FFTSizeString='64',
+                              useCoherenceMask=False,
+                              windowSizeString='3'):
     """"
     Parameter Options: (gpt -h GoldsteinPhaseFiltering)
         - alpha=<double>                 adaptive filter exponent
@@ -372,6 +441,12 @@ def goldstein_phase_filtering(obj):
     logging.info('gpt operator = GoldsteinPhaseFiltering')
 
     parameters = HashMap()
+    parameters.put('alpha', alpha)
+    parameters.put('coherenceThreshold', coherenceThreshold)
+    parameters.put('FFTSizeString', FFTSizeString)
+    parameters.put('useCoherenceMask', useCoherenceMask)
+    parameters.put('windowSizeString', windowSizeString)
+
     result = GPF.createProduct('GoldsteinPhaseFiltering', parameters, obj)
 
     return result
@@ -465,6 +540,31 @@ def band_maths():
 
 ####################################################################
 
+def graph_processing(config_file):
+
+    # --- read config file
+    cfg = utils.read_configfile(config_file)
+
+    p = []
+
+    # --- loop through operators sequentially
+    for i, operator in enumerate(cfg['optn_processing']):
+
+        # --- get operator name and options
+        operator_name = operator['operator']
+        operator_options = dict(operator)
+        del operator_options['operator']
+
+        # --- call method (must be defined within this module)
+        p = globals()[operator_name](p, **operator_options)
+
+        if p is None:
+            continue
+        else:
+            print('    | ' + str(p))
+            bds = get_bandnames(p)
+            print('    | ' + str(bds))
+
 
 def get_rasterDim(obj, band_name):
 
@@ -482,8 +582,9 @@ def print_rasterDim(obj, band_name):
 
 def print_engineConfig():
 
-    # => update parameters used in:
-    # >> /home/khola/SOFTWARES/ESA/snap/etc/snap.properties
+    # NB: engine configuration set in file 'snap.properties'. Read in order of priority:
+    # 1) user setting: $HOME/.snap/etc/snap.properties
+    # 2) default setting: $SNAP/etc/snap.properties
 
     # http://forum.step.esa.int/t/basic-error-with-snappy-python-beginner/5220/5
     from snappy import EngineConfig
@@ -522,20 +623,21 @@ def read_xmlnodes(obj):
     GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis()
 
 
-####################################################################
-
-
-def plotBand(obj, band_name, cmap=None, f_out=None, p_out=None):
+def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
 
     logging.info('plotting band')
 
-    # - check if band_name valid
-    r, band_name_valid = is_bandinproduct(obj, band_name)
+    if band_name is None:
+        # get bands available in product if none specified
+        band_name_valid = get_bandnames(obj)
+    else:
+        # check if band_name valid
+        r, band_name_valid = is_bandinproduct(obj, band_name)
 
     for bname in band_name_valid:
-        # ON SECOND ITERATION BAND RESULSTS NONE.... WHY?
+        # ON SECOND ITERATION BAND RESULTS NONE.... WHY?
 
-        # - get band data
+        # --- get band data
         band = obj.getBand(bname)
 
         if band is None:
