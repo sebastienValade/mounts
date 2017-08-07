@@ -1,5 +1,7 @@
 import os
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from snappy import GPF
 from snappy import ProductIO
@@ -374,8 +376,7 @@ def topo_phase_removal(obj,
                        demName='SRTM 3Sec',
                        orbitDegree=3,
                        tileExtensionPercent='100',
-                       topoPhaseBandName='topo_phase'
-                       ):
+                       topoPhaseBandName='topo_phase'):
     """"
     Parameter Options: (gpt -h TopoPhaseRemoval)
         - demName=<string>                   The digital elevation model.

@@ -1,6 +1,6 @@
 optn_processing:
   - operator: read_product
-    path_and_file: '/home/sebastien/DATA/data_satellite/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE.zip'
+    path_and_file: '/home/sebastien/DATA/data_satellite/ERTAALE/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE.zip'
   - operator: topsar_split
     subswath: IW2
   - operator: apply_orbit_file
