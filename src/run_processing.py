@@ -41,26 +41,22 @@ s = gpt.apply_orbit_file(s)
 # --- back-geocoding
 p = gpt.back_geocoding(m, s)
 
-gpt.get_bandnames(p, print_bands=1)
 
 # --- interferogram
 p = gpt.interferogram(p)
 
-gpt.get_bandnames(p, print_bands=1)
 
 # # ===> write interferogram
-# gpt.write_product(p, pathout='/home/khola/DATA/data_satellite/ERTAALE_gpt/')
+# gpt.write_product(p, pathout=os.environ['HOME'] + '/DATA/data_satellite/ERTAALE_gpt/')
 
 
 # --- deburst
 p = gpt.deburst(p)
 
-gpt.get_bandnames(p, print_bands=1)
 
 # --- topographic phase removal
 p = gpt.topo_phase_removal(p)
 
-gpt.get_bandnames(p, print_bands=1)
 
 # --- phase filtering
 p = gpt.goldstein_phase_filtering(p)
@@ -71,13 +67,12 @@ gpt.get_bandnames(p, print_bands=1)
 sourceBands = ['Intensity_VV_11Jan2017_04Feb2017', 'Phase_VV_11Jan2017_04Feb2017', 'coh_IW2_VV_11Jan2017_04Feb2017']
 p = gpt.terrain_correction(p, sourceBands)
 
-quit()
 # --- plot
 # p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
 # gpt.plotBand(p_subset, sourceBands[0], f_out='int_TC', cmap='binary')
 
-p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
-gpt.plotBand(p_subset, sourceBands[1], cmap='gist_rainbow')
+# p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
+# gpt.plotBand(p_subset, sourceBands[1], cmap='gist_rainbow')
 
 p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
 gpt.plotBand(p_subset, sourceBands[2], cmap='binary')

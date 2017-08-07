@@ -1,7 +1,7 @@
 import os
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
+# import matplotlib
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from snappy import GPF
 from snappy import ProductIO
@@ -23,7 +23,7 @@ GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis()
 # HashMap = jpy.get_type('java.util.HashMap')
 
 
-# --- various (not fully understood)
+# --- various
 # ProductIOPlugInManager = snappy.jpy.get_type('org.esa.snap.core.dataio.ProductIOPlugInManager')
 # Logger = jpy.get_type('java.util.logging.Logger')
 # Level = jpy.get_type('java.util.logging.Level')
@@ -320,8 +320,7 @@ def interferogram(obj,
                   squarePixel=True,
                   srpNumberPoints=501,
                   srpPolynomialDegree=5,
-                  subtractFlatEarthPhase=True,
-                  ):
+                  subtractFlatEarthPhase=True):
     """"
     Parameter Options: (gpt -h Interferogram)
         - cohWinAz=<int>                      Size of coherence estimation window in Azimuth direction

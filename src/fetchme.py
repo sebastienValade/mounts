@@ -31,18 +31,24 @@ class Product(Esa):
     Manage product located in Copernicus Scientific Hub
     """
 
+    class Metadata(dict):
+        """Class used to store product's metadata into attribute metadata
+        >> product.metadata.title
+        returns S1A_IW_SLC__1SDV_20170107T050420_20170107T050447_014721_017F5D_B588
+        """
+
+        def __getattr__(self, key):
+            return self.get(key, None)
+
+        def __setattr__(self, key, value):
+            self[key] = value
+
     def __init__(self, user=None, pwd=None, cfg=None):
         Esa.__init__(self)
         self.user = user
         self.pwd = pwd
         self.cfg = cfg
-
-    class metadata:
-        """Class used to store product's metadata into attribute metadata
-        >> product.metadata.title
-        returns S1A_IW_SLC__1SDV_20170107T050420_20170107T050447_014721_017F5D_B588
-        """
-        pass
+        self.metadata = self.Metadata()
 
     def store_metadata(self, metadata_dict):
         """Store product metadata as subattributes in Product class attribute "metadata"
@@ -175,13 +181,7 @@ class Scihub(Esa):
         elif export_fmt == 'json':
             productlist = self.parse_json(resp)
 
-        # print('======')
-        # print('debug: ' + productlist[-2].metadata.title)
-        # print('debug: ' + productlist[-1].metadata.title)
-        # print('======')
-
         # --- print product summary/title
-        print('WARNING: list results in the same product!!!')
         # self.print_product_summary(productlist)
         self.print_product_title(productlist)
 
@@ -298,7 +298,7 @@ class Scihub(Esa):
         # --- loop through products
         for product in root.findall('default_xmlns:entry', ns):
 
-            D = {}
+            D = dict()
 
             # --- loop through children with specific tag
             tags = ['title', 'id', 'summary']
@@ -330,16 +330,6 @@ class Scihub(Esa):
             objprod.store_metadata(D)
             productlist.append(objprod)
 
-            print('-------')
-            print('debug: appending "' + D['title'] + '"')
-            # print('debug: ' + productlist[0].metadata.title)
-            # print('debug: ' + productlist[-1].metadata.title)
-
-        # print('==================>')
-        # print(productlist[0].metadata.title)
-        # print(productlist[1].metadata.title)
-        # print('==================>')
-
         return productlist
 
     def parse_json(self, resp):
@@ -359,6 +349,10 @@ class Scihub(Esa):
 
         logging.info('queried product summary:')
 
+        if not productlist:
+            print('   | 0 product found')
+            return
+
         for i, prod in enumerate(productlist):
             print('   | ' + productlist[i].metadata.summary)
 
@@ -368,6 +362,10 @@ class Scihub(Esa):
         """
 
         logging.info('queried product title:')
+
+        if not productlist:
+            print('   | 0 product found')
+            return
 
         for i, prod in enumerate(productlist):
             print('   | ' + productlist[i].metadata.title)

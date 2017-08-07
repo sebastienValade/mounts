@@ -17,7 +17,7 @@ obj.query_auth('sebastien.valade', 'wave*worm')
 
 # - read config file
 # conffile = 'config_ertaale.yml'
-conffile = 'config_template.yml'
+conffile = '_config_ertaale.yml'
 obj.read_configfile('./conf/' + conffile)
 
 
