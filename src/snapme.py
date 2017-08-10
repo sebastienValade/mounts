@@ -541,6 +541,31 @@ def band_maths():
 ####################################################################
 
 def graph_processing(config_file):
+    """Runs snapme operators sequentially from yaml configuration file.
+
+    Arguments:
+        config_file {str} -- full path to yaml configuration file
+
+    Example: read, split, applyOrbit, subset, and plot.
+        The yaml file content should be structured as follows:
+
+        optn_processing:
+            - operator: read_product
+              path_and_file: '/home/sebastien/DATA/data_satellite/ERTAALE/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE.zip'
+            - operator: topsar_split
+              subswath: IW2
+            - operator: apply_orbit_file
+            - operator: subset
+              north_bound: 13.55
+              west_bound: 40.64
+              south_bound: 13.62
+              east_bound: 40.715
+            - operator: plotBand
+              cmap: gist_rainbow
+              band_name: Intensity_IW2_VV
+
+        Operators are read sequentially. The operator name is the name of the funtion in snapme. The operator options are passed as keys, name/values identical to those used in snapme functions.
+    """
 
     # --- read config file
     cfg = utils.read_configfile(config_file)
@@ -656,7 +681,7 @@ def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
         imgplot = plt.imshow(band_data, cmap=cmap)
 
         if f_out is None:
-            f_out = 'band_' + bname + '.png'
+            f_out = 'band_%s.png' % bname
         else:
             f_out = f_out + '.png'
 
@@ -698,3 +723,48 @@ def is_bandinproduct(obj, band_name):
             is_band.append(0)
 
     return is_band, band_name_valid
+
+
+def schedule_interferogram_queue(master, slave):
+
+    # --- read product
+    m = read_product(master)
+    s = read_product(slave)
+
+    # --- split product
+    m = topsar_split(m, subswath='IW2')
+    s = topsar_split(s, subswath='IW2')
+
+    # --- apply orbit file
+    m = apply_orbit_file(m)
+    s = apply_orbit_file(s)
+
+    # --- back-geocoding
+    p = back_geocoding(m, s)
+
+    # --- interferogram
+    p = interferogram(p)
+
+    # --- deburst
+    p = deburst(p)
+
+    # --- topographic phase removal
+    p = topo_phase_removal(p)
+
+    # --- phase filtering
+    p = goldstein_phase_filtering(p)
+
+    # --- terrain correction (geocode)
+    get_bandnames(p, print_bands=1)
+    sourceBands = ['Intensity_VV_11Jan2017_04Feb2017', 'Phase_VV_11Jan2017_04Feb2017', 'coh_IW2_VV_11Jan2017_04Feb2017']
+    p = terrain_correction(p, sourceBands)
+
+    # --- plot
+    # p_subset = subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
+    # plotBand(p_subset, sourceBands[0], f_out='int_TC', cmap='binary')
+
+    # p_subset = subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
+    # plotBand(p_subset, sourceBands[1], cmap='gist_rainbow')
+
+    p_subset = subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
+    plotBand(p_subset, sourceBands[2], cmap='binary')

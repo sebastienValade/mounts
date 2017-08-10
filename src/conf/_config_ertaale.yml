@@ -6,8 +6,7 @@
 
 
 optn_search:
-  filename: S1*
-  #filename: S1*SLC__1SSV*
+  filename: S1*SLC__1SSV*
   #filename: S2A_MSI*
   #ingestiondate: "[2017-01-25T00:00:00.000Z TO 2017-02-15T00:00:00.000Z]"
 
@@ -16,7 +15,7 @@ optn_search:
   #polarisationmode: VV
   #sensoroperationalmode: IW
   footprint: [13.60, 40.66]
-  ingestiondate: "[2017-01-01T00:00:00.000Z TO 2017-04-01T00:00:00.000Z]"
+  #ingestiondate: "[2017-01-01T00:00:00.000Z TO 2017-04-01T00:00:00.000Z]"
 
   maxrecords: 50
   #orderby: ingestiondate asc
