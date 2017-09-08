@@ -1,7 +1,7 @@
 /src/tmp/
 /src/log/
 /src/log/_*.yml
-*.png
+#*.png
 *.pyc
 *.xml
 *.json
