@@ -1,4 +1,6 @@
-/tmp
+/src/tmp/
+/src/log/
+/src/log/_*.yml
 *.png
 *.pyc
 *.xml
