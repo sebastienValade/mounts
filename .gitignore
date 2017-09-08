@@ -1,4 +1,6 @@
-#*.png
+/tmp
+*.png
 *.pyc
 *.xml
 *.json
+

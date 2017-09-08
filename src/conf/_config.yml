@@ -7,7 +7,7 @@
 #    'footprint': [lat, lon] | [lon1, lat1, lon2, lat2, ...]
 
 optn_search:
-  filename: S1A*
+  filename: S1B*
   productType: SLC
   footprint: [-1.5220282208917981, 29.24981117248535]
   #ingestiondate: "[2017-01-01T00:00:00.000Z TO 2017-02-01T00:00:00.000Z]"

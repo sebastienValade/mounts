@@ -2,8 +2,7 @@
 https://scihub.copernicus.eu/userguide/3FullTextSearch
 
 
-# ... to implement (from Sentinel_download.py) ...
---dhus                Try dhus interface when apihub is not working
+
 
 # ----- FILE NAME OPTIONS
 filename		= Search based on the product filename, expressed according to the product naming convention
@@ -13,6 +12,10 @@ filename		= Search based on the product filename, expressed according to the pro
 
 # ----- GEOGRAPHIC OPTIONS
 footprint 		= Geographical search of the products whose footprint intersects or is included in a specific geographic type.
+				= Supported inputs:
+				[lat, lon]
+				[lat1, lon1, lat2, lon2, ...]
+				POLYGON((lat1 lon1, lat2 lon2, ..., lat1 lon1)  #= WKT standard
 
 
 
@@ -67,3 +70,11 @@ orderby	 		= order result by
 			    beginposition desc 	=> sorts results by sensing date arranged in descending order
 			    ingestiondate asc 	=> sorts results by ingestion date arranged in ascending order
 			    ingestiondate desc 	=> sorts results by ingestion date arranged in descending order 
+
+
+# ---- EXTRA
+--hub 			= data access point (see https://scihub.copernicus.eu/)
+				=> API Hub : access point for API users with no graphical interface. All API users regularly downloading the latest data are encouraged to use this access point for a better performance.
+                => Open Access Hub : access point for all Sentinel missions with access to the interactive graphical user interface.
+                = [api], openaccess 
+                

@@ -3,6 +3,7 @@ import logging
 import utilityme as utils
 import snapme as gpt
 
+
 # --- set logging behaviour
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 logging.getLogger('requests').setLevel(logging.ERROR)
@@ -23,7 +24,7 @@ logging.info('>> script started')
 # dbo.insert(dbname='volcanoes', tbname='ertaale', dicts=dicts)
 # dicts = {'prod_title': 'S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD', 'prod_abspath': '/home/sebastien/DATA/data_satellite/ertaale_cron/S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD.SAFE.zip'}
 # dbo.insert(dbname='volcanoes', tbname='ertaale', dicts=dicts)
-# dbo.print_dataset(dbname='volcanoes', tblname='ertaale')  # , colname='prod_title')
+# dbo.print_dataset(dbname='volcanoes', tbname='ertaale')  # , colname='prod_title')
 
 # # --- test writing in db
 # from datetime import datetime
@@ -41,16 +42,16 @@ obj.read_configfile('./conf/' + conffile)
 productlist = obj.scihub_search(export_result=None, print_url=1)
 newprod = productlist[0]
 logging.info('LASTEST PRODUCT AVAILABLE: ')
-logging.info('	=> ' + str(newprod.metadata.title) + ' (' + str(newprod.metadata.size) + ')')
+logging.info('  => ' + str(newprod.metadata.title) + ' (' + str(newprod.metadata.size) + ')')
 
 
 # === (2) CHECK if new product has been downloaded yet
 # -------------------------------------------------------------------------------
 dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
-dat = dbo.get_dataset(dbname='volcanoes', tblname='ertaale')
+dat = dbo.get_dataset(dbname='volcanoes', tbname='ertaale')
 oldprod = dat[-1]
 
-# check if database is empty
+# - check if database is empty
 if not dat:
     logging.info('0 product downloaded yet')
     oldprod_title = 'none'
@@ -58,25 +59,26 @@ else:
     oldprod_title = oldprod.prod_title
 
 logging.info('LAST DOWNLOADED PRODUCT TITLE:')
-logging.info('	=> ' + oldprod_title)
+logging.info('  => ' + oldprod_title)
 
+# - download product
+if oldprod_title != newprod.metadata.title:
 
-# if oldprod_title != newprod.metadata.title:
+    # --- download data
+    logging.info('NEW PRODUCT TO DOWNLOAD !')
 
-#     # --- download data
-#     logging.info('NEW PRODUCT TO DOWNLOAD !')
-#     # newprod.getQuicklook()
-#     newprod.getFullproduct()
+    # newprod.getQuicklook()
+    newprod.getFullproduct()
 
-#     # --- update database
-#     logging.info('Updating Database with new downloaded product')
-#     dicts = {'prod_title': newprod.metadata.title, 'prod_abspath': newprod.path_and_file}
-#     dbo.insert(dbname='volcanoes', tbname='ertaale', dicts=dicts)
-#     dbo.print_dataset(dbname='volcanoes', tblname='ertaale')
+    # --- update database
+    logging.info('Updating Database with new downloaded product')
+    dicts = {'prod_title': newprod.metadata.title, 'prod_abspath': newprod.path_and_file}
+    dbo.insert(dbname='volcanoes', tbname='ertaale', dicts=dicts)
+    dbo.print_dataset(dbname='volcanoes', tbname='ertaale')
 
-# else:
-#     logging.info('NOTHING NEW: waiting till next cron run.')
-#     quit()
+else:
+    logging.info('NOTHING NEW: waiting till next cron run.')
+    quit()
 
 
 # === (3) INTERFEROMETRIC processing chain
@@ -85,11 +87,12 @@ if len(dat) < 2:
     logging.info('2 products need to have been downloaded to perform interferometric processing.')
     quit()
 
-dbo.print_dataset(dbname='volcanoes', tblname='ertaale')
+dbo.print_dataset(dbname='volcanoes', tbname='ertaale')
+
 
 # --- read master product
-# master_abspath = oldprod.prod_abspath
-master_abspath = dat[-2].prod_abspath
+master_abspath = oldprod.prod_abspath
+# master_abspath = dat[-2].prod_abspath
 print master_abspath
 m = gpt.read_product(path_and_file=master_abspath)
 
@@ -131,11 +134,14 @@ p = gpt.terrain_correction(p, sourceBands)
 # p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
 # gpt.plotBand(p_subset, sourceBands[0], f_out='int_TC', cmap='binary')
 
-# p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
-# gpt.plotBand(p_subset, sourceBands[1], cmap='gist_rainbow')
+print '--> plotting IFG'
+p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
+gpt.plotBand(p_subset, sourceBands[1], cmap='gist_rainbow')
 
+print '--> plotting COH'
 p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
 gpt.plotBand(p_subset, sourceBands[2], cmap='binary')
 
+print '--> finished!'
 
 logging.info('FINISHED!')

@@ -1,13 +1,13 @@
 import os
 import numpy as np
-# import matplotlib
-# matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from snappy import GPF
 from snappy import ProductIO
 from snappy import HashMap
 import logging
 import utilityme as utils
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 
 # --- load all available gpf operators
@@ -63,6 +63,11 @@ def read_product(*args, **kwargs):
         obj = fetchme.Product()
         obj.path_and_file = '/home/sebastien/DATA/data_satellite/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE.zip'
         p = gpt.read_product(obj)
+
+        # See native funtions available:
+        p.<tab>
+        EX: p.getName()
+
     """
 
     logging.info('reading product')
@@ -98,7 +103,7 @@ def write_product(obj, fileout=None, pathout=None, formatout=None):
     ProductIO.writeProduct(obj, pathout + fileout + ext, formatout)
 
 
-def resample(obj):
+def resample(obj, referenceBand=None):
     """
     Parameter Options: (sh gpt -h Resample)
         - downsampling=<string>                The method used for aggregation (downsampling to a coarser resolution).
@@ -122,13 +127,13 @@ def resample(obj):
 
     # --- set operator parameters and apply
     parameters = HashMap()
-    parameters.put('referenceBand', 'B1')
+    parameters.put('referenceBand', referenceBand)
     result = GPF.createProduct('Resample', parameters, obj)
 
     return result
 
 
-def subset(obj, polygon_wkt=None, north_bound=None, west_bound=None, south_bound=None, east_bound=None):
+def subset(obj, geoRegion=None, region=None, north_bound=None, west_bound=None, south_bound=None, east_bound=None):
     """GPT subset
 
     Optional input argument:
@@ -137,7 +142,7 @@ def subset(obj, polygon_wkt=None, north_bound=None, west_bound=None, south_bound
         obj {[type]} -- [description]
 
     Keyword Arguments:
-        polygon_wkt {string} -- [description] (default: {None})
+        geoRegion {string} -- [description] (default: {None})
         north_bound {int} -- [description] (default: {None})
         west_bound {int} -- [description] (default: {None})
         south_bound {int} -- [description] (default: {None})
@@ -165,6 +170,18 @@ def subset(obj, polygon_wkt=None, north_bound=None, west_bound=None, south_bound
                                                         Default value is '1'.
         - tiePointGridNames=<string,string,...>     The comma-separated list of names of tie-point grids to be copied.
                                                         If not given, all bands are copied.
+
+    Examples:
+        Get region of interest: 
+        NB: select region at http://boundingbox.klokantech.com/, and copy/paste output in desired format
+
+        Using FGDC format (rectangle bounds)
+            subset_bounds = {'north_bound': 13.53, 'west_bound': 40.63, 'south_bound': 13.64, 'east_bound': 40.735}  # >> ertaale
+            p = gpt.subset(p, **subset_bounds)
+        Using WTK format
+            NB: select region at http://boundingbox.klokantech.com/, and copy/paste 'OGC WKT' format
+            polygon_wkt = 'POLYGON((14.890766 37.417891, 15.117702 37.417891, 15.117702 37.289897, 14.890766 37.289897, 14.890766 37.417891))'
+            p = gpt.subset(p, geoRegion=polygon_wkt)
     """
 
     logging.info('gpt operator = Subset')
@@ -172,14 +189,14 @@ def subset(obj, polygon_wkt=None, north_bound=None, west_bound=None, south_bound
     # --- set operator parameters (see: gpt -h operator)
     parameters = HashMap()
     parameters.put('copyMetadata', 'true')
-    if polygon_wkt is None:
-        if all(v is not None for v in [north_bound, west_bound, south_bound, east_bound]):
-            polygon_wkt = "POLYGON((" + str(west_bound) + ' ' + str(south_bound) + ', ' + str(east_bound) + ' ' + str(south_bound) + ', ' + str(east_bound) + ' ' + str(north_bound) + ', ' + str(west_bound) + ' ' + str(north_bound) + ', ' + str(west_bound) + ' ' + str(south_bound) + '))'
-            # print(polygon_wkt)
-        else:
-            print('enter valid polygon bounds')
-            quit()
-    parameters.put('geoRegion', polygon_wkt)
+
+    if geoRegion is not None:
+        parameters.put('geoRegion', geoRegion)
+    elif region is not None:
+        parameters.put('region', region)
+    elif all(v is not None for v in [north_bound, west_bound, south_bound, east_bound]):
+        geoRegion = "POLYGON((" + str(west_bound) + ' ' + str(south_bound) + ', ' + str(east_bound) + ' ' + str(south_bound) + ', ' + str(east_bound) + ' ' + str(north_bound) + ', ' + str(west_bound) + ' ' + str(north_bound) + ', ' + str(west_bound) + ' ' + str(south_bound) + '))'
+        parameters.put('geoRegion', geoRegion)
 
     # --- apply operator
     result = GPF.createProduct('Subset', parameters, obj)
@@ -408,10 +425,10 @@ def topo_phase_removal(obj,
 
     result = GPF.createProduct('TopoPhaseRemoval', parameters, obj)
 
-    # - print created band
-    band_list = get_bandnames(result)
-    matching = [b for b in band_list if topoPhaseBandName in b]
-    logging.info('new band created: "' + matching[0] + '"')
+    # # - print created band
+    # band_list = get_bandnames(result)
+    # matching = [b for b in band_list if topoPhaseBandName in b]
+    # logging.info('new band created: "' + matching[0] + '"')
 
     return result
 
@@ -553,7 +570,7 @@ def graph_processing(config_file):
 
         optn_processing:
             - operator: read_product
-              path_and_file: '/home/sebastien/DATA/data_satellite/ERTAALE/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE.zip'
+              path_and_file: '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE.zip'
             - operator: topsar_split
               subswath: IW2
             - operator: apply_orbit_file
@@ -652,8 +669,6 @@ def read_xmlnodes(obj):
 
 def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
 
-    logging.info('plotting band')
-
     if band_name is None:
         # get bands available in product if none specified
         band_name_valid = get_bandnames(obj)
@@ -661,36 +676,66 @@ def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
         # check if band_name valid
         r, band_name_valid = is_bandinproduct(obj, band_name)
 
-    for bname in band_name_valid:
-        # ON SECOND ITERATION BAND RESULTS NONE.... WHY?
+    for k, bname in enumerate(band_name_valid):
+
+        logging.info('plotting band "' + bname + '"')
 
         # --- get band data
         band = obj.getBand(bname)
 
         if band is None:
             logging.info('warning: band "' + bname + '" is None')
-            logging.info('=> this is a bug in my script!')
             continue
 
         # --- get band dimensions
         w, h = get_rasterDim(obj, bname)
 
         band_data = np.zeros(w * h, np.float32)
+
+        # import pdb
+        # pdb.set_trace()
+
+        logging.info('reading band pixels')
+        # NB: operation will be "Converting DEM to radar system for this tile."
+        # maybe can be done only once when plotting first band, and copying geocoding metadata for other bands?
+        # obj.transferGeoCodingTo
+        #   Transfers the geo-coding of this product instance to the destProduct with respect to the given subsetDef.
+
         band.readPixels(0, 0, w, h, band_data)
 
-        obj.dispose()
-        band_data.shape = h, w
-        imgplot = plt.imshow(band_data, cmap=cmap)
+        # pdb.set_trace()
 
-        if f_out is None:
-            f_out = 'band_%s.png' % bname
+        band_data.shape = h, w
+
+        # print('Product dispose() ...')
+        # obj.dispose()
+
+        # --- get colormap
+        if type(cmap) is list and len(cmap) == len(band_name_valid):
+            colormap = cmap[k]
+        elif type(cmap) is list and len(cmap) == 1:
+            colormap = cmap[0]
         else:
-            f_out = f_out + '.png'
+            colormap = None
+
+        imgplot = plt.imshow(band_data, cmap=colormap)
+
+        # --- save png
+        if f_out is None:
+            fname_out = 'band_%s.png' % bname
+        else:
+            fname_out = f_out + '.png'
 
         if p_out is None:
-            p_out = '../data/'
+            pname_out = '../data/'
+        imgplot.write_png(pname_out + fname_out)
 
-        imgplot.write_png(p_out + f_out)
+        # --- check output file size
+        if os.path.getsize(pname_out + fname_out) < 10000:
+            print 'WARNING: file size <10KB, abnormal'
+            # pdb.set_trace()
+
+    # return band
 
 
 def is_bandinproduct(obj, band_name):
@@ -725,3 +770,69 @@ def is_bandinproduct(obj, band_name):
             is_band.append(0)
 
     return is_band, band_name_valid
+
+
+def get_metadata_abstracted(self):
+    # --- get list of metadata categories
+    # print list(self.getMetadataRoot().getElementNames())
+
+    # --- get list of attributes (in this node):
+    # print list(self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeNames())
+
+    # --- get list of other nodes
+    # print list(self.getMetadataRoot().getElement('Abstracted_Metadata').getElementNames())
+
+    product_title = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('PRODUCT')
+    product_type = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('PRODUCT_TYPE')
+    mission = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('MISSION')
+    acquisition_mode = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('ACQUISITION_MODE')
+    acqstart_str = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('first_line_time')
+    orbit_relativenb = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('REL_ORBIT')
+    orbit_direction = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('PASS')
+    polarization_1 = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('mds1_tx_rx_polar')
+    polarization_2 = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('mds2_tx_rx_polar')
+    polarization = ' '.join([polarization_1, polarization_2])
+
+    from dateutil.parser import parse
+    acqstart_datetime = parse(acqstart_str).strftime('%Y-%m-%d %H:%M:%S.%f')
+
+    # NB: I'm not using datetime because of abbreviated month format
+    # datetime.datetime.strptime(date_string, format1).strftime(format2)
+
+    # NB: keys should be identical to columns of DB_ARCHIVE's tables
+    metadata_abs = {'title': product_title,
+                    'producttype': product_type,
+                    'mission': mission,
+                    'acquisitionmode': acquisition_mode,
+                    'acqstarttime': acqstart_datetime,
+                    'relativeorbitnumber': orbit_relativenb,
+                    'orbitdirection': orbit_direction,
+                    'polarization': polarization}
+
+    return metadata_abs
+
+
+def metadata_naming_convention():
+    metadata_names = []
+
+    # --- metadata providers
+    metadata_names.append(['opensearch', 'Abstracted_Metadata', 'Original_Product_Metadata', 'example'])
+
+    # --- metadata naming convention
+    metadata_names.append(['title', 'PRODUCT', '', 'S1A_IW_SL1__1_DV_20170101T165556_20170101T165629_014641_017CE5_D905'])
+    metadata_names.append(['filename', '', '', 'S1A_IW_SL1__1_DV_20170101T165556_20170101T165629_014641_017CE5_D905.SAFE'])
+    metadata_names.append(['beginposition', 'first_line_time', 'acquisitionPeriod/startTime', '01-JAN-2017 16:55:59.196569 | 2017-01-01T16:55:59.196Z'])
+    metadata_names.append(['endposition', 'last_line_time', 'acquisitionPeriod/stopTime', '01-JAN-2017 16:56:26.144913 | 2017-01-01T16:56:26.144Z'])
+    metadata_names.append(['ingestiondate', '', '', '2017-01-01T20:44:29.821Z'])
+    metadata_names.append(['producttype', 'PRODUCT_TYPE', 'standAloneProductInformation/productType', 'SLC'])
+    metadata_names.append(['', 'MISSION', '', 'SENTINEL-1A'])
+    metadata_names.append(['platformname', '', 'platform/familyName', 'Sentinel-1'])
+    metadata_names.append(['', '', 'platform/number', 'A'])
+    metadata_names.append(['platformidentifier', '', 'platform/nssdcIdentifier', '2014-016A'])
+    metadata_names.append(['sensoroperationalmode', 'ACQUISITION_MODE', '', 'IW'])
+    metadata_names.append(['orbitnumber', 'ABS_ORBIT', 'orbitNumber', '14'])
+    metadata_names.append(['relativeorbitnumber', 'REL_ORBIT', 'relativeOrbitNumber', '14'])
+    metadata_names.append(['orbitdirection', 'PASS', 'pass', 'ASCENDING'])
+    metadata_names.append(['polarisationmode', '', '', 'VV VH'])
+    metadata_names.append(['', 'mds1_tx_rx_polar', '', 'VV'])
+    metadata_names.append(['', 'mds2_tx_rx_polar', '', 'VH'])

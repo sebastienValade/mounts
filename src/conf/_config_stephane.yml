@@ -1,0 +1,21 @@
+# STEPHANE
+
+# Download all prodcuts available
+# Usage:
+#   import fetchme
+#   obj = fetchme.Scihub()
+#   obj.scihub_search(configfile='./conf/_config_stephane.yml')
+
+# === search query options (scihub)
+optn_search:
+  filename: S1*EW_GRD*
+  footprint: POLYGON((-59.06524658203125 -62.234674004973606, -58.84002685546875 -62.234674004973606, -58.84002685546875 -62.1334241182246, -59.06524658203125 -62.1334241182246, -59.06524658203125 -62.234674004973606))
+  ingestiondate: "[2017-01-25T00:00:00.000Z TO 2017-02-03T00:00:00.000Z]"
+  maxrecords: 100
+  orderby: ingestiondate desc
+
+
+# === download options
+optn_download:
+  download_pnode: quicklook             # S1 options: quicklook, fullproduct
+  # download_dir: /home/sebastien/DATA/data_satellite/ertaale/

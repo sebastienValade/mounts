@@ -16,7 +16,7 @@ optn_search:
   swathidentifier: IW                 # S1-S6, IW, IW1-3, EW, EW1-5
 
   # - geographic options 
-  footprint: [13.60, 40.66]           # [lat, lon], [lon1, lat1, lon2, lat2, ...]
+  footprint: [13.60, 40.66]           # [lat, lon], [lat1, lon1, lat2, lon2, ...], POLYGON((lat1 lon1, lat2 lon2, ..., lat1 lon1))
 
   # - date options
   ingestiondate: "[2017-01-01T00:00:00.000Z TO 2017-04-01T00:00:00.000Z]"

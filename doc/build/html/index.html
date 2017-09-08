@@ -1,0 +1,342 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>MOUNTS documentation (seb) &#8212; mounts 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="mounts-documentation-seb">
+<h1>MOUNTS documentation (seb)<a class="headerlink" href="#mounts-documentation-seb" title="Permalink to this headline">¶</a></h1>
+</div>
+<div class="section" id="another-header">
+<h1>Another header<a class="headerlink" href="#another-header" title="Permalink to this headline">¶</a></h1>
+<p>blabalabala:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">print</span> <span class="s1">&#39;hello&#39;</span>
+<span class="o">&gt;&gt;</span> <span class="n">hello</span>
+</pre></div>
+</div>
+<div class="section" id="guide">
+<h2>Guide<a class="headerlink" href="#guide" title="Permalink to this headline">¶</a></h2>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-fetchme"></span><dl class="class">
+<dt id="fetchme.Esa">
+<em class="property">class </em><code class="descclassname">fetchme.</code><code class="descname">Esa</code><a class="headerlink" href="#fetchme.Esa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parent class</p>
+<dl class="method">
+<dt id="fetchme.Esa.query_auth">
+<code class="descname">query_auth</code><span class="sig-paren">(</span><em>user</em>, <em>pwd</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Esa.query_auth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set ESA apihub authentification username and password.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Esa.read_configfile">
+<code class="descname">read_configfile</code><span class="sig-paren">(</span><em>configfile</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Esa.read_configfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>configfile</strong> (<em>TYPE</em>) – Description</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Esa.reset_cfg">
+<code class="descname">reset_cfg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Esa.reset_cfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set instance attribute “cfg” storing search/download/processing options back to None</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="fetchme.Product">
+<em class="property">class </em><code class="descclassname">fetchme.</code><code class="descname">Product</code><span class="sig-paren">(</span><em>user=None</em>, <em>pwd=None</em>, <em>cfg=None</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manage product located in Copernicus Scientific Hub</p>
+<dl class="class">
+<dt id="fetchme.Product.Metadata">
+<em class="property">class </em><code class="descname">Metadata</code><a class="headerlink" href="#fetchme.Product.Metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class used to store product’s metadata into attribute metadata
+&gt;&gt; product.metadata.title
+returns S1A_IW_SLC__1SDV_20170107T050420_20170107T050447_014721_017F5D_B588</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Product.getFullproduct">
+<code class="descname">getFullproduct</code><span class="sig-paren">(</span><em>download_dir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Product.getFullproduct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download full product (zip)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Product.getQuicklook">
+<code class="descname">getQuicklook</code><span class="sig-paren">(</span><em>download_dir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Product.getQuicklook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download product’s quicklook (png)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Product.getUri">
+<code class="descname">getUri</code><span class="sig-paren">(</span><em>uri</em>, <em>fname</em>, <em>download_dir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Product.getUri" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download product from uri address.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>{string} - - uri link</strong> (<em>uri</em>) – </li>
+<li><strong>{string} - - downloaded file name</strong> (<em>fname</em>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Product.store_metadata">
+<code class="descname">store_metadata</code><span class="sig-paren">(</span><em>metadata_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Product.store_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store product metadata as subattributes in Product class attribute “metadata”</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>{dict} - -</strong><strong> [</strong><strong>dictionnary of product metadata</strong><strong>, </strong><strong>as returned by parse_xml</strong><strong>]</strong> (<em>metadata_dict</em>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="fetchme.Scihub">
+<em class="property">class </em><code class="descclassname">fetchme.</code><code class="descname">Scihub</code><a class="headerlink" href="#fetchme.Scihub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interact with Copernicus Scientific Hub</p>
+<dl class="method">
+<dt id="fetchme.Scihub.format_query_optns">
+<code class="descname">format_query_optns</code><span class="sig-paren">(</span><em>optns</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Scihub.format_query_optns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Format options into format valid for scihub product query.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>{dictionnary} - - dictionnary of options as defined in configuration file.</strong> (<em>optns</em>) – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">optns_fmtd {dictionary} - - dictionnary of options sorted in such a way that it can be parsed to requests</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Scihub.parse_json">
+<code class="descname">parse_json</code><span class="sig-paren">(</span><em>resp</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Scihub.parse_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse query response formatted in json.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Scihub.parse_xml">
+<code class="descname">parse_xml</code><span class="sig-paren">(</span><em>resp</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Scihub.parse_xml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse query response formatted in xml, and return list of dictionnaries, one per ESA product found.
+EX: print title of first product: print(P[0][‘title’])</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Scihub.print_product_summary">
+<code class="descname">print_product_summary</code><span class="sig-paren">(</span><em>productlist</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Scihub.print_product_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print summary of queried products.
+Input argument = product list returned by ‘parse_xml’ or ‘parse_json’ method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Scihub.print_product_title">
+<code class="descname">print_product_title</code><span class="sig-paren">(</span><em>productlist</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Scihub.print_product_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print summary of queried products.
+Input argument = product list returned by ‘parse_xml’ or ‘parse_json’ method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Scihub.scihub_download">
+<code class="descname">scihub_download</code><span class="sig-paren">(</span><em>productlist</em>, <em>download_pnode='fullproduct'</em>, <em>download_dir=None</em>, <em>configfile=None</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Scihub.scihub_download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download products from Scihub.</p>
+<p>Download all elements in productlist.
+Product component to download(e.g., quicklook, fullproduct) is specified in yaml configuration file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>{list} - - list of objects returned by parse_xml</strong> (<em>productlist</em>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fetchme.Scihub.scihub_search">
+<code class="descname">scihub_search</code><span class="sig-paren">(</span><em>filename=None</em>, <em>platformname=None</em>, <em>productType=None</em>, <em>polarisationmode=None</em>, <em>sensoroperationalmode=None</em>, <em>orbitdirection=None</em>, <em>swathidentifier=None</em>, <em>footprint=None</em>, <em>ingestiondate=None</em>, <em>maxrecords=None</em>, <em>orderby=None</em>, <em>configfile=None</em>, <em>export_result=None</em>, <em>print_url=None</em>, <em>download_pnode=None</em>, <em>download_dir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.Scihub.scihub_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query Open Search API to discover products in the Data Hub archive.
+TO DO: implement option dhus = &gt; try dhus interface when apihub is not working(see Sentinel_download.py)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> (<em>None</em><em>, </em><em>optional</em>) – Search based on the product filename, expressed according to the product naming convention
+S1 convention: ‘MMM_BB_TTR_LFPP_YYYMMDDTHHMMSS_YYYYMMDDTHHMMSS_OOOOO_DDDDD_CCCC’
+Wildcard * = any sequence of zero or more characters
+Wildcard ? = any one character
+= ‘S1A*’</li>
+<li><strong>platformname</strong> (<em>None</em><em>, </em><em>optional</em>) – Satellite Platform name(regardless of the serial identifier, e.g. A, B, C …)
+= ‘Sentinel-1’, ‘Sentinel-2’</li>
+<li><strong>productType</strong> (<em>None</em><em>, </em><em>optional</em>) – output product type
+= ‘SLC’, ‘GRD’, ‘OCN’, ‘S2MSI1C’</li>
+<li><strong>polarisationmode</strong> (<em>None</em><em>, </em><em>optional</em>) – valid polarisations for the S1 SAR instrument
+= ‘HH’, ‘VV’, ‘HV’, ‘VH’, ‘HH HV’, ‘VV VH’</li>
+<li><strong>sensoroperationalmode</strong> (<em>None</em><em>, </em><em>optional</em>) – SAR instrument imaging modes
+= ‘SM’, ‘IW’, ‘EW’</li>
+<li><strong>orbitdirection</strong> (<em>None</em><em>, </em><em>optional</em>) – direction of the orbit(ascending, descending)
+= ‘Ascending’, ‘Descending’</li>
+<li><strong>swathidentifier</strong> (<em>None</em><em>, </em><em>optional</em>) – swath identifiers for the Sentinel - 1 SAR instrument.
+= S1 - S6: swaths apply to SM products
+= IW, IW1-3: swaths apply to IW products(IW is used for detected IW products where the 3 swaths are merged into one image)
+= EW, EW1-5: swaths apply to EW products(EW is used for detected EW products where the 5 swaths are merged into one image)</li>
+<li><strong>footprint</strong> (<em>None</em><em>, </em><em>optional</em>) – Geographical search of the products whose footprint intersects or is included in a specific geographic type.
+= [lat, lon], [lon1, lat1, lon2, lat2, …]</li>
+<li><strong>ingestiondate</strong> (<em>None</em><em>, </em><em>optional</em>) – time interval search based on the time of publication of the product on the Data Hub.
+= ‘[2017-01-25T00:00:00.000Z TO 2017-02-15T00:00:00.000Z]’
+= ‘[&lt; timestamp &gt; TO &lt; timestamp &gt; ]’ where &lt; timestamp &gt; can be expressed in one of the the following formats: yyyy-MM-ddThh:mm:ss.SSSZ, NOW, NOW-&lt;n&gt;MINUTE(S), NOW-&lt;n&gt;HOUR(S), NOW-&lt;n&gt;DAY(S), NOW-&lt;n&gt;MONTH(S)</li>
+<li><strong>maxrecords</strong> (<em>None</em><em>, </em><em>optional</em>) – number of results listed per page
+= integer</li>
+<li><strong>orderby</strong> (<em>None</em><em>, </em><em>optional</em>) – order result by
+= ‘beginposition asc’ =&gt; sorts results by sensing date arranged in ascending order
+= ‘beginposition desc’ =&gt; sorts results by sensing date arranged in descending order
+= ‘ingestiondate asc’ =&gt; sorts results by ingestion date arranged in ascending order
+= ‘ingestiondate desc’ =&gt; sorts results by ingestion date arranged in descending order</li>
+<li><strong>configfile</strong> (<em>None</em><em>, </em><em>optional</em>) – path to yaml configuration file</li>
+<li><strong>export_result</strong> (<em>None</em><em>, </em><em>optional</em>) – export search results as xml</li>
+<li><strong>print_url</strong> (<em>None</em><em>, </em><em>optional</em>) – display url string generated</li>
+<li><strong>download_pnode</strong> (<em>None</em><em>, </em><em>optional</em>) – product part to download
+= S1 options: quicklook, fullproduct</li>
+<li><strong>download_dir</strong> (<em>None</em><em>, </em><em>optional</em>) – download directory</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Description</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">TYPE</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="fetchme.chk_dir">
+<code class="descclassname">fetchme.</code><code class="descname">chk_dir</code><span class="sig-paren">(</span><em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#fetchme.chk_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if directory validity.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">mounts</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Sebastien valade.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
