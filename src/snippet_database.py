@@ -23,12 +23,6 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # --- store archive zip files to database
 # dbo.store_dir2db('/home/sebastien/DATA/data_satellite/ertaale/', dbname='DB_ARCHIVE', tbname='ertaale')
 
-# --- store result png files to database
-# dbo.create_db('DB_RESULTS')
-# dicts = {'file_name': 'VARCHAR(100)', 'file_abspath': 'TEXT', 'master_date':}
-# dbo.create_tb(dbname='DB_RESULTS', tbname='ertaale', dicts=dicts, primarykey='file_name')
-# dbo.store_dir2db('/home/sebastien/DATA/data_mounts/ertaale', dbname='DB_RESULTS', tbname='ertaale')
-
 # --- print content
 # dbo.print_dataset(dbname='volcanoes', tbname='ertaale')  # , colname='prod_title')
 
@@ -60,10 +54,22 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # =============================================
 
 # --- store new volcano data to DB_ARCHIVE
-volcanoname = 'etna'
-dbo.dbarch_newtable(tbname=volcanoname)
-dbo.dbarch_loaddir('/home/sebastien/DATA/data_satellite/' + volcanoname, tbname=volcanoname)
+# volcanoname = 'etna'
+# dbo.dbarch_newtable(tbname=volcanoname)
+# dbo.dbarch_loaddir('/home/sebastien/DATA/data_satellite/' + volcanoname, tbname=volcanoname)
 
+# --- store new volcano data to DB_RESULTS
+volcanoname = 'etna'
+dbo.dbres_newtable(tbname=volcanoname)
+
+# --- store image file to DB_RESULTS
+
+
+# --- store result png files to database
+# dbo.create_db('DB_RESULTS')
+# dicts = {'file_name': 'VARCHAR(100)', 'file_abspath': 'TEXT', 'master_date':}
+# dbo.create_tb(dbname='DB_RESULTS', tbname='ertaale', dicts=dicts, primarykey='file_name')
+# dbo.store_dir2db('/home/sebastien/DATA/data_mounts/ertaale', dbname='DB_RESULTS', tbname='ertaale')
 
 # =============================================
 # MISC

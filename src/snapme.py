@@ -687,28 +687,28 @@ def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
             logging.info('warning: band "' + bname + '" is None')
             continue
 
-        # --- get band dimensions
+        # --- initialize empty matrix
         w, h = get_rasterDim(obj, bname)
-
         band_data = np.zeros(w * h, np.float32)
 
         # import pdb
         # pdb.set_trace()
 
-        logging.info('reading band pixels')
+        # --- set geocoding if it has been calculated already for another band of this product
+        # see also: obj.transferGeoCodingTo = Transfers the geo-coding of this product instance to the destProduct with respect to the given subsetDef.
+        if 'geocoding' in locals():
+            logging.info('copying geocoding')
+            band.setGeoCoding(geocoding)
+
+        # --- read band pixels
         # NB: operation will be "Converting DEM to radar system for this tile."
-        # maybe can be done only once when plotting first band, and copying geocoding metadata for other bands?
-        # obj.transferGeoCodingTo
-        #   Transfers the geo-coding of this product instance to the destProduct with respect to the given subsetDef.
-
+        logging.info('reading band pixels')
         band.readPixels(0, 0, w, h, band_data)
-
-        # pdb.set_trace()
-
         band_data.shape = h, w
 
-        # print('Product dispose() ...')
-        # obj.dispose()
+        # --- get geocoding of the band (will be copied to other bands in product)
+        if 'geocoding' not in locals():
+            geocoding = band.getGeoCoding()
 
         # --- get colormap
         if type(cmap) is list and len(cmap) == len(band_name_valid):
@@ -722,9 +722,14 @@ def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
 
         # --- save png
         if f_out is None:
+            # # - set file name based on metadata
+            # metadata_master = get_metadata_abstracted(obj)
+            # metadata_slave = get_metadata_slave(obj, slave_idx=0)
+            # fname_out = metadata_master['acqstarttime_str'] + '_' + metadata_slave['acqstarttime_str'] + '_' + '_'.join(bname.split('_')[0:3]) + '.png'
             fname_out = 'band_%s.png' % bname
+
         else:
-            fname_out = f_out + '.png'
+            fname_out = f_out[k]
 
         if p_out is None:
             pname_out = '../data/'
@@ -795,6 +800,7 @@ def get_metadata_abstracted(self):
 
     from dateutil.parser import parse
     acqstart_datetime = parse(acqstart_str).strftime('%Y-%m-%d %H:%M:%S.%f')
+    acqstart_iso = parse(acqstart_str).strftime('%Y%m%dT%H%M%S')
 
     # NB: I'm not using datetime because of abbreviated month format
     # datetime.datetime.strptime(date_string, format1).strftime(format2)
@@ -805,11 +811,54 @@ def get_metadata_abstracted(self):
                     'mission': mission,
                     'acquisitionmode': acquisition_mode,
                     'acqstarttime': acqstart_datetime,
+                    'acqstarttime_str': acqstart_iso,
                     'relativeorbitnumber': orbit_relativenb,
                     'orbitdirection': orbit_direction,
                     'polarization': polarization}
 
     return metadata_abs
+
+
+def get_metadata_slave(self, slave_idx=0):
+    # --- get list of metadata categories
+    # print list(self.getMetadataRoot().getElementNames())
+
+    # --- get list of attributes (in this node):
+    # print list(self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getAttributeNames())
+
+    # --- get list of other nodes
+    # print list(self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getElementNames())
+
+    product_title = self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getAttributeString('PRODUCT')
+    product_type = self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getAttributeString('PRODUCT_TYPE')
+    mission = self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getAttributeString('MISSION')
+    acquisition_mode = self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getAttributeString('ACQUISITION_MODE')
+    acqstart_str = self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getAttributeString('first_line_time')
+    orbit_relativenb = self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getAttributeString('REL_ORBIT')
+    orbit_direction = self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getAttributeString('PASS')
+    polarization_1 = self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getAttributeString('mds1_tx_rx_polar')
+    polarization_2 = self.getMetadataRoot().getElement('Slave_Metadata').getElementAt(slave_idx).getAttributeString('mds2_tx_rx_polar')
+    polarization = ' '.join([polarization_1, polarization_2])
+
+    from dateutil.parser import parse
+    acqstart_datetime = parse(acqstart_str).strftime('%Y-%m-%d %H:%M:%S.%f')
+    acqstart_iso = parse(acqstart_str).strftime('%Y%m%dT%H%M%S')
+
+    # NB: I'm not using datetime because of abbreviated month format
+    # datetime.datetime.strptime(date_string, format1).strftime(format2)
+
+    # NB: keys should be identical to columns of DB_ARCHIVE's tables
+    metadata_slave = {'title': product_title,
+                      'producttype': product_type,
+                      'mission': mission,
+                      'acquisitionmode': acquisition_mode,
+                      'acqstarttime': acqstart_datetime,
+                      'acqstarttime_str': acqstart_iso,
+                      'relativeorbitnumber': orbit_relativenb,
+                      'orbitdirection': orbit_direction,
+                      'polarization': polarization}
+
+    return metadata_slave
 
 
 def metadata_naming_convention():

@@ -236,6 +236,8 @@ class Database:
 
         return metadata_abs
 
+    # -----------------------------------------------------------------------------------------
+
     def dbarch_newtable(self, tbname=None):
         """Use names recovered from "get_metadata_abstracted" (snapme)."""
         dicts = {'title': 'VARCHAR(100)',
@@ -270,3 +272,21 @@ class Database:
             d.update(metadata_abs)
 
             self.insert('DB_ARCHIVE', tbname, d)
+
+    def dbres_newtable(self, tbname=None):
+        """Use names recovered from "get_metadata_abstracted" (snapme)."""
+        dicts = {'title': 'VARCHAR(100)',
+                 'abspath': 'TEXT',
+                 'type': 'TEXT',
+                 'mission': 'TEXT',
+                 'orbitdirection': 'TEXT',
+                 'relativeorbitnumber': 'TEXT',
+                 'acquisitionmode': 'TEXT',
+                 'acqstarttime': 'DATETIME',
+                 'polarization': 'TEXT'}
+
+        self.create_tb(dbname='DB_RESULTS', tbname=tbname, dicts=dicts, primarykey='title')
+
+    def dbres_loadfile(self, dict_val, tbname=None):
+        # NB: dict_val -> cf columns defined in dbres_newtable
+        self.insert('DB_RESULTS', tbname, dict_val)

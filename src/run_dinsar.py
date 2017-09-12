@@ -22,6 +22,7 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # --- processing options
 subswath = 'IW2'
 polarization = 'VV'
+volcanoname = 'etna'
 
 # >> etna
 stmt = "SELECT * FROM DB_ARCHIVE.etna WHERE orbitdirection = 'DESCENDING' AND polarization = 'VH VV';"
@@ -61,17 +62,6 @@ for k, r in enumerate(dat, start=start_idx):
     master_abspath = dat[k].abspath
     m = gpt.read_product(path_and_file=master_abspath)
 
-    # --- debug
-    # p = gpt.read_product(path_and_file=master_abspath)
-    # p = gpt.topsar_split(p, subswath=subswath, polarisation=polarization)
-    # bdnames = gpt.get_bandnames(p, print_bands=1)
-    # p = gpt.resample(p, referenceBand='Intensity_IW2_VV')
-    # p = gpt.subset(p, **subset_bounds)
-    # band = gpt.plotBand(p, ['Intensity_IW2_VV'], cmap=['binary_r'])
-    # p.dispose()
-    # import sys
-    # sys.exit()
-
     # --- read slave product
     slave_abspath = dat[k + 1].abspath
     s = gpt.read_product(path_and_file=slave_abspath)
@@ -107,22 +97,37 @@ for k, r in enumerate(dat, start=start_idx):
     p = gpt.terrain_correction(p, sourceBands)
 
     # --- subset
-    # => zona lago lentini
-    # polygon_wkt = 'POLYGON((14.890766 37.417891, 15.117702 37.417891, 15.117702 37.289897, 14.890766 37.289897, 14.890766 37.417891))'
-    # p = gpt.subset(p, geoRegion=polygon_wkt)37.289897
-    # => zona lago lentini - etna
-    # subset_bounds = {'north_bound': 37.8, 'west_bound': 14.890766, 'south_bound': 37.289897, 'east_bound': 15.117702}
-    # => zona etna extra large
-    # subset_bounds = {'north_bound': 38, 'west_bound': 14.7, 'south_bound': 37.5, 'east_bound': 15.2}
-    subset_bounds = {'north_bound': 37.9, 'west_bound': 14.78, 'south_bound': 37.5, 'east_bound': 15.2}
+    # => small region over lake for testing
+    # polygon_wkt = 'POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))'
+    # p = gpt.subset(p, geoRegion=polygon_wkt)
+    # => entire etna
+    subset_bounds = {'north_bound': 37.9, 'west_bound': 14.8, 'south_bound': 37.59, 'east_bound': 15.2}
     p = gpt.subset(p, **subset_bounds)
 
-    # --- plot
-    band = gpt.plotBand(p, sourceBands, cmap=['gist_rainbow', 'binary_r'])
+    # --- set output file name based on metadata
+    metadata_master = gpt.get_metadata_abstracted(m)
+    metadata_slave = gpt.get_metadata_abstracted(s)
+    fnameout_band1 = metadata_master['acqstarttime_str'] + '_' + metadata_slave['acqstarttime_str'] + '_' + '_'.join(sourceBands[0].split('_')[0:3]) + '.png'
+    fnameout_band2 = metadata_master['acqstarttime_str'] + '_' + metadata_slave['acqstarttime_str'] + '_' + '_'.join(sourceBands[1].split('_')[0:3]) + '.png'
 
-    # Dispose => Releases all of the resources used by this object instance and all of its owned children.
+    # --- plot
+    gpt.plotBand(p, sourceBands, cmap=['gist_rainbow', 'binary_r'], f_out=[fnameout_band1, fnameout_band2])
+
+    # --- dispose => Releases all of the resources used by this object instance and all of its owned children.
     print('Product dispose (release all resources used by object)')
     p.dispose()
+
+    # --- store image file to DB_RESULTS
+    # dict_val = {'title': fnameout_band1,
+    #             'abspath': '/home/sebastien/Documents/MOUNTS/mounts/data' + fnameout_band1,
+    #             'type': 'ifg',
+    #             'mission': metadata_master['mission'],
+    #             'orbitdirection': metadata_master['orbitdirection'],
+    #             'relativeorbitnumber': metadata_master['relativeorbitnumber'],
+    #             'acquisitionmode': metadata_master['acquisitionmode'],
+    #             'acqstarttime': metadata_master['acqstarttime'],
+    #             'polarization': metadata_master['polarization']}
+    # dbo.dbres_loadfile(dict_val, tbname=volcanoname)
 
     # import sys
     # sys.exit()
