@@ -1,6 +1,8 @@
+.gitignore
 /src/tmp/
 /src/log/
 /src/conf/_*
+/data/.gitkeep
 *.png
 *.pyc
 *.xml
