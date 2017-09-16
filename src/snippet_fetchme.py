@@ -40,6 +40,10 @@ logging.info('>> script started')
 # obj.read_configfile('./conf/_config_ertaale.yml')
 # obj.scihub_search()
 
+# -- examples:
+# ex: cloud coverage
+# pl = obj.scihub_search(filename='S2*', cloudcoverpercentage='[0 TO 25]', footprint=[-1.5578, 29.4729])
+
 # ex: search specific file
 # productlist = obj.scihub_search(filename='S1A_IW_SLC__1SDV_20170507T050422_20170507T050449_016471_01B4A7_9DF7*')
 

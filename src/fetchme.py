@@ -245,8 +245,11 @@ class Scihub(Esa):
                       swathidentifier=None,
                       footprint=None,
                       ingestiondate=None,
+                      beginposition=None,
+                      endposition=None,
                       maxrecords=None,
                       orderby=None,
+                      cloudcoverpercentage=None,
                       hub='api',
                       configfile=None,
                       export_result=None,
@@ -285,8 +288,14 @@ class Scihub(Esa):
             footprint (None, optional): Geographical search of the products whose footprint intersects or is included in a specific geographic type.
                 = [lat, lon], [lon1, lat1, lon2, lat2, ...]
             ingestiondate (None, optional): time interval search based on the time of publication of the product on the Data Hub.
-                = '[2017-01-25T00:00:00.000Z TO 2017-02-15T00:00:00.000Z]'
                 = '[< timestamp > TO < timestamp > ]' where < timestamp > can be expressed in one of the the following formats: yyyy-MM-ddThh:mm:ss.SSSZ, NOW, NOW-<n>MINUTE(S), NOW-<n>HOUR(S), NOW-<n>DAY(S), NOW-<n>MONTH(S)
+                = '[2017-01-25T00:00:00.000Z TO 2017-02-15T00:00:00.000Z]'
+            beginposition (None, optional): time interval search based on the Sensing Start Time of the products.
+                = '[< timestamp > TO < timestamp > ]' where < timestamp > can be expressed in one of the the following formats: yyyy-MM-ddThh:mm:ss.SSSZ, NOW, NOW-<n>MINUTE(S), NOW-<n>HOUR(S), NOW-<n>DAY(S), NOW-<n>MONTH(S)
+                = '[2017-01-25T00:00:00.000Z TO 2017-02-15T00:00:00.000Z]'
+            endposition (None, optional):
+                = '[< timestamp > TO < timestamp > ]' where < timestamp > can be expressed in one of the the following formats: yyyy-MM-ddThh:mm:ss.SSSZ, NOW, NOW-<n>MINUTE(S), NOW-<n>HOUR(S), NOW-<n>DAY(S), NOW-<n>MONTH(S)
+                = '[2017-01-25T00:00:00.000Z TO 2017-02-15T00:00:00.000Z]'
             maxrecords (None, optional): number of results listed per page (max=100)
                 = integer
             orderby (None, optional): order result by
@@ -294,6 +303,9 @@ class Scihub(Esa):
                 = 'beginposition desc' => sorts results by sensing date arranged in descending order
                 = 'ingestiondate asc' => sorts results by ingestion date arranged in ascending order
                 = 'ingestiondate desc' => sorts results by ingestion date arranged in descending order
+            cloudcoverpercentage: Percentage of cloud coverage of product for each area covered by a reference band.
+                = 95
+                = '[0 TO 50]'
             hub ('api', optional): data access point
                 WARNING: not yet operational!
                 = 'api' => API Hub : access point for API users with no graphical interface. All API users regularly downloading the latest data are encouraged to use this access point for a better performance.
@@ -486,8 +498,8 @@ class Scihub(Esa):
             # --- apend formated option if dictionary key is valid
             optns_valid = ('filename', 'footprint', 'platformname', 'polarisationmode',
                            'productType', 'sensoroperationalmode', 'orbitdirection',
-                           'swathidentifier', 'cloudcoverpercentage'
-                           'beginposition', 'endposition', 'ingestiondate'
+                           'swathidentifier', 'cloudcoverpercentage',
+                           'beginposition', 'endposition', 'ingestiondate',
                            )
 
             if k in optns_valid:

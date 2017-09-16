@@ -172,7 +172,7 @@ def subset(obj, geoRegion=None, region=None, north_bound=None, west_bound=None, 
                                                         If not given, all bands are copied.
 
     Examples:
-        Get region of interest: 
+        Get region of interest:
         NB: select region at http://boundingbox.klokantech.com/, and copy/paste output in desired format
 
         Using FGDC format (rectangle bounds)
@@ -552,6 +552,44 @@ def terrain_correction(obj, sourceBands):
     return result
 
 
+def collocate(obj_master, obj_slave):
+    """Collocates two products based on their geo-codings.
+
+        Source Options:
+          - master=<file>    The source product which serves as master.
+                             This is a mandatory source.
+          - slave=<file>     The source product which serves as slave.
+                             This is a mandatory source.
+
+        Parameter Options:
+          - masterComponentPattern=<string>     The text pattern to be used when renaming master components.
+                                                Default value is '${ORIGINAL_NAME}_M'.
+          - renameMasterComponents=<boolean>    Whether or not components of the master product shall be renamed in the target product.
+                                                Default value is 'true'.
+          - renameSlaveComponents=<boolean>     Whether or not components of the slave product shall be renamed in the target product.
+                                                Default value is 'true'.
+          - resamplingType=<resamplingType>     The method to be used when resampling the slave grid onto the master grid.
+                                                Default value is 'NEAREST_NEIGHBOUR'.
+          - slaveComponentPattern=<string>      The text pattern to be used when renaming slave components.
+                                                Default value is '${ORIGINAL_NAME}_S'.
+          - targetProductType=<string>          The product type string for the target product (informal)
+                                                Default value is 'COLLOCATED'.
+    """
+
+    logging.info('gpt operator = Collocate')
+
+    parameters = HashMap()
+    parameters.put('resamplingType', 'NEAREST_NEIGHBOUR')
+
+    sources = HashMap()
+    sources.put('master', obj_master)
+    sources.put('slave', obj_slave)
+
+    result = GPF.createProduct('Collocate', parameters, sources)
+
+    return result
+
+
 def band_maths():
     # marpet code: https://github.com/senbox-org/snap-engine/blob/master/snap-python/src/main/resources/snappy/examples/snappy_bmaths.py
     pass
@@ -741,6 +779,124 @@ def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
             # pdb.set_trace()
 
     # return band
+
+
+def plot_RGB(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None):
+    # Plot RGB bands in optical data (S2, Envisat)
+    # NB: see https://github.com/techforspace/sentinel
+    #
+    # RGB band names:
+    #   - Sentinel 2 -> MSIL1C
+    #       => bname_red='B4', bname_green='B3', bname_blue='B2'
+    #   - ENVISAT -> MERIS (Imaging multi-spectral radiometers (vis/IR))
+    #       =>  bname_red='radiance_4', bname_green='radiance_3', bname_blue='radiance_2'
+
+    from skimage import exposure
+
+    logging.info('reading RGB bands (' + bname_red + ', ' + bname_green + ', ' + bname_blue + ')')
+
+    # ===> original solution => correct RGB rendereing BUT different image size (black band on right hand side) then produced by plotBand ...
+    #   => image is like shifted towards North, upermost is lost, width narrowed
+    # --- get R,G,B bands
+    B_rad = self.getBand(bname_blue)
+    width = B_rad.getRasterWidth()
+    height = B_rad.getRasterHeight()
+    B_rad_data = np.zeros(width * height, dtype=np.float32)
+    B_rad.readPixels(0, 0, height, width, B_rad_data)
+    B_rad_data.shape = width, height
+
+    G_rad = self.getBand(bname_green)
+    G_rad_data = np.zeros(width * height, dtype=np.float32)
+    G_rad.readPixels(0, 0, height, width, G_rad_data)
+    G_rad_data.shape = width, height
+
+    R_rad = self.getBand(bname_red)
+    R_rad_data = np.zeros(width * height, dtype=np.float32)
+    R_rad.readPixels(0, 0, height, width, R_rad_data)
+    R_rad_data.shape = width, height
+
+    # --- contrast enhancement
+    # => rescale pixel intensities for each channel according to a low and a high saturation thresholds (expressed as % of the total number of pixels)
+    cube = np.zeros((width, height, 3), dtype=np.float32)
+    print(cube.shape)
+
+    saturation_threshold = None
+    if saturation_threshold is not None:
+        logging.info('applying contrast enhancement')
+
+        val1, val2 = np.percentile(B_rad_data, (4, 95))
+        sat_B_rad_data = exposure.rescale_intensity(B_rad_data, in_range=(val1, val2))
+
+        val1, val2 = np.percentile(G_rad_data, (4, 95))
+        sat_G_rad_data = exposure.rescale_intensity(G_rad_data, in_range=(val1, val2))
+
+        val1, val2 = np.percentile(R_rad_data, (4, 95))
+        sat_R_rad_data = exposure.rescale_intensity(R_rad_data, in_range=(val1, val2))
+
+        cube[:, :, 0] = sat_R_rad_data
+        cube[:, :, 1] = sat_G_rad_data
+        cube[:, :, 2] = sat_B_rad_data
+
+    else:
+        cube[:, :, 0] = R_rad_data
+        cube[:, :, 1] = G_rad_data
+        cube[:, :, 2] = B_rad_data
+
+    # ===> solution identical to plotBand => identical image size BUT uncorrect RGB rendereing ...
+    # # --- get R,G,B bands
+    # B_rad = self.getBand(bname_blue)
+    # width = B_rad.getRasterWidth()
+    # height = B_rad.getRasterHeight()
+    # B_rad_data = np.zeros(width * height, np.float32)
+    # B_rad.readPixels(0, 0, width, height, B_rad_data)
+    # B_rad_data.shape = height, width
+
+    # G_rad = self.getBand(bname_green)
+    # G_rad_data = np.zeros(width * height, np.float32)
+    # G_rad.readPixels(0, 0, width, height, B_rad_data)
+    # G_rad_data.shape = height, width
+
+    # R_rad = self.getBand(bname_red)
+    # R_rad_data = np.zeros(width * height, np.float32)
+    # R_rad.readPixels(0, 0, width, height, B_rad_data)
+    # R_rad_data.shape = height, width
+
+    # # --- contrast enhancement
+    # # => rescale pixel intensities for each channel according to a low and a high saturation thresholds (expressed as % of the total number of pixels)
+    # cube = np.zeros((height, width, 3), dtype=np.float32)
+    # print(cube.shape)
+    #
+    # saturation_threshold = None
+    # if saturation_threshold is not None:
+    #     logging.info('applying contrast enhancement')
+
+    #     val1, val2 = np.percentile(B_rad_data, (4, 95))
+    #     sat_B_rad_data = exposure.rescale_intensity(B_rad_data, in_range=(val1, val2))
+
+    #     val1, val2 = np.percentile(G_rad_data, (4, 95))
+    #     sat_G_rad_data = exposure.rescale_intensity(G_rad_data, in_range=(val1, val2))
+
+    #     val1, val2 = np.percentile(R_rad_data, (4, 95))
+    #     sat_R_rad_data = exposure.rescale_intensity(R_rad_data, in_range=(val1, val2))
+
+    #     cube[:, :, 0] = sat_R_rad_data
+    #     cube[:, :, 1] = sat_G_rad_data
+    #     cube[:, :, 2] = sat_B_rad_data
+
+    # else:
+    #     cube[:, :, 0] = R_rad_data
+    #     cube[:, :, 1] = G_rad_data
+    #     cube[:, :, 2] = B_rad_data
+
+    fig = plt.imshow(cube)
+
+    # --- save png
+    if f_out is None:
+        f_out = self.getName() + '_RGB.png'
+    if p_out is None:
+        p_out = '../data/'
+
+    fig.write_png(p_out + f_out)
 
 
 def is_bandinproduct(obj, band_name):
