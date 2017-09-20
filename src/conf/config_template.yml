@@ -30,7 +30,7 @@ optn_search:
 # === download options
 optn_download:
   product_in_list: new                #to implement: all, newest, ...
-  product_node: quicklook             # S1 options: quicklook, fullproduct
+  download_pnode: quicklook             # S1 options: quicklook, fullproduct
   download_dir: '../data/'
 
 

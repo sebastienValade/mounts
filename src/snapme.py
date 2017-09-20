@@ -781,6 +781,74 @@ def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
     # return band
 
 
+def write_image(obj, band_name=None, f_out=None, p_out=None):
+    """[summary]
+
+    https://github.com/senbox-org/snap-engine/blob/b8c9e5c1c657bb8c022bb41439ffd59ec019fcc4/snap-python/src/main/resources/snappy/examples/snappy_write_image.py
+
+    Arguments:
+        obj {[type]} -- [description]
+
+    Keyword Arguments:
+        band_name {[type]} -- [description] (default: {None})
+        f_out {[type]} -- [description] (default: {None})
+        p_out {[type]} -- [description] (default: {None})
+    """
+
+    from snappy import jpy
+    JAI = jpy.get_type('javax.media.jai.JAI')
+    ImageManager = jpy.get_type('org.esa.snap.core.image.ImageManager')
+
+    band = obj.getBand(band_name)
+    im = ImageManager.getInstance().createColoredBandImage([band], band.getImageInfo(), 0)
+
+    if f_out is None:
+        f_out = obj.getName() + '_' + band_name + '.png'
+    if p_out is None:
+        p_out = '../data/'
+    else:
+        p_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
+
+    JAI.create("filestore", im, p_out + f_out, 'png')
+
+
+def write_rgb_image(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None):
+    """Plot RGB bands in optical data (e.g., S2, Envisat)
+
+    https://github.com/senbox-org/snap-engine/blob/b8c9e5c1c657bb8c022bb41439ffd59ec019fcc4/snap-python/src/main/resources/snappy/examples/snappy_write_image.py
+
+    Keyword Arguments:
+        bname_red {str} -- [description] (default: {'B4'})
+        bname_green {str} -- [description] (default: {'B3'})
+        bname_blue {str} -- [description] (default: {'B2'})
+        f_out {[type]} -- [description] (default: {None})
+        p_out {[type]} -- [description] (default: {None})
+    """
+
+    from snappy import ProductUtils, ProgressMonitor
+    from snappy import jpy
+    JAI = jpy.get_type('javax.media.jai.JAI')
+    ImageManager = jpy.get_type('org.esa.snap.core.image.ImageManager')
+
+    red = self.getBand(bname_red)
+    green = self.getBand(bname_green)
+    blue = self.getBand(bname_blue)
+    bands = [red, green, blue]
+
+    image_info = ProductUtils.createImageInfo(bands, True, ProgressMonitor.NULL)
+    im = ImageManager.getInstance().createColoredBandImage(bands, image_info, 0)
+
+    # --- save png
+    if f_out is None:
+        f_out = self.getName() + '_' + bname_red + bname_green + bname_blue + '.png'
+    if p_out is None:
+        p_out = '../data/'
+    else:
+        p_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
+
+    JAI.create("filestore", im, p_out + f_out, 'png')
+
+
 def plot_RGB(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None):
     # Plot RGB bands in optical data (S2, Envisat)
     # NB: see https://github.com/techforspace/sentinel
@@ -794,6 +862,10 @@ def plot_RGB(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None
     from skimage import exposure
 
     logging.info('reading RGB bands (' + bname_red + ', ' + bname_green + ', ' + bname_blue + ')')
+
+    # !!! look at:
+    # http://forum.step.esa.int/t/sentinel-2-product-to-rgb-png-patches-in-python-using-snappy/5354/2
+    # https://github.com/senbox-org/snap-engine/blob/b8c9e5c1c657bb8c022bb41439ffd59ec019fcc4/snap-python/src/main/resources/snappy/examples/snappy_write_image.py
 
     # ===> original solution => correct RGB rendereing BUT different image size (black band on right hand side) then produced by plotBand ...
     #   => image is like shifted towards North, upermost is lost, width narrowed
@@ -820,7 +892,7 @@ def plot_RGB(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None
     cube = np.zeros((width, height, 3), dtype=np.float32)
     print(cube.shape)
 
-    saturation_threshold = None
+    saturation_threshold = 1
     if saturation_threshold is not None:
         logging.info('applying contrast enhancement')
 

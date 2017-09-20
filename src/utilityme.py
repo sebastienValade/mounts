@@ -248,6 +248,7 @@ class Database:
                  'relativeorbitnumber': 'TEXT',
                  'acquisitionmode': 'TEXT',
                  'acqstarttime': 'DATETIME',
+                 'acqstarttime_str': 'TEXT',
                  'polarization': 'TEXT'}
 
         self.create_tb(dbname='DB_ARCHIVE', tbname=tbname, dicts=dicts, primarykey='title')

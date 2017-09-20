@@ -2,6 +2,7 @@
 /src/tmp/
 /src/log/
 /src/conf/_*
+/src/_*
 /data/.gitkeep
 *.png
 *.pyc

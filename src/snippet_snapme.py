@@ -71,29 +71,28 @@ import snapme as gpt
 # PLOT
 # =============================================
 
-# # --- plot RGB from S2 data
-# file_abspath = '/home/khola/DATA/data_satellite/ertaale_S2/S2A_MSIL1C_20170330T073611_N0204_R092_T37PFR_20170330T075431.SAFE'
-# p = gpt.read_product(path_and_file=file_abspath)
+# --- plot RGB from S2 data
+file_abspath = '/home/khola/DATA/data_satellite/ertaale_S2/S2A_MSIL1C_20170129T075211_N0204_R092_T37PFR_20170129T075205.zip'
+p = gpt.read_product(path_and_file=file_abspath)
 # gpt.plot_RGB(p)
 # gpt.plot_RGB(p, bname_red='B12', bname_green='B11', bname_blue='B8A', f_out='waou.png') #-> cf S2 image erta ale 2017-03-30
+gpt.write_rgb_image(p, bname_red='B12', bname_green='B11', bname_blue='B8A', f_out='waou.png')  # -> cf S2 image erta ale 2017-03-30
 
+# # --- collocate products (S1 geocoded = master, S2 not-geocoded = slave)
+# master_abspath = '/home/khola/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE_Orb_Stack_deb_ifg_dinsar_flt_TC.dim'
+# m = gpt.read_product(path_and_file=master_abspath)
+# slave_abspath = '/home/khola/DATA/data_satellite/ertaale_S2/S2A_MSIL1C_20170330T073611_N0204_R092_T37PFR_20170330T075431.SAFE'
+# s = gpt.read_product(path_and_file=slave_abspath)
+# s = gpt.resample(s, referenceBand='B2')
+# p = gpt.collocate(m, s)
+# gpt.get_bandnames(p, print_bands=1)
 
-# --- collocate products (S1 geocoded = master, S2 not-geocoded = slave)
-master_abspath = '/home/khola/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE_Orb_Stack_deb_ifg_dinsar_flt_TC.dim'
-m = gpt.read_product(path_and_file=master_abspath)
-slave_abspath = '/home/khola/DATA/data_satellite/ertaale_S2/S2A_MSIL1C_20170330T073611_N0204_R092_T37PFR_20170330T075431.SAFE'
-s = gpt.read_product(path_and_file=slave_abspath)
+# subset_bounds = {'north_bound': 13.53, 'west_bound': 40.63, 'south_bound': 13.64, 'east_bound': 40.735}  # >> ertaale
+# p = gpt.subset(p, **subset_bounds)
 
-s = gpt.resample(s, referenceBand='B2')
-p = gpt.collocate(m, s)
-gpt.get_bandnames(p, print_bands=1)
-
-subset_bounds = {'north_bound': 13.53, 'west_bound': 40.63, 'south_bound': 13.64, 'east_bound': 40.735}  # >> ertaale
-p = gpt.subset(p, **subset_bounds)
-
-gpt.plotBand(p, ['coh_IW2_VV_11Jan2017_04Feb2017_M', 'B8A_S'], cmap=['binary_r', 'binary_r'])
-gpt.plotBand(p, ['B12_S'], cmap=['binary_r'])
-gpt.plot_RGB(p, bname_red='B12_S', bname_green='B11_S', bname_blue='B8A_S', f_out='waou.png')  # -> cf S2 image erta ale 2017-03-30
+# gpt.plotBand(p, ['coh_IW2_VV_11Jan2017_04Feb2017_M'], cmap=['binary_r'])
+# gpt.plot_RGB(p, bname_red='B12_S', bname_green='B11_S', bname_blue='B8A_S', f_out='waou.png')  # -> cf S2 image erta ale 2017-03-30
+# gpt.write_rgb_image(p, bname_red='B12_S', bname_green='B11_S', bname_blue='B8A_S')  # -> cf S2 image erta ale 2017-03-30
 
 # =============================================
 # MISC
