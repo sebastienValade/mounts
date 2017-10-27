@@ -6,6 +6,8 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # MANAGE db
 # =============================================
 
+# === CREATE
+
 # --- create db
 # dbo.create_db('DB_ARCHIVE')
 
@@ -13,12 +15,23 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # dicts = {'title': 'VARCHAR(100)', 'abspath': 'TEXT'}
 # dbo.create_tb(dbname='DB_ARCHIVE', tbname='etna', dicts=dicts, primarykey='title')
 
+# === DELETE
+
 # --- delete db
-# dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
 # dbo.delete_db('DB_ARCHIVE')
+
+# --- delete tb
+# dbo.delete_tb(dbname='DB_RESULTS', tbname='etna')
+
+# === EMPTY
 
 # --- empty db
 # dbo.empty_tb(dbname='DB_ARCHIVE', tbname='ertaale')
+
+# --- empty tb
+# dbo.empty_tb(dbname='DB_RESULTS', tbname='etna')
+
+# === MISC
 
 # --- store archive zip files to database
 # dbo.store_dir2db('/home/sebastien/DATA/data_satellite/ertaale/', dbname='DB_ARCHIVE', tbname='ertaale')
@@ -55,15 +68,44 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 
 # --- store new volcano data to DB_ARCHIVE
 # volcanoname = 'etna'
-# dbo.dbarch_newtable(tbname=volcanoname)
+# # dbo.dbarch_newtable(tbname=volcanoname)
 # dbo.dbarch_loaddir('/home/sebastien/DATA/data_satellite/' + volcanoname, tbname=volcanoname)
 
-# --- store new volcano data to DB_RESULTS
-volcanoname = 'etna'
-dbo.dbres_newtable(tbname=volcanoname)
+
+# =============================================
+# DB_RESULTS
+# =============================================
+
+# --- create table with pre-defined fields
+# volcanoname = 'ertaale'
+# dbo.dbres_newtable(tbname=volcanoname)
 
 # --- store image file to DB_RESULTS
+# IMPORTANT: 'master_title' and 'slave_title' are foreign keys linked to DB_ARCHIVE.volcano.title
+# 	Specifying their values is optional, BUT if they are specified, they MUST be found in the reference table (DB_ARCHIVE.volcano.title)
+# dict_val = {'title': 'interferogram',
+#             'abspath': '/home/sebastien/',
+#             'type': 'ifg',
+#             'master_title': 'S1A_IW_SLC__1SDV_20141229T152648_20141229T152715_003936_004BAC_752F',
+#             }
+# dict_val = {'title': ['interferogram', 'coherence'],
+#             'abspath': ['/home/sebastien/', '/home/sebastien/'],
+#             'type': ['ifg', 'coh'],
+#             'master_title': ['S1A_IW_SLC__1SDV_20141229T152648_20141229T152715_003936_004BAC_752F', 'S1A_IW_SLC__1SDV_20141229T152648_20141229T152715_003936_004BAC_752F'],
+#             }
+# dbo.insert('DB_RESULTS', 'ertaale', dict_val)
 
+
+# --- retrieve data from foreign table
+# NB: INNER JOIN statement => selects records (=column values) that have matching values in both tables.
+# ----- select just one field:
+# stmt = "SELECT acqstarttime_str FROM DB_ARCHIVE.ertaale INNER JOIN DB_RESULTS.ertaale ON DB_ARCHIVE.ertaale.title=DB_RESULTS.ertaale.ref_master;"
+# rows = dbo.execute_query(stmt)
+# ----- select all fields
+# stmt = "SELECT * FROM DB_ARCHIVE.ertaale INNER JOIN DB_RESULTS.ertaale ON DB_ARCHIVE.ertaale.title=DB_RESULTS.ertaale.ref_master;"
+# rows = dbo.execute_query(stmt)
+# print rows.all()
+# print rows[0]['acqstarttime_str']
 
 # --- store result png files to database
 # dbo.create_db('DB_RESULTS')

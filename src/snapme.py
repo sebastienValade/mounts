@@ -85,22 +85,101 @@ def read_product(*args, **kwargs):
     return p
 
 
-def write_product(obj, fileout=None, pathout=None, formatout=None):
-    """TO DO: allow other types here: BEAM-DIMAP, GeoTIFF-BigTIFF, HDF5"""
+def write_product(obj, f_out=None, p_out=None, fmt_out=None):
+    """Writes a product with the specified format to the given file.
 
-    if fileout is None:
-        fileout = get_name(obj)
+    The method also writes all band data to the file. Therefore the band data must either
+        be completely loaded (Band.rasterData is not null)
+        or the product must be associated with a product reader (Product.productReader is not null) so that unloaded data can be reloaded.
 
-    if pathout is None:
-        pathout = os.getcwd()
-        pathout = os.path.join(pathout, '')  # add trailing slash if missing (os independent)
+    Available format: BEAM-DIMAP, GeoTIFF, GeoTIFF-BigTIFF, HDF5, ...
+    """
 
-    if formatout is None:
+    if f_out is None:
+        f_out = get_name(obj)
+
+    if p_out is None:
+        p_out = '../data/'
+    else:
+        p_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
+
+    if fmt_out is None:
         ext = '.dim'
-        formatout = 'BEAM-DIMAP'
+        fmt_out = 'BEAM-DIMAP'
+    else:
+        ext = ''
 
     logging.info('saving product')
-    ProductIO.writeProduct(obj, pathout + fileout + ext, formatout)
+
+    # print p_out + f_out + ext
+    # print fmt_out
+    # return
+    ProductIO.writeProduct(obj, p_out + f_out + ext, fmt_out)
+
+
+# def write(obj, f_out=None, p_out=None, fmt_out=None):
+#     """Writes a data product to a file.
+#         Source Options:
+#         - source=<file>    The source product to be written.
+#                      This is a mandatory source.
+
+#         Parameter Options: (sh gpt -h Write)
+#         - clearCacheAfterRowWrite=<boolean>    If true, the internal tile cache is cleared after a tile row has been written. Ignored if writeEntireTileRows=false.
+#                                          Default value is 'false'.
+#         - deleteOutputOnFailure=<boolean>      If true, all output files are deleted after a failed write operation.
+#                                          Default value is 'true'.
+#         - file=<file>                          The output file to which the data product is written.
+#         - formatName=<string>                  The name of the output file format.
+#                                          Default value is 'BEAM-DIMAP'.
+#         - writeEntireTileRows=<boolean>        If true, the write operation waits until an entire tile row is computed.
+#                                          Default value is 'true'.
+#     """
+
+#     if f_out is None:
+#         f_out = get_name(obj)
+
+#     if p_out is None:
+#         p_out = '../data/'
+#     else:
+#         p_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
+
+#     if fmt_out is None:
+#         ext = '.dim'
+#         fmt_out = 'BEAM-DIMAP'
+#     else:
+#         ext = ''
+
+#     logging.info('gpt operator = Write')
+
+#     # --- set operator parameters and apply
+#     parameters = HashMap()
+#     result = GPF.createProduct('Write', parameters, obj)
+
+
+def band_select(obj, sourceBands=None):
+    """Creates a new product with only selected bands. (gpt -h BandSelect)
+
+    Source Options:
+        - source=<file>    Sets source 'source' to <filepath>.
+                            This is a mandatory source.
+
+    Parameter Options:
+        - bandNamePattern=<string>                            Band name regular expression pattern
+        - selectedPolarisations=<string,string,string,...>    The list of polarisations
+        - sourceBands=<string,string,string,...>              The list of source bands.
+    """
+
+    logging.info('gpt operator = BandSelect')
+
+    # --- check if source bands valid & format python list to string
+    r, sourceBands_valid = is_bandinproduct(obj, sourceBands)
+    sourceBands_valid_str = ','.join(sourceBands_valid)
+
+    parameters = HashMap()
+    parameters.put('sourceBands', sourceBands_valid_str)
+    result = GPF.createProduct('BandSelect', parameters, obj)
+
+    return result
 
 
 def resample(obj, referenceBand=None):
@@ -590,9 +669,184 @@ def collocate(obj_master, obj_slave):
     return result
 
 
-def band_maths():
+def speckle_filter(obj, sourceBands):
+    """Speckle Reduction. (gpt -h Speckle-Filter)
+
+        Parameter Options:
+            - anSize=<int>                              The Adaptive Neighbourhood size
+                                                            Valid interval is (1, 200].
+                                                            Default value is '50'.
+            - dampingFactor=<int>                       The damping factor (Frost filter only)
+                                                            Valid interval is (0, 100].
+                                                            Default value is '2'.
+            - enl=<double>                              The number of looks
+                                                            Valid interval is (0, *).
+                                                            Default value is '1.0'.
+            - estimateENL=<boolean>                     Sets parameter 'estimateENL' to <boolean>.
+                                                            Default value is 'false'.
+            - filter=<string>                           Sets parameter 'filter' to <string>.
+                                                            Value must be one of 'None', 'Boxcar', 'Median', 'Frost', 'Gamma Map', 'Lee', 'Refined Lee', 'Lee Sigma', 'IDAN'.
+                                                            Default value is 'Lee Sigma'.
+            - filterSizeX=<int>                         The kernel x dimension
+                                                            Valid interval is (1, 100].
+                                                            Default value is '3'.
+            - filterSizeY=<int>                         The kernel y dimension
+                                                            Valid interval is (1, 100].
+                                                            Default value is '3'.
+            - numLooksStr=<string>                      Sets parameter 'numLooksStr' to <string>.
+                                                            Value must be one of '1', '2', '3', '4'.
+                                                            Default value is '1'.
+            - sigmaStr=<string>                         Sets parameter 'sigmaStr' to <string>.
+                                                            Value must be one of '0.5', '0.6', '0.7', '0.8', '0.9'.
+                                                            Default value is '0.9'.
+            - sourceBands=<string,string,string,...>    The list of source bands.
+            - targetWindowSizeStr=<string>              Sets parameter 'targetWindowSizeStr' to <string>.
+                                                            Value must be one of '3x3', '5x5'.
+                                                            Default value is '3x3'.
+            - windowSize=<string>                       Sets parameter 'windowSize' to <string>.
+                                                            Value must be one of '5x5', '7x7', '9x9', '11x11', '13x13', '15x15', '17x17'.
+                                                            Default value is '7x7'.
+    """
+    logging.info('gpt operator = Speckle-Filter')
+
+    # --- check if source bands valid
+    r, sourceBands_valid = is_bandinproduct(obj, sourceBands)
+
+    # --- format python list to string
+    sourceBands_valid_str = ','.join(sourceBands_valid)
+
+    parameters = HashMap()
+    parameters.put('sourceBands', sourceBands_valid_str)
+
+    result = GPF.createProduct('Speckle-Filter', parameters, obj)
+
+    return result
+
+
+def polarimetric_matrix(obj, matrix='C2'):
+    """Generates covariance or coherency matrix for given product.
+    (gpt -h Polarimetric-Matrices)
+
+    Source Options:
+        - source=<file>    Sets source 'source' to <filepath>.
+                                This is a mandatory source.
+
+    Parameter Options:
+        - matrix=<string>    The covariance or coherency matrix
+                                Value must be one of 'C2', 'C3', 'C4', 'T3', 'T4'.
+                                Default value is 'T3'.
+    """
+
+    logging.info('gpt operator = Polarimetric-Matrices')
+
+    parameters = HashMap()
+    parameters.put('matrix', matrix)
+
+    result = GPF.createProduct('Polarimetric-Matrices', parameters, obj)
+
+    return result
+
+
+def merge(obj_master, obj_slave):
+    """Allows merging of several source products by using specified 'master' as reference product.
+    (gpt -h Merge)
+
+    Source Options:
+        - masterProduct=<file>      The master, which serves as the reference, e.g. providing the geo-information.
+                                        This is a mandatory source.
+
+    Parameter Options:
+        - geographicError=<float>   Defines the maximum lat/lon error in degree between the products. If set to NaN no check for compatible geographic boundary is performed
+                                        Default value is '1.0E-5f'.
+    """
+
+    # WARNING: if error "Product [sourceProducts] is not compatible to master product."
+    # http://forum.step.esa.int/t/product-sourceproduct-is-not-compatible-to-master-product/1761/6
+
+    logging.info('gpt operator = Merge')
+
+    parameters = HashMap()
+
+    sources = HashMap()
+    sources.put('masterProduct', obj_master)
+    sources.put('sourceProducts', obj_slave)
+
+    result = GPF.createProduct('Merge', parameters, sources)
+
+    return result
+
+
+def band_maths(product, expression=None, targetband_name='band_new'):
     # marpet code: https://github.com/senbox-org/snap-engine/blob/master/snap-python/src/main/resources/snappy/examples/snappy_bmaths.py
-    pass
+    # == ./.snap/snap-python/snappy/examples/snappy_bmaths.py
+    #
+    # TODO: implement masking and export in kmz:
+    # http://www.un-spider.org/advisory-support/recommended-practices/recommended-practice-flood-mapping/step-by-step
+    # 
+    # WARNING: All the methods in the Band Maths are pixel-based. They don't compute values for a whole band.
+    # http://forum.step.esa.int/t/mean-average-and-standard-deviation-band-math/1879
+
+    from snappy import jpy
+
+    width = product.getSceneRasterWidth()
+    height = product.getSceneRasterHeight()
+    name = product.getName()
+    description = product.getDescription()
+    band_names = product.getBandNames()
+
+    print list(band_names)
+
+    print("Product: %s, %d x %d pixels, %s" % (name, width, height, description))
+    print("Bands:   %s" % (list(band_names)))
+
+    GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis()
+
+    BandDescriptor = jpy.get_type('org.esa.snap.core.gpf.common.BandMathsOp$BandDescriptor')
+
+    targetBand1 = BandDescriptor()
+    targetBand1.name = targetband_name
+    targetBand1.type = 'float32'
+    # targetBand1.expression = '(radiance_10 - radiance_7) / (radiance_10 + radiance_7)'
+    targetBand1.expression = expression
+
+    # targetBand2 = BandDescriptor()
+    # targetBand2.name = 'band_2'
+    # targetBand2.type = 'float32'
+    # targetBand2.expression = '(radiance_9 - radiance_6) / (radiance_9 + radiance_6)'
+
+    # targetBands = jpy.array('org.esa.snap.core.gpf.common.BandMathsOp$BandDescriptor', 2)
+    # targetBands[0] = targetBand1
+    # targetBands[1] = targetBand2
+
+    targetBands = jpy.array('org.esa.snap.core.gpf.common.BandMathsOp$BandDescriptor', 1)
+    targetBands[0] = targetBand1
+
+    parameters = HashMap()
+    parameters.put('targetBands', targetBands)
+
+    result = GPF.createProduct('BandMaths', parameters, product)
+
+    return result
+
+    """
+       Please note: the next major version of snappy/jpy will be more pythonic in the sense that implicit data type
+       conversions are performed. The 'parameters' from above variable could then be given as a Python dict object:
+
+        parameters = {
+            'targetBands': [
+                {
+                    'name': 'band_1',
+                    'type': 'float32',
+                    'expression': '(radiance_10 - radiance_7) / (radiance_10 + radiance_7)'
+                },
+                {
+                    'name': 'band_2',
+                    'type': 'float32',
+                    'expression': '(radiance_9 - radiance_6) / (radiance_9 + radiance_6)'
+                }
+            ]
+        }
+    """
 
 
 ####################################################################
@@ -705,7 +959,8 @@ def read_xmlnodes(obj):
     GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis()
 
 
-def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
+def plotBands_np(obj, band_name=None, cmap=None, f_out=None, p_out=None):
+    """Plot band (or list of bands), using numpy."""
 
     if band_name is None:
         # get bands available in product if none specified
@@ -728,9 +983,6 @@ def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
         # --- initialize empty matrix
         w, h = get_rasterDim(obj, bname)
         band_data = np.zeros(w * h, np.float32)
-
-        # import pdb
-        # pdb.set_trace()
 
         # --- set geocoding if it has been calculated already for another band of this product
         # see also: obj.transferGeoCodingTo = Transfers the geo-coding of this product instance to the destProduct with respect to the given subsetDef.
@@ -781,8 +1033,8 @@ def plotBand(obj, band_name=None, cmap=None, f_out=None, p_out=None):
     # return band
 
 
-def write_image(obj, band_name=None, f_out=None, p_out=None):
-    """[summary]
+def plotBands(obj, band_name=None, f_out=None, p_out=None, fmt_out=None):
+    """Plot band (or list of bands), using jpy.
 
     https://github.com/senbox-org/snap-engine/blob/b8c9e5c1c657bb8c022bb41439ffd59ec019fcc4/snap-python/src/main/resources/snappy/examples/snappy_write_image.py
 
@@ -799,21 +1051,74 @@ def write_image(obj, band_name=None, f_out=None, p_out=None):
     JAI = jpy.get_type('javax.media.jai.JAI')
     ImageManager = jpy.get_type('org.esa.snap.core.image.ImageManager')
 
-    band = obj.getBand(band_name)
-    im = ImageManager.getInstance().createColoredBandImage([band], band.getImageInfo(), 0)
+    # More Java type definitions required for image generation
+    Color = jpy.get_type('java.awt.Color')
+    ColorPoint = jpy.get_type('org.esa.snap.core.datamodel.ColorPaletteDef$Point')
+    ColorPaletteDef = jpy.get_type('org.esa.snap.core.datamodel.ColorPaletteDef')
+    ImageInfo = jpy.get_type('org.esa.snap.core.datamodel.ImageInfo')
+    ImageLegend = jpy.get_type('org.esa.snap.core.datamodel.ImageLegend')
+    # Disable JAI native MediaLib extensions
+    System = jpy.get_type('java.lang.System')
+    System.setProperty('com.sun.media.jai.disableMediaLib', 'true')
 
-    if f_out is None:
-        f_out = obj.getName() + '_' + band_name + '.png'
-    if p_out is None:
-        p_out = '../data/'
+    if band_name is None:
+        # get bands available in product if none specified
+        band_name_valid = get_bandnames(obj)
     else:
-        p_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
+        # check if band_name valid
+        r, band_name_valid = is_bandinproduct(obj, band_name)
 
-    JAI.create("filestore", im, p_out + f_out, 'png')
+    for k, bname in enumerate(band_name_valid):
+
+        logging.info('plotting band "' + bname + '"')
+
+        # --- get band data
+        band = obj.getBand(bname)
+
+        if band is None:
+            logging.info('warning: band "' + bname + '" is None')
+            continue
+
+        # --- set geocoding if it has been calculated already for another band of this product
+        # see also: obj.transferGeoCodingTo = Transfers the geo-coding of this product instance to the destProduct with respect to the given subsetDef.
+        if 'geocoding' in locals():
+            logging.info('copying geocoding')
+            band.setGeoCoding(geocoding)
+
+        im = ImageManager.getInstance().createColoredBandImage([band], band.getImageInfo(), 0)
+
+        # --- get geocoding of the band (will be copied to other bands in product)
+        if 'geocoding' not in locals():
+            geocoding = band.getGeoCoding()
+
+        # --- save png
+        if f_out is None:
+            # # - set file name based on metadata
+            # metadata_master = get_metadata_abstracted(obj)
+            # metadata_slave = get_metadata_slave(obj, slave_idx=0)
+            # fname_out = metadata_master['acqstarttime_str'] + '_' + metadata_slave['acqstarttime_str'] + '_' + '_'.join(bname.split('_')[0:3]) + '.png'
+            fname_out = 'band_%s.png' % bname
+
+        else:
+            if isinstance(f_out, str):
+                fname_out = f_out
+            else:
+                fname_out = f_out[k]
+
+        if p_out is None:
+            pname_out = '../data/'
+        else:
+            pname_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
+
+        if fmt_out is None:
+            fmt_out = 'png'
+
+        JAI.create("filestore", im, pname_out + fname_out + '.' + fmt_out, fmt_out)
+        # JAI.create("filestore", im, pname_out + fname_out, fmt_out)
 
 
-def write_rgb_image(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None):
-    """Plot RGB bands in optical data (e.g., S2, Envisat)
+def plotBands_rgb(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None, fmt_out=None):
+    """Plot RGB bands in optical data (e.g., S2, Envisat), using jpy.
 
     https://github.com/senbox-org/snap-engine/blob/b8c9e5c1c657bb8c022bb41439ffd59ec019fcc4/snap-python/src/main/resources/snappy/examples/snappy_write_image.py
 
@@ -846,11 +1151,17 @@ def write_rgb_image(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_o
     else:
         p_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
 
-    JAI.create("filestore", im, p_out + f_out, 'png')
+    if fmt_out is None:
+        fmt_out = 'png'
+
+    print 'XXXXXXXXXXX'
+    print im
+    print 'XXXXXXXXXXX'
+    JAI.create("filestore", im, p_out + f_out + '.' + fmt_out, fmt_out)
 
 
-def plot_RGB(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None):
-    # Plot RGB bands in optical data (S2, Envisat)
+def plotBands_rgb_np(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None):
+    # Plot RGB bands in optical data (S2, Envisat), using numpy.
     # NB: see https://github.com/techforspace/sentinel
     #
     # RGB band names:

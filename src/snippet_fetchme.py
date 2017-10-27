@@ -26,7 +26,10 @@ logging.info('>> script started')
 # productlist = obj.scihub_search(print_url=1)
 
 # --- parse options from kwargs
+# ----- filename:
 # obj.scihub_search(filename='S1*')
+# ----- footprint:
+# ex: WKT format (http://boundingbox.klokantech.com/)
 # obj.scihub_search(footprint='POLYGON((-2.211 49.9654, -0.835 49.9654, -0.835 49.1206, -2.211 49.1206, -2.211 49.9654))')
 
 # --- parse options from dict

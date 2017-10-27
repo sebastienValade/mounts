@@ -132,15 +132,15 @@ p = gpt.terrain_correction(p, sourceBands)
 
 # --- plot
 # p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
-# gpt.plotBand(p_subset, sourceBands[0], f_out='int_TC', cmap='binary')
+# gpt.plotBand_np(p_subset, sourceBands[0], f_out='int_TC', cmap='binary')
 
 print '--> plotting IFG'
 p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
-gpt.plotBand(p_subset, sourceBands[1], cmap='gist_rainbow')
+gpt.plotBand_np(p_subset, sourceBands[1], cmap='gist_rainbow')
 
 print '--> plotting COH'
 p_subset = gpt.subset(p, north_bound=13.55, west_bound=40.64, south_bound=13.62, east_bound=40.715)
-gpt.plotBand(p_subset, sourceBands[2], cmap='binary')
+gpt.plotBand_np(p_subset, sourceBands[2], cmap='binary')
 
 print '--> finished!'
 

@@ -17,11 +17,12 @@ import snapme as gpt
 # =============================================
 
 # # --- read master product
-# master_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE.zip'
+# master_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.zip'
 # m = gpt.read_product(path_and_file=master_abspath)
 
 # # --- read slave product
-# slave_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD.SAFE.zip'
+# # slave_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD.SAFE.zip'
+# slave_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD.zip'
 # s = gpt.read_product(path_and_file=slave_abspath)
 
 # # --- split product
@@ -61,49 +62,99 @@ import snapme as gpt
 # p = gpt.subset(p, **subset_bounds)
 
 # # --- plot
-# gpt.plotBand(p, sourceBands, cmap=['gist_rainbow', 'binary_r'])
+# # gpt.plotBands_np(p, sourceBands, cmap=['gist_rainbow', 'binary_r'])
+# gpt.plotBands(p, sourceBands)
 
 # # --- dispose (releases all of the resources used by this object instance and all of its owned children)
 # p.dispose()
 
+# =============================================
+# INTERFEROMETY various
+# =============================================
+
+# --- compute polarimetric covariance matrix (need polarimetric data => SDV)
+# abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SDV_20170209T030748_20170209T030815_015201_018E37_C90D.zip'
+# p = gpt.read_product(path_and_file=abspath)
+# pdb = gpt.deburst(p)
+# polmat = gpt.polarimetric_matrix(pdb, matrix='C2')
+# polmat = gpt.apply_orbit_file(polmat)
+# sourceBands = ['C11', 'C12_real', 'C12_imag', 'C22']
+# # NB: C11 and C22 = diagonal elts of the cov matrix, corresponding to the intensities of the two polarimetric images (intensity_VV, intensity_HV)
+# # C12_real and C12_imag denote respectively real and imaginary parts of the complex element of the covariance matrix (non diagonal element)
+# polmat = gpt.terrain_correction(polmat, sourceBands)
+# polmat = gpt.subset(polmat, **subset_bounds)
+# gpt.plotBands(polmat, band_name=sourceBands)
+
+# --- speckle filter
+# sourceBands = ['Intensity_IW2_VV']
+# p = gpt.speckle_filter(p, sourceBands)
 
 # =============================================
 # PLOT
 # =============================================
 
-# --- plot RGB from S2 data
-file_abspath = '/home/khola/DATA/data_satellite/ertaale_S2/S2A_MSIL1C_20170129T075211_N0204_R092_T37PFR_20170129T075205.zip'
-p = gpt.read_product(path_and_file=file_abspath)
-# gpt.plot_RGB(p)
-# gpt.plot_RGB(p, bname_red='B12', bname_green='B11', bname_blue='B8A', f_out='waou.png') #-> cf S2 image erta ale 2017-03-30
-gpt.write_rgb_image(p, bname_red='B12', bname_green='B11', bname_blue='B8A', f_out='waou.png')  # -> cf S2 image erta ale 2017-03-30
+# # --- plot RGB from S2 data
+# file_abspath = '/home/sebastien/DATA/data_satellite/ertaale_S2/S2A_MSIL1C_20170129T075211_N0204_R092_T37PFR_20170129T075205.zip'
+# p = gpt.read_product(path_and_file=file_abspath)
+# p = gpt.resample(p, referenceBand='B2')
+# p = gpt.subset(p, geoRegion='POLYGON((40.611005 13.654661, 40.712886 13.654661, 40.712886 13.555889, 40.611005 13.555889, 40.611005 13.654661))')
+# gpt.plotBands_rgb(p)
+# gpt.plotBands_rgb(p, bname_red='B12', bname_green='B11', bname_blue='B8A')  # -> cf S2 image erta ale 2017-03-30
 
 # # --- collocate products (S1 geocoded = master, S2 not-geocoded = slave)
-# master_abspath = '/home/khola/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.SAFE_Orb_Stack_deb_ifg_dinsar_flt_TC.dim'
-# m = gpt.read_product(path_and_file=master_abspath)
-# slave_abspath = '/home/khola/DATA/data_satellite/ertaale_S2/S2A_MSIL1C_20170330T073611_N0204_R092_T37PFR_20170330T075431.SAFE'
-# s = gpt.read_product(path_and_file=slave_abspath)
-# s = gpt.resample(s, referenceBand='B2')
-# p = gpt.collocate(m, s)
+# s1_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SDV_20170410T030748_20170410T030815_016076_01A8A7_CF75.zip'
+# s1 = gpt.read_product(path_and_file=s1_abspath)
+# s1 = gpt.topsar_split(s1, subswath=subswath, polarisation=polarization)
+# s1 = gpt.apply_orbit_file(s1)
+# s1 = gpt.deburst(s1)
+# s1 = gpt.terrain_correction(s1, ['Intensity_IW2_VV'])
+# s1 = gpt.subset(s1, **subset_bounds)
+#
+# s2_abspath = '/home/sebastien/DATA/data_satellite/ertaale_S2/S2A_MSIL1C_20170409T075211_N0204_R092_T37PFR_20170409T075210.zip'
+# s2 = gpt.read_product(path_and_file=s2_abspath)
+# s2 = gpt.resample(s2, referenceBand='B2')
+#
+# p = gpt.collocate(s1, s2)
+#
 # gpt.get_bandnames(p, print_bands=1)
-
 # subset_bounds = {'north_bound': 13.53, 'west_bound': 40.63, 'south_bound': 13.64, 'east_bound': 40.735}  # >> ertaale
 # p = gpt.subset(p, **subset_bounds)
-
-# gpt.plotBand(p, ['coh_IW2_VV_11Jan2017_04Feb2017_M'], cmap=['binary_r'])
-# gpt.plot_RGB(p, bname_red='B12_S', bname_green='B11_S', bname_blue='B8A_S', f_out='waou.png')  # -> cf S2 image erta ale 2017-03-30
-# gpt.write_rgb_image(p, bname_red='B12_S', bname_green='B11_S', bname_blue='B8A_S')  # -> cf S2 image erta ale 2017-03-30
+# gpt.plotBands(p, band_name='Intensity_IW2_VV_M')
+# gpt.plotBands_rgb(p, bname_red='B12_S', bname_green='B11_S', bname_blue='B8A_S')  # -> cf S2 image erta ale 2017-03-30
 
 # =============================================
 # MISC
 # =============================================
+
+# --- band math to compute amplitude from real/imag
+# bandmath_expression = 'ampl(C12_real, C12_imag)'
+# targetband_name = 'C12_ampl'
+# p_new = gpt.band_maths(polmat, expression=bandmath_expression, targetband_name=targetband_name)
+# polmat = gpt.merge(polmat, p_new)
 
 # --- run processing graph (operators defined in configuration file)
 # config_file = './conf/config_processing.yml'
 # gpt.graph_processing(config_file)
 
 # --- write product
-# gpt.write_product(p, pathout='home/sebastien/DATA/')
+# gpt.write_product(p, p_out='home/sebastien/DATA/')
+
+# --- extract band(s) from product
+# bd = gpt.band_select(p, sourceBands=['Intensity_IW2_VV'])
+
+# --- export
+# fmt_out = 'GeoTIFF'
+# f_out = 'mygeotiff'
+# gpt.write_product(p, f_out=f_out, fmt_out=fmt_out)
+
+# --- export all bands as distinct files
+# fmt_out = 'GeoTIFF'
+# bdnames = gpt.get_bandnames(p, print_bands=1)
+# bnames_intensity = [bdnames[idx] for idx, dbname in enumerate(bdnames) if 'Intensity_' in dbname]
+# for k, bd_name in enumerate(bnames_intensity):
+#     bd = gpt.band_select(p, sourceBands=[bd_name])
+#     gpt.write_product(bd, fmt_out=fmt_out)
+#     bd.dispose()
 
 # --- resample
 # p = gpt.resample(p, referenceBand='Intensity_IW2_VV')
@@ -113,6 +164,3 @@ gpt.write_rgb_image(p, bname_red='B12', bname_green='B11', bname_blue='B8A', f_o
 
 # --- print raster dimensions
 # gpt.print_rasterDim(p, 'Phase_ifg_IW2_VV_11Jan2017_11Jan2017')
-
-# TODO: collocate S1 and S2
-# Raster -> collocate => collocate S1 (terrain corrected) and S2

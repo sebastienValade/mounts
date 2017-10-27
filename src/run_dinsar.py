@@ -26,19 +26,19 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # polarization = 'VV'
 # volcanoname = 'etna'
 # stmt = "SELECT * FROM DB_ARCHIVE.etna WHERE orbitdirection = 'DESCENDING' AND polarization = 'VH VV';"
-## polygon_wkt = 'POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))' #>> small region over lake for testing
-# subset_bounds = {'north_bound': 37.9, 'west_bound': 14.8, 'south_bound': 37.59, 'east_bound': 15.2} 	#>> etna large view
+# polygon_wkt = 'POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))' #>> small region over lake for testing
+# subset_bounds = {'north_bound': 37.9, 'west_bound': 14.8, 'south_bound': 37.59, 'east_bound': 15.2}   #>> etna large view
 
 # >> ertaale optns
 subswath = 'IW2'
 polarization = 'VV'
 volcanoname = 'ertaale'
 # stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE SUBSTRING(title,13,4) = '1SDV'"
-# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01'"
-# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01'"
 # stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01' and orbitdirection = 'DESCENDING'"
-stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01' and orbitdirection = 'DESCENDING' ORDER BY acqstarttime ASC"
-stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01' and orbitdirection = 'ASCENDING' ORDER BY acqstarttime ASC"
+# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01' and orbitdirection = 'DESCENDING' ORDER BY acqstarttime ASC"
+# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01' and orbitdirection = 'ASCENDING' ORDER BY acqstarttime ASC"
+stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and orbitdirection = 'DESCENDING' ORDER BY acqstarttime ASC"
+# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and orbitdirection = 'ASCENDING' ORDER BY acqstarttime ASC"
 subset_bounds = {'north_bound': 13.53, 'west_bound': 40.63, 'south_bound': 13.64, 'east_bound': 40.735}  # >> ertaale
 
 
@@ -48,8 +48,8 @@ dat = rows.all()
 # --- check selection
 for r in dat:
     print(r.title, r.orbitdirection)
-#import sys
-#sys.exit()
+# import sys
+# sys.exit()
 
 start_idx = 0
 # ertaale start_idx = 4, 7, 11, 14, 17
@@ -60,10 +60,12 @@ for k, r in enumerate(dat, start=start_idx):
     if k >= len(dat) - 1:
         break
 
+    master_title = dat[k].title
+    slave_title = dat[k + 1].title
     print '---'
     print 'idx ' + str(k)
-    print 'MASTER = ' + dat[k].title + ' (' + dat[k].orbitdirection + ')'
-    print 'SLAVE = ' + dat[k + 1].title + ' (' + dat[k].orbitdirection + ')'
+    print 'MASTER = ' + master_title + ' (' + dat[k].orbitdirection + ')'
+    print 'SLAVE = ' + slave_title + ' (' + dat[k].orbitdirection + ')'
     # import sys
     # sys.exit()
 
@@ -84,8 +86,8 @@ for k, r in enumerate(dat, start=start_idx):
     s = gpt.apply_orbit_file(s)
 
     # -- subset giving pixel-coordinates to avoid DEM-assisted back-geocoding on full swath???
-    # TODO: try!  
-    
+    # TODO: try!
+
     # --- back-geocoding (TOPS coregistration)
     p = gpt.back_geocoding(m, s)
 
@@ -115,28 +117,24 @@ for k, r in enumerate(dat, start=start_idx):
     # --- set output file name based on metadata
     metadata_master = gpt.get_metadata_abstracted(m)
     metadata_slave = gpt.get_metadata_abstracted(s)
-    fnameout_band1 = metadata_master['acqstarttime_str'] + '_' + metadata_slave['acqstarttime_str'] + '_' + '_'.join(sourceBands[0].split('_')[0:3]) + '.png'
-    fnameout_band2 = metadata_master['acqstarttime_str'] + '_' + metadata_slave['acqstarttime_str'] + '_' + '_'.join(sourceBands[1].split('_')[0:3]) + '.png'
+    fnameout_band1 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'ifg']) + '.png'
+    fnameout_band2 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh']) + '.png'
 
     # --- plot
-    gpt.plotBand(p, sourceBands, cmap=['gist_rainbow', 'binary_r'], f_out=[fnameout_band1, fnameout_band2])
-    # gpt.write_image(p, band_name=bdnames[idx_coh], f_out=fnameout_band2)
+    p_out = '/home/sebastien/DATA/data_mounts/' + volcanoname + '/'
+    # gpt.plotBands_np(p, sourceBands, cmap=['gist_rainbow', 'binary_r'], f_out=[fnameout_band1, fnameout_band2])
+    gpt.plotBands(p, sourceBands, f_out=[fnameout_band1, fnameout_band2], p_out=p_out)
 
     # --- dispose => Releases all of the resources used by this object instance and all of its owned children.
     print('Product dispose (release all resources used by object)')
     p.dispose()
 
     # --- store image file to DB_RESULTS
-    # dict_val = {'title': fnameout_band1,
-    #             'abspath': '/home/sebastien/Documents/MOUNTS/mounts/data' + fnameout_band1,
-    #             'type': 'ifg',
-    #             'mission': metadata_master['mission'],
-    #             'orbitdirection': metadata_master['orbitdirection'],
-    #             'relativeorbitnumber': metadata_master['relativeorbitnumber'],
-    #             'acquisitionmode': metadata_master['acquisitionmode'],
-    #             'acqstarttime': metadata_master['acqstarttime'],
-    #             'polarization': metadata_master['polarization']}
-    # dbo.dbres_loadfile(dict_val, tbname=volcanoname)
-
-    # import sys
-    # sys.exit()
+    print('Store to DB_RESULTS')
+    dict_val = {'title': [fnameout_band1, fnameout_band2],
+                'abspath': [p_out + fnameout_band1, p_out + fnameout_band2],
+                'type': ['ifg', 'coh'],
+                'master_title': [master_title, master_title],
+                'slave_title': [slave_title, slave_title],
+                }
+    dbo.insert('DB_RESULTS', 'ertaale', dict_val)

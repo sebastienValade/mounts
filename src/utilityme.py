@@ -108,30 +108,48 @@ class Database:
         q = "DROP DATABASE " + dbname
         self.execute_query(q)
 
-    def create_tb(self, dbname=None, tbname=None, dicts=None, primarykey=None):
+    def create_tb(self, dbname=None, tbname=None, dicts=None, primarykey=None, foreignkey=None, foreignkey_ref=None):
         """Create table.
 
         Query statement: "CREATE TABLE table (field1 type1, field2 type2, ...)"
 
         """
 
-        table = '.'.join([dbname, tbname])
-
-        q = 'create table {}'.format(table)
+        # --- set field/type
         a = []
         for k, v in dicts.items():
             a.append(str(k) + ' ' + str(v))
 
+        # --- set PRIMARY KEY
         if primarykey is not None:
             # WARNING: primary key cannot be of type TEXT.
             # In order to use a column containing a string as a primary key, a length should be specified (=> how many characters to guarantee maintain unique).
             # This is only possible with VARCHAR type, ex: VARCHAR(100)
-            q += ' (' + ','.join(a) + ', PRIMARY KEY (' + primarykey + ')) '
-        else:
-            q += ' (' + ','.join(a) + ') '
+            a.append('PRIMARY KEY (' + primarykey + ')')
 
         # --- add id column as primary key with auto_incrementation
         # q += ' (id int NOT NULL AUTO_INCREMENT, ' + ','.join(a) + ', PRIMARY KEY (id))'
+
+        # --- set FOREIGN KEY constraint
+        if foreignkey is not None and foreignkey_ref is not None:
+            # Syntax: FOREIGN KEY (foreignkey) REFERENCES foreignkey_ref
+            #   where: foreignkey = colname, foreignkey_ref = dbref_name.tbref_name(colref_name)
+            # Example: FOREIGN KEY (ref_master) REFERENCES DB_ARCHIVE.etna(title)
+            # Source: https://www.w3schools.com/sql/sql_foreignkey.asp
+            # Usage: => The INNER JOIN keyword selects records that have matching values in both tables.
+            #   stmt = "SELECT acqstarttime_str FROM DB_ARCHIVE.ertaale INNER JOIN DB_RESULTS.ertaale ON DB_ARCHIVE.ertaale.title=DB_RESULTS.ertaale.ref_master;"
+            #   rows = dbo.execute_query(stmt)
+
+            if isinstance(foreignkey, str):
+                foreignkey = [foreignkey]
+                foreignkey_ref = [foreignkey_ref]
+
+            for k, fkey in enumerate(foreignkey):
+                a.append('FOREIGN KEY (' + foreignkey[k] + ') REFERENCES ' + foreignkey_ref[k])
+
+        table = '.'.join([dbname, tbname])
+        q = 'create table {}'.format(table)
+        q += ' (' + ', '.join(a) + ') '
 
         self.execute_query(q)
 
@@ -145,22 +163,51 @@ class Database:
 
     def gen_insert(self, dbname=None, tbname=None, dicts=None):
         """Generate insert statement.
-            "INSERT INTO table1 (field1, field2, ...) VALUES (value1, value2, ...)"
-
-            dicts = {'col1':'val1', 'col2':'val2', ...}
+            One row: 
+                dicts = {'col1':'val1', 'col2':'val2', ...}
+                "INSERT INTO table1 (field1, field2, ...) VALUES ('value1', 'value2', ...)"
+            Multiple rows:
+                dicts = {'col1':['row1', 'row2'], 'col2':['row1', 'row2'], ...}
+                "INSERT INTO table1 (field1, field2, ...) VALUES ('row1_col1', 'row1_col2', ...), ('row2_col1', 'row2_col2', ...)"
 
             NB: 'ignore' statement will generate a warning when entery already exists
         """
-        table = '.'.join([dbname, tbname])
 
-        q = 'insert ignore into {}'.format(table)
-        ksql = []
-        vsql = []
-        for k, v in dicts.items():
-            ksql.append(str(k))
-            vsql.append("'" + str(v) + "'")
-        q += ' (' + ','.join(ksql) + ') '
-        q += ' values (' + ','.join(vsql) + ')'
+        # === one row insertion only:
+        # table = '.'.join([dbname, tbname])
+        # q = 'insert ignore into {}'.format(table)
+
+        # ksql = []
+        # vsql = []
+        # for k, v in dicts.items():
+        #     ksql.append(str(k))
+        #     vsql.append("'" + str(v) + "'")
+        # q += ' (' + ','.join(ksql) + ') '
+        # q += ' values (' + ','.join(vsql) + ')'
+
+        # --- get dbname.tbname
+        tb_str = '.'.join([dbname, tbname])
+
+        # --- get keys (columns)
+        k_list = dicts.keys()
+        k_str = '(' + ', '.join(k_list) + ') '
+
+        # --- get values
+        v_list = dicts.values()
+
+        if isinstance(v_list[0], list):
+            # => nested list: multiple rows to write
+            row_dict = []
+            for r in zip(*v_list):
+                row_str = '(' + ', '.join("'" + item + "'" for item in r) + ')'
+                row_dict.append(row_str)
+            v_str = ', '.join(row_dict)
+
+        else:
+            v_str = '(' + ', '.join("'" + item + "'" for item in v_list) + ')'
+
+        # --- assemble query string
+        q = 'insert ignore into {} {} values {}'.format(tb_str, k_str, v_str)
 
         return q
 
@@ -178,7 +225,7 @@ class Database:
         """Insert values into database."""
 
         q = self.gen_insert(dbname=dbname, tbname=tbname, dicts=dicts)
-        print q
+
         self.db_conn.query(q)
 
     def print_dataset(self, dbname=None, tbname=None, colname='*'):
@@ -275,19 +322,17 @@ class Database:
             self.insert('DB_ARCHIVE', tbname, d)
 
     def dbres_newtable(self, tbname=None):
-        """Use names recovered from "get_metadata_abstracted" (snapme)."""
+
         dicts = {'title': 'VARCHAR(100)',
                  'abspath': 'TEXT',
                  'type': 'TEXT',
-                 'mission': 'TEXT',
-                 'orbitdirection': 'TEXT',
-                 'relativeorbitnumber': 'TEXT',
-                 'acquisitionmode': 'TEXT',
-                 'acqstarttime': 'DATETIME',
-                 'polarization': 'TEXT'}
+                 'master_title': 'VARCHAR(100)',
+                 'slave_title': 'VARCHAR(100)'}
 
-        self.create_tb(dbname='DB_RESULTS', tbname=tbname, dicts=dicts, primarykey='title')
-
-    def dbres_loadfile(self, dict_val, tbname=None):
-        # NB: dict_val -> cf columns defined in dbres_newtable
-        self.insert('DB_RESULTS', tbname, dict_val)
+        self.create_tb(dbname='DB_RESULTS',
+                       tbname=tbname,
+                       dicts=dicts,
+                       primarykey='title',
+                       foreignkey=['master_title', 'slave_title'],
+                       foreignkey_ref=['DB_ARCHIVE.' + tbname + '(title)', 'DB_ARCHIVE.' + tbname + '(title)']
+                       )
