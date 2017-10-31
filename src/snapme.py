@@ -782,7 +782,7 @@ def band_maths(product, expression=None, targetband_name='band_new'):
     #
     # TODO: implement masking and export in kmz:
     # http://www.un-spider.org/advisory-support/recommended-practices/recommended-practice-flood-mapping/step-by-step
-    # 
+    #
     # WARNING: All the methods in the Band Maths are pixel-based. They don't compute values for a whole band.
     # http://forum.step.esa.int/t/mean-average-and-standard-deviation-band-math/1879
 
@@ -850,6 +850,131 @@ def band_maths(product, expression=None, targetband_name='band_new'):
 
 
 ####################################################################
+
+def dinsar(cfg_productselection,
+           cfg_dinsar,
+           cfg_plot,
+           store_result2db=None,
+           print_sqlQuery=None,
+           print_sqlResult=None):
+
+    print('=== DINSAR PROCESSING')
+
+    # --- connect to database
+    import utilityme as utils
+    dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
+
+    # --- query archive with selected options
+    stmt = dbo.dbmounts_archive_querystmt(**cfg_productselection)
+    rows = dbo.execute_query(stmt)
+    dat = rows.all()
+    if print_sqlQuery is True:
+        print(stmt)
+
+    # --- create master slave pairs (msp)
+    msp_ASC = [(x, y) for x, y in zip(dat[0::], dat[1::]) if x.orbitdirection == 'ASCENDING' and y.orbitdirection == 'ASCENDING']
+    msp_DSC = [(x, y) for x, y in zip(dat[0::], dat[1::]) if x.orbitdirection == 'DESCENDING' and y.orbitdirection == 'DESCENDING']
+    msp = msp_ASC + msp_DSC
+
+    if print_sqlResult is True:
+        print('--- Selected products (ordered by orbitdirection/acqstarttime):')
+        for r in dat:
+            print(r.title, r.orbitdirection)
+
+        print('--- Created master/slave pairs:')
+        for k, val in enumerate(msp):
+            print('- pair ' + str(k + 1) + '/' + str(len(msp)))
+            print '  master = ' + msp[k][0].title + ' ' + msp[k][0].orbitdirection
+            print '  slave = ' + msp[k][1].title + ' ' + msp[k][1].orbitdirection
+
+    # === PROCESS
+    targetname = cfg_productselection['target_name']
+    subswath = cfg_dinsar['subswath']
+    polarization = cfg_dinsar['polarization']
+    subset_wkt = cfg_plot['subset_wkt']
+    pathout_root = cfg_plot['pathout_root']
+
+    start_idx = 0
+    for k, r in enumerate(msp, start=start_idx):
+
+        master_title = msp[k][0].title
+        slave_title = msp[k][1].title
+        master_id = str(msp[k][0].id)
+        slave_id = str(msp[k][1].id)
+        print '---'
+        print 'idx ' + str(k)
+        print 'MASTER = ' + master_title + ' (' + msp[k][0].orbitdirection + ')'
+        print 'SLAVE = ' + slave_title + ' (' + msp[k][1].orbitdirection + ')'
+
+        # --- read master product
+        master_abspath = msp[k][0].abspath
+        m = read_product(path_and_file=master_abspath)
+
+        # --- read slave product
+        slave_abspath = msp[k][1].abspath
+        s = read_product(path_and_file=slave_abspath)
+
+        # --- split product
+        m = topsar_split(m, subswath=subswath, polarisation=polarization)
+        s = topsar_split(s, subswath=subswath, polarisation=polarization)
+
+        # --- apply orbit file
+        m = apply_orbit_file(m)
+        s = apply_orbit_file(s)
+
+        # -- subset giving pixel-coordinates to avoid DEM-assisted back-geocoding on full swath???
+        # TODO: try!
+
+        # --- back-geocoding (TOPS coregistration)
+        p = back_geocoding(m, s)
+
+        # --- interferogram
+        p = interferogram(p)
+
+        # --- deburst
+        p = deburst(p)
+
+        # --- topographic phase removal
+        p = topo_phase_removal(p)
+
+        # --- phase filtering
+        p = goldstein_phase_filtering(p)
+
+        # --- terrain correction (geocoding)
+        bdnames = get_bandnames(p, print_bands=None)
+        idx_phase = [idx for idx, dbname in enumerate(bdnames) if 'Phase_' in dbname][0]
+        idx_coh = [idx for idx, dbname in enumerate(bdnames) if 'coh_' in dbname][0]
+        sourceBands = [bdnames[idx_phase], bdnames[idx_coh]]
+        p = terrain_correction(p, sourceBands)
+
+        # --- subset
+        # p = subset(p, **subset_bounds)
+        p = subset(p, geoRegion=subset_wkt)
+
+        # --- set output file name based on metadata
+        metadata_master = get_metadata_abstracted(m)
+        metadata_slave = get_metadata_abstracted(s)
+        fnameout_band1 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'ifg']) + '.png'
+        fnameout_band2 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh']) + '.png'
+
+        # --- plot
+        p_out = pathout_root + targetname + '/'
+        plotBands(p, sourceBands, f_out=[fnameout_band1, fnameout_band2], p_out=p_out)
+
+        # --- dispose => Releases all of the resources used by this object instance and all of its owned children.
+        print('Product dispose (release all resources used by object)')
+        p.dispose()
+
+        # --- store image file to database
+        if store_result2db is True:
+            print('Store to DB_MOUNTS.results_img')
+            dict_val = {'title': [fnameout_band1, fnameout_band2],
+                        'abspath': [p_out + fnameout_band1, p_out + fnameout_band2],
+                        'type': ['ifg', 'coh'],
+                        'id_master': [master_id, master_id],
+                        'id_slave': [slave_id, slave_id]}
+            dbo.insert('DB_MOUNTS', 'results_img', dict_val)
+
 
 def graph_processing(config_file):
     """Runs snapme operators sequentially from yaml configuration file.
@@ -1154,9 +1279,6 @@ def plotBands_rgb(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out
     if fmt_out is None:
         fmt_out = 'png'
 
-    print 'XXXXXXXXXXX'
-    print im
-    print 'XXXXXXXXXXX'
     JAI.create("filestore", im, p_out + f_out + '.' + fmt_out, fmt_out)
 
 
@@ -1335,7 +1457,10 @@ def get_metadata_abstracted(self):
     orbit_direction = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('PASS')
     polarization_1 = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('mds1_tx_rx_polar')
     polarization_2 = self.getMetadataRoot().getElement('Abstracted_Metadata').getAttributeString('mds2_tx_rx_polar')
-    polarization = ' '.join([polarization_1, polarization_2])
+    if polarization_2 == '-':
+        polarization = polarization_1
+    else:
+        polarization = ' '.join([polarization_1, polarization_2])
 
     from dateutil.parser import parse
     acqstart_datetime = parse(acqstart_str).strftime('%Y-%m-%d %H:%M:%S.%f')

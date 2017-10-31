@@ -120,15 +120,18 @@ class Database:
         for k, v in dicts.items():
             a.append(str(k) + ' ' + str(v))
 
+            # --- if field 'id' -> add autoincrement behavior
+            # if k == 'id':
+            #     a[-1] = str(k) + ' ' + str(v) + ' NOT NULL AUTO_INCREMENT'
+
         # --- set PRIMARY KEY
         if primarykey is not None:
             # WARNING: primary key cannot be of type TEXT.
             # In order to use a column containing a string as a primary key, a length should be specified (=> how many characters to guarantee maintain unique).
-            # This is only possible with VARCHAR type, ex: VARCHAR(100)
+            # This is only possible with VARCHAR type:
+            # EX:   >> dicts = {'title': 'VARCHAR(100)', 'abspath': 'TEXT'}
+            #       >> dbo.create_tb(dbname='DB_ARCHIVE', tbname='etna', dicts=dicts, primarykey='title')
             a.append('PRIMARY KEY (' + primarykey + ')')
-
-        # --- add id column as primary key with auto_incrementation
-        # q += ' (id int NOT NULL AUTO_INCREMENT, ' + ','.join(a) + ', PRIMARY KEY (id))'
 
         # --- set FOREIGN KEY constraint
         if foreignkey is not None and foreignkey_ref is not None:
@@ -163,7 +166,7 @@ class Database:
 
     def gen_insert(self, dbname=None, tbname=None, dicts=None):
         """Generate insert statement.
-            One row: 
+            One row:
                 dicts = {'col1':'val1', 'col2':'val2', ...}
                 "INSERT INTO table1 (field1, field2, ...) VALUES ('value1', 'value2', ...)"
             Multiple rows:
@@ -199,12 +202,12 @@ class Database:
             # => nested list: multiple rows to write
             row_dict = []
             for r in zip(*v_list):
-                row_str = '(' + ', '.join("'" + item + "'" for item in r) + ')'
+                row_str = '(' + ', '.join('"' + item + '"' for item in r) + ')'
                 row_dict.append(row_str)
             v_str = ', '.join(row_dict)
 
         else:
-            v_str = '(' + ', '.join("'" + item + "'" for item in v_list) + ')'
+            v_str = '(' + ', '.join('"' + item + '"' for item in v_list) + ')'
 
         # --- assemble query string
         q = 'insert ignore into {} {} values {}'.format(tb_str, k_str, v_str)
@@ -231,7 +234,6 @@ class Database:
     def print_dataset(self, dbname=None, tbname=None, colname='*'):
 
         q = self.gen_select(dbname=dbname, tbname=tbname, colname=colname)
-
         rows = self.db_conn.query(q)
 
         if not rows.all():
@@ -247,27 +249,6 @@ class Database:
 
         # return rows
         return rows.all()
-
-    def store_dir2db(self, path_dir, dbname=None, tbname=None):
-        """Store file name and abspath contained in a directory into a datablase with fields 'prod_title' and 'prod_abspath'"""
-
-        if dbname == 'DB_ARCHIVE':
-            file_ext = 'zip'
-            colname_title = 'prod_title'
-            colname_abspath = 'prod_abspath'
-        elif dbname == 'DB_RESULTS':
-            file_ext = 'png'
-            colname_title = 'file_name'
-            colname_abspath = 'file_abspath'
-
-        import glob
-        f = glob.glob(os.path.join(path_dir, '') + '*.' + file_ext)
-
-        for k, fpath in enumerate(f):
-            fname = os.path.basename(fpath)
-            ftitle = os.path.splitext(fname)[0]
-
-            self.insert(dbname, tbname, {colname_title: ftitle, colname_abspath: fpath})
 
     def get_product_metadata(self, path_and_file=None):
         from snapme import read_product
@@ -285,22 +266,89 @@ class Database:
 
     # -----------------------------------------------------------------------------------------
 
-    def dbarch_newtable(self, tbname=None):
-        """Use names recovered from "get_metadata_abstracted" (snapme)."""
-        dicts = {'title': 'VARCHAR(100)',
-                 'abspath': 'TEXT',
-                 'producttype': 'TEXT',
-                 'mission': 'TEXT',
-                 'orbitdirection': 'TEXT',
-                 'relativeorbitnumber': 'TEXT',
-                 'acquisitionmode': 'TEXT',
-                 'acqstarttime': 'DATETIME',
-                 'acqstarttime_str': 'TEXT',
-                 'polarization': 'TEXT'}
+    # TODO: delete, obsolete as of v2 ?
+    # def store_dir2db(self, path_dir, dbname=None, tbname=None):
+    #     """Store file name and abspath contained in a directory into a datablase with fields 'prod_title' and 'prod_abspath'"""
+    #
+    #     if dbname == 'DB_ARCHIVE':
+    #         file_ext = 'zip'
+    #         colname_title = 'prod_title'
+    #         colname_abspath = 'prod_abspath'
+    #     elif dbname == 'DB_RESULTS':
+    #         file_ext = 'png'
+    #         colname_title = 'file_name'
+    #         colname_abspath = 'file_abspath'
+    #
+    #     import glob
+    #     f = glob.glob(os.path.join(path_dir, '') + '*.' + file_ext)
+    #
+    #     for k, fpath in enumerate(f):
+    #         fname = os.path.basename(fpath)
+    #         ftitle = os.path.splitext(fname)[0]
+    #
+    #         self.insert(dbname, tbname, {colname_title: ftitle, colname_abspath: fpath})
 
-        self.create_tb(dbname='DB_ARCHIVE', tbname=tbname, dicts=dicts, primarykey='title')
+    # TODO: delete, obsolte as of v2
+    # def dbarch_newtable(self, tbname=None):
+    #     """Use names recovered from "get_metadata_abstracted" (snapme)."""
+    #     dicts = {'title': 'VARCHAR(100)',
+    #              'abspath': 'TEXT',
+    #              'producttype': 'TEXT',
+    #              'mission': 'TEXT',
+    #              'orbitdirection': 'TEXT',
+    #              'relativeorbitnumber': 'TEXT',
+    #              'acquisitionmode': 'TEXT',
+    #              'acqstarttime': 'DATETIME',
+    #              'acqstarttime_str': 'TEXT',
+    #              'polarization': 'TEXT'}
+    #
+    #     self.create_tb(dbname='DB_ARCHIVE', tbname=tbname, dicts=dicts, primarykey='title')
 
-    def dbarch_loaddir(self, path_dir, tbname=None):
+    # TODO: remove, replaced by 'dbmounts_loadarchive' as of v2
+    # def dbarch_loaddir(self, path_dir, tbname=None):
+    #
+    #     import glob
+    #     f = glob.glob(os.path.join(path_dir, '') + '*.zip')
+    #
+    #     for k, fpath in enumerate(f):
+    #         fname = os.path.basename(fpath)
+    #
+    #         # --- get metadata
+    #         metadata_abs = self.get_product_metadata(path_and_file=fpath)
+    #
+    #         if metadata_abs is None:
+    #             continue
+    #
+    #         # --- dict with column/value to upload
+    #         d = {}
+    #         d = {'abspath': fpath}
+    #         d.update(metadata_abs)
+    #
+    #         self.insert('DB_ARCHIVE', tbname, d)
+
+    # TODO: delete, obsolte as of v2
+    # def dbres_newtable(self, tbname=None):
+    #
+    #     dicts = {'title': 'VARCHAR(100)',
+    #              'abspath': 'TEXT',
+    #              'type': 'TEXT',
+    #              'master_title': 'VARCHAR(100)',
+    #              'slave_title': 'VARCHAR(100)'}
+    #
+    #     self.create_tb(dbname='DB_RESULTS',
+    #                    tbname=tbname,
+    #                    dicts=dicts,
+    #                    primarykey='title',
+    #                    foreignkey=['master_title', 'slave_title'],
+    #                    foreignkey_ref=['DB_ARCHIVE.' + tbname + '(title)', 'DB_ARCHIVE.' + tbname + '(title)']
+    #                    )
+
+    def dbmounts_loadarchive(self, path_dir=None, target_name=None, print_metadata=None):
+
+        # --- get 'target_id' => find in table 'DB_MOUNTS.target' element matching selected name
+        stmt = "SELECT id FROM DB_MOUNTS.targets WHERE name = '{}'".format(target_name)
+        rows = self.execute_query(stmt)
+        target_id = rows[0][0]
 
         import glob
         f = glob.glob(os.path.join(path_dir, '') + '*.zip')
@@ -316,23 +364,70 @@ class Database:
 
             # --- dict with column/value to upload
             d = {}
-            d = {'abspath': fpath}
+            d = {'abspath': fpath, 'target_id': str(target_id), 'target_name': target_name}
             d.update(metadata_abs)
 
-            self.insert('DB_ARCHIVE', tbname, d)
+            if print_metadata:
+                print d
 
-    def dbres_newtable(self, tbname=None):
+            self.insert('DB_MOUNTS', 'archive', d)
 
-        dicts = {'title': 'VARCHAR(100)',
-                 'abspath': 'TEXT',
-                 'type': 'TEXT',
-                 'master_title': 'VARCHAR(100)',
-                 'slave_title': 'VARCHAR(100)'}
+    def dbmounts_archive_querystmt(self,
+                                   id=None,
+                                   title=None,
+                                   abspath=None,
+                                   producttype=None,
+                                   mission=None,
+                                   orbitdirection=None,
+                                   relativeorbitnumber=None,
+                                   acquisitionmode=None,
+                                   acqstarttime=None,
+                                   acqstarttime_str=None,
+                                   polarization=None,
+                                   target_id=None,
+                                   target_name=None):
 
-        self.create_tb(dbname='DB_RESULTS',
-                       tbname=tbname,
-                       dicts=dicts,
-                       primarykey='title',
-                       foreignkey=['master_title', 'slave_title'],
-                       foreignkey_ref=['DB_ARCHIVE.' + tbname + '(title)', 'DB_ARCHIVE.' + tbname + '(title)']
-                       )
+        # --- format sql options as "option1='value' and option2='value2 and ..." => parse the locals() dictionnary (excluding 'self' and None values)
+        options = [k[0] + "='" + str(k[1]) + "'" for k in locals().iteritems() if k[1] is not None and k[0] != 'self']
+        options = ' and '.join(options)
+
+        # --- TODO: format acqstarttime to allow syntax like:
+        # stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01'"
+
+        # --- contruct SQL statement
+        # NB: results ordered by orbitdirection/acqstarttime, in ascending order
+        stmt = "SELECT * FROM DB_MOUNTS.archive WHERE {} ORDER BY orbitdirection, acqstarttime ASC".format(options)
+
+        return stmt
+
+    # def dbmounts_addtarget(self,
+    #                        id=None,
+    #                        fullname=None,
+    #                        name=None,
+    #                        country=None,
+    #                        lat=None,
+    #                        lon=None,
+    #                        processing=None,
+    #                        download=None):
+
+    #     dicts = {'id': str(id), 'fullname': fullname, 'name': name, 'country': country, 'lat': str(lat), 'lon': str(lon), 'processing': processing, 'download': download}
+    #     dicts_no_none = dict((k, v) for k, v in dicts.iteritems() if v is not None)
+
+    #     # TODO: Python3 syntax:
+    #     # dicts_no_none = {k:v for k,v in dicts.items() if v is not None}
+
+    #     self.insert('DB_MOUNTS', 'targets', dicts_no_none)
+
+    def dbmounts_addtarget(self, **kwargs):
+
+        # --- make sure every values is passed in as string in mysql statement
+        dicts = dict((k, str(v)) for k, v in kwargs.iteritems())
+
+        self.insert('DB_MOUNTS', 'targets', dicts)
+
+    def dbmounts_gettargetid(self, name=None):
+
+        stmt = "SELECT id FROM DB_MOUNTS.targets WHERE name = '{}'".format(name)
+        rows = self.execute_query(stmt)
+
+        return rows[0][0]

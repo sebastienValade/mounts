@@ -395,7 +395,8 @@ class Scihub(Esa):
 
         return productlist
 
-    def scihub_download(self, productlist,
+    def scihub_download(self,
+                        productlist,
                         download_pnode='fullproduct',
                         download_dir=None,
                         configfile=None):

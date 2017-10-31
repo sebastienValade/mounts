@@ -4,77 +4,70 @@ import snapme as gpt
 
 dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
 
-# --- get dataset
-# dat = dbo.get_dataset(dbname='DB_ARCHIVE', tbname='ertaale')
-# print dat[0][1]
-# rows = dbo.get_dataset(dbname='DB_ARCHIVE', tbname='ertaale')
-# for r in rows:
-#     print(r.title, r.abspath)
+printselection_without_processing = 1
 
-# --- open product
-# p = gpt.read_product(path_and_file=dat[0][1])
-# print p.getName()
 
-# --- select products
-# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE SUBSTRING(title,13,4) = '1SDV'"
-# stmt = "SELECT * FROM DB_ARCHIVE.etna WHERE orbitdirection = 'DESCENDING' AND polarization = 'VH VV';"
-
-# --- processing options
-
-# >> etna optns
-# subswath = 'IW2'
-# polarization = 'VV'
-# volcanoname = 'etna'
-# stmt = "SELECT * FROM DB_ARCHIVE.etna WHERE orbitdirection = 'DESCENDING' AND polarization = 'VH VV';"
-# polygon_wkt = 'POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))' #>> small region over lake for testing
-# subset_bounds = {'north_bound': 37.9, 'west_bound': 14.8, 'south_bound': 37.59, 'east_bound': 15.2}   #>> etna large view
-
-# >> ertaale optns
+# === INPUTS
+volcanoname = 'ertaale'
 subswath = 'IW2'
 polarization = 'VV'
-volcanoname = 'ertaale'
-# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE SUBSTRING(title,13,4) = '1SDV'"
-# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01' and orbitdirection = 'DESCENDING'"
-# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01' and orbitdirection = 'DESCENDING' ORDER BY acqstarttime ASC"
-# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01' and orbitdirection = 'ASCENDING' ORDER BY acqstarttime ASC"
-stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and orbitdirection = 'DESCENDING' ORDER BY acqstarttime ASC"
-# stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and orbitdirection = 'ASCENDING' ORDER BY acqstarttime ASC"
 subset_bounds = {'north_bound': 13.53, 'west_bound': 40.63, 'south_bound': 13.64, 'east_bound': 40.735}  # >> ertaale
 
+username = 'khola'
+pathout_root = '/home/' + username + '/DATA/data_mounts/'
 
+# === GET ARCHIVE
+query_optns = {'target_name': volcanoname}
+stmt = dbo.dbmounts_archive_querystmt(**query_optns)
+# stmt = "SELECT * FROM DB_MOUNTS.archive WHERE target_name = '{}' ORDER BY orbitdirection, acqstarttime ASC".format(volcanoname)
 rows = dbo.execute_query(stmt)
 dat = rows.all()
 
-# --- check selection
-for r in dat:
-    print(r.title, r.orbitdirection)
-# import sys
-# sys.exit()
 
+# --- create master slave pairs (msp)
+msp_ASC = [(x, y) for x, y in zip(dat[0::], dat[1::]) if x.orbitdirection == 'ASCENDING' and y.orbitdirection == 'ASCENDING']
+msp_DSC = [(x, y) for x, y in zip(dat[0::], dat[1::]) if x.orbitdirection == 'DESCENDING' and y.orbitdirection == 'DESCENDING']
+msp = msp_ASC + msp_DSC
+
+
+if printselection_without_processing:
+    print('=== Selected products (ordered by orbitdirection/acqstarttime):')
+    for r in dat:
+        print(r.title, r.orbitdirection)
+
+    print('=== Created master/slave pairs:')
+    for k, val in enumerate(msp):
+        print('- pair ' + str(k + 1) + '/' + str(len(msp)))
+        print '  master = ' + msp[k][0].title + ' ' + msp[k][0].orbitdirection
+        print '  slave = ' + msp[k][1].title + ' ' + msp[k][1].orbitdirection
+
+    import sys
+    sys.exit()
+
+
+# === PROCESS
 start_idx = 0
-# ertaale start_idx = 4, 7, 11, 14, 17
 print 'starting from idx ' + str(start_idx)
 
-for k, r in enumerate(dat, start=start_idx):
+for k, r in enumerate(msp, start=start_idx):
 
-    if k >= len(dat) - 1:
-        break
-
-    master_title = dat[k].title
-    slave_title = dat[k + 1].title
+    master_title = msp[k][0].title
+    slave_title = msp[k][1].title
+    master_id = str(msp[k][0].id)
+    slave_id = str(msp[k][1].id)
     print '---'
     print 'idx ' + str(k)
-    print 'MASTER = ' + master_title + ' (' + dat[k].orbitdirection + ')'
-    print 'SLAVE = ' + slave_title + ' (' + dat[k].orbitdirection + ')'
+    print 'MASTER = ' + master_title + ' (' + msp[k][0].orbitdirection + ')'
+    print 'SLAVE = ' + slave_title + ' (' + msp[k][1].orbitdirection + ')'
     # import sys
     # sys.exit()
 
     # --- read master product
-    master_abspath = dat[k].abspath
+    master_abspath = msp[k][0].abspath
     m = gpt.read_product(path_and_file=master_abspath)
 
     # --- read slave product
-    slave_abspath = dat[k + 1].abspath
+    slave_abspath = msp[k][1].abspath
     s = gpt.read_product(path_and_file=slave_abspath)
 
     # --- split product
@@ -121,7 +114,7 @@ for k, r in enumerate(dat, start=start_idx):
     fnameout_band2 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh']) + '.png'
 
     # --- plot
-    p_out = '/home/sebastien/DATA/data_mounts/' + volcanoname + '/'
+    p_out = pathout_root + volcanoname + '/'
     # gpt.plotBands_np(p, sourceBands, cmap=['gist_rainbow', 'binary_r'], f_out=[fnameout_band1, fnameout_band2])
     gpt.plotBands(p, sourceBands, f_out=[fnameout_band1, fnameout_band2], p_out=p_out)
 
@@ -129,12 +122,11 @@ for k, r in enumerate(dat, start=start_idx):
     print('Product dispose (release all resources used by object)')
     p.dispose()
 
-    # --- store image file to DB_RESULTS
-    print('Store to DB_RESULTS')
+    # --- store image file to database
+    print('Store to DB_MOUNTS.results_img')
     dict_val = {'title': [fnameout_band1, fnameout_band2],
                 'abspath': [p_out + fnameout_band1, p_out + fnameout_band2],
                 'type': ['ifg', 'coh'],
-                'master_title': [master_title, master_title],
-                'slave_title': [slave_title, slave_title],
-                }
-    dbo.insert('DB_RESULTS', 'ertaale', dict_val)
+                'id_master': [master_id, master_id],
+                'id_slave': [slave_id, slave_id]}
+    dbo.insert('DB_MOUNTS', 'results_img', dict_val)
