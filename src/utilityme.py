@@ -188,6 +188,9 @@ class Database:
         # q += ' (' + ','.join(ksql) + ') '
         # q += ' values (' + ','.join(vsql) + ')'
 
+        # TODO: check example on Records lib website using variables !? (https://github.com/kennethreitz/records/blob/master/examples/randomuser-sqlite.py)
+        # db.query('INSERT INTO persons (key, fname, lname, email) VALUES(:key, :fname, :lname, :email)', key=key, fname=fname, lname=lname, email=email)
+
         # --- get dbname.tbname
         tb_str = '.'.join([dbname, tbname])
 
@@ -425,9 +428,14 @@ class Database:
 
         self.insert('DB_MOUNTS', 'targets', dicts)
 
-    def dbmounts_gettargetid(self, name=None):
+    def dbmounts_target_nameid(self, target_name=None, target_id=None):
+        """ Get target_id from name, or target_name from id. """
 
-        stmt = "SELECT id FROM DB_MOUNTS.targets WHERE name = '{}'".format(name)
+        if target_id is None and target_name is not None:
+            stmt = "SELECT id FROM DB_MOUNTS.targets WHERE name = '{}'".format(target_name)
+        elif target_id is not None and target_name is None:
+            stmt = "SELECT name FROM DB_MOUNTS.targets WHERE id = '{}'".format(target_id)
+
         rows = self.execute_query(stmt)
 
         return rows[0][0]

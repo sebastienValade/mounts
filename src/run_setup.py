@@ -23,6 +23,7 @@ dicts = {'id': 'INT',               # = volcano number defined by GVP
          'country': 'CHAR(100)',
          'lat': 'FLOAT',
          'lon': 'FLOAT',
+         'alt': 'INT',
          'download': 'INT',
          'processing': 'CHAR(100)',
          'subset_wkt': 'TEXT'}
@@ -55,13 +56,14 @@ dicts = {'id': 'INT NOT NULL AUTO_INCREMENT',
          'abspath': 'TEXT',
          'type': 'TEXT',
          'id_master': 'INT',
-         'id_slave': 'INT'}
+         'id_slave': 'INT',
+         'target_id': 'INT'}
 dbo.create_tb(dbname='DB_MOUNTS',
               tbname=tbname,
               dicts=dicts,
               primarykey='id',
-              foreignkey=['id_master', 'id_slave'],
-              foreignkey_ref=['DB_MOUNTS.archive(id)', 'DB_MOUNTS.archive(id)']
+              foreignkey=['id_master', 'id_slave', 'target_id'],
+              foreignkey_ref=['DB_MOUNTS.archive(id)', 'DB_MOUNTS.archive(id)', 'DB_MOUNTS.targets(id)']
               )
 
 # # --- create tb "processing"
@@ -81,8 +83,8 @@ dbo.create_tb(dbname='DB_MOUNTS',
 # =============================================
 
 # --- add volcanoes to target list
-dbo.dbmounts_addtarget(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV'} }", subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
-dbo.dbmounts_addtarget(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV'} }", subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
+dbo.dbmounts_addtarget(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613, processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV'} }", subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
+dbo.dbmounts_addtarget(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295, processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV'} }", subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
 
 # --- store archive zip files of each listed target to database
 stmt = "SELECT name FROM DB_MOUNTS.targets"
@@ -120,4 +122,4 @@ for r in rows:
         cfg_productselection = {'target_name': volcanoname} 	# = sql search options
         cfg_dinsar = pcss['dinsar']				# = dinsar options
         cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/'}
-        gpt.dinsar(cfg_productselection, cfg_dinsar, cfg_plot)
+        gpt.dinsar(cfg_productselection, cfg_dinsar, cfg_plot, store_result2db=True)

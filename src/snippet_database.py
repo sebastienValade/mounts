@@ -43,6 +43,14 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # QUERY db
 # =============================================
 
+# --- convert Records output to Tablib format, and use all of the library's functionalities:
+# dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
+# stmt = "SELECT * FROM DB_MOUNTS.results_img WHERE target_id = '221080'"
+# rows = dbo.execute_query(stmt)
+# tbl = rows.dataset
+# # tble.append_col([22, 20, 12, 11], header='Age') #= append new column
+
+
 # --- print content
 # dbo.print_dataset(dbname='DB_MOUNTS', tbname='targets')  # , colname='prod_title')
 
@@ -64,6 +72,26 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # rows = dbo.execute_query(stmt)
 # for r in rows:
 #     print(r.title)
+
+# --- sort based on foreign key
+# EX: get ifg image titles (in 'result_img' table) sorted by acquisition time (in 'archive' table)
+db_name = 'DB_MOUNTS'
+dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql', db_name=db_name)
+
+id = '22180'
+stmt = '''
+    SELECT R.title, A.acqstarttime
+    FROM results_img AS R
+    INNER JOIN archive AS A
+    ON R.id_master = A.id
+    WHERE R.target_id = {} AND R.type = 'ifg' OR R.type = 'coh'
+    ORDER BY A.acqstarttime desc
+    '''
+stmt = stmt.format(88)
+
+res = dbo.execute_query(stmt)
+print(res.dataset)
+
 
 # =============================================
 # DB_MOUNTS

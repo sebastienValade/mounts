@@ -888,11 +888,12 @@ def dinsar(cfg_productselection,
             print '  slave = ' + msp[k][1].title + ' ' + msp[k][1].orbitdirection
 
     # === PROCESS
-    targetname = cfg_productselection['target_name']
     subswath = cfg_dinsar['subswath']
     polarization = cfg_dinsar['polarization']
     subset_wkt = cfg_plot['subset_wkt']
     pathout_root = cfg_plot['pathout_root']
+    target_name = cfg_productselection['target_name']
+    target_id = dbo.dbmounts_target_nameid(target_name=target_name)
 
     start_idx = 0
     for k, r in enumerate(msp, start=start_idx):
@@ -958,7 +959,7 @@ def dinsar(cfg_productselection,
         fnameout_band2 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh']) + '.png'
 
         # --- plot
-        p_out = pathout_root + targetname + '/'
+        p_out = pathout_root + target_name + '/'
         plotBands(p, sourceBands, f_out=[fnameout_band1, fnameout_band2], p_out=p_out)
 
         # --- dispose => Releases all of the resources used by this object instance and all of its owned children.
@@ -967,12 +968,14 @@ def dinsar(cfg_productselection,
 
         # --- store image file to database
         if store_result2db is True:
+            path_ln = 'data_mounts/' + target_name + '/'  # = abspath from data_mounts folder, linked to mountsweb static folder
             print('Store to DB_MOUNTS.results_img')
             dict_val = {'title': [fnameout_band1, fnameout_band2],
-                        'abspath': [p_out + fnameout_band1, p_out + fnameout_band2],
+                        'abspath': [path_ln + fnameout_band1, path_ln + fnameout_band2],
                         'type': ['ifg', 'coh'],
                         'id_master': [master_id, master_id],
-                        'id_slave': [slave_id, slave_id]}
+                        'id_slave': [slave_id, slave_id],
+                        'target_id': [str(target_id), str(target_id)]}
             dbo.insert('DB_MOUNTS', 'results_img', dict_val)
 
 
