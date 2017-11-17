@@ -390,12 +390,18 @@ class Database:
                                    target_id=None,
                                    target_name=None):
 
-        # --- format sql options as "option1='value' and option2='value2 and ..." => parse the locals() dictionnary (excluding 'self' and None values)
-        options = [k[0] + "='" + str(k[1]) + "'" for k in locals().iteritems() if k[1] is not None and k[0] != 'self']
-        options = ' and '.join(options)
+        # --- construct list of options => parse the locals() dictionnary (excluding 'self', 'acqstarttime', and None values)
+        options = [k[0] + "='" + str(k[1]) + "'" for k in locals().iteritems() if k[1] is not None and k[0] != 'self' and k[0] != 'acqstarttime']
 
-        # --- TODO: format acqstarttime to allow syntax like:
-        # stmt = "SELECT * FROM DB_ARCHIVE.ertaale WHERE acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01'"
+        # --- format option acqstarttime:
+        # NB: acqstarttime='>=2017-01-01' formated as 'acqstarttime'>='2017-01-01'
+        # TODO: allow multiple time options: acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01'"
+        if acqstarttime is not None:
+            import re
+            (sign, date) = re.split(r'(^[^\d]+)', acqstarttime)[1:]
+            options.append('acqstarttime' + sign + "'" + date + "'")
+
+        options = ' and '.join(options)
 
         # --- contruct SQL statement
         # NB: results ordered by orbitdirection/acqstarttime, in ascending order

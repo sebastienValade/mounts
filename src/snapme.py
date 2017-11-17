@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 
 
 # --- load all available gpf operators
-GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis()
+# NB: not necessary anymore since version 5.0 (http://forum.step.esa.int/t/a-fatal-java-error-occurs-when-running-snappy-scripts/2093/10)
+# GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis()
 
 # --- import hashmap
 # NB: http://forum.step.esa.int/t/example-script-for-multiple-operations/2636/2
@@ -856,13 +857,20 @@ def dinsar(cfg_productselection,
            cfg_plot,
            store_result2db=None,
            print_sqlQuery=None,
-           print_sqlResult=None):
+           print_sqlResult=None,
+           file_credentials_mysql=None):
 
     print('=== DINSAR PROCESSING')
 
+    # --- get database credentials
+    if file_credentials_mysql is None:
+        file_credentials_mysql = './conf/credentials_mysql.txt'
+    f = file(file_credentials_mysql)
+    (db_usr, db_pwd) = f.readline().split(' ')
+
     # --- connect to database
     import utilityme as utils
-    dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
+    dbo = utils.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
 
     # --- query archive with selected options
     stmt = dbo.dbmounts_archive_querystmt(**cfg_productselection)
@@ -902,10 +910,10 @@ def dinsar(cfg_productselection,
         slave_title = msp[k][1].title
         master_id = str(msp[k][0].id)
         slave_id = str(msp[k][1].id)
-        print '---'
-        print 'idx ' + str(k)
-        print 'MASTER = ' + master_title + ' (' + msp[k][0].orbitdirection + ')'
-        print 'SLAVE = ' + slave_title + ' (' + msp[k][1].orbitdirection + ')'
+        print('---')
+        print('- pair ' + str(k + 1) + '/' + str(len(msp)))
+        print('MASTER = ' + master_title + ' (' + msp[k][0].orbitdirection + ')')
+        print('SLAVE = ' + slave_title + ' (' + msp[k][1].orbitdirection + ')')
 
         # --- read master product
         master_abspath = msp[k][0].abspath
@@ -955,8 +963,8 @@ def dinsar(cfg_productselection,
         # --- set output file name based on metadata
         metadata_master = get_metadata_abstracted(m)
         metadata_slave = get_metadata_abstracted(s)
-        fnameout_band1 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'ifg']) + '.png'
-        fnameout_band2 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh']) + '.png'
+        fnameout_band1 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'ifg'])
+        fnameout_band2 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh'])
 
         # --- plot
         p_out = pathout_root + target_name + '/'
@@ -1282,7 +1290,8 @@ def plotBands_rgb(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out
     if fmt_out is None:
         fmt_out = 'png'
 
-    JAI.create("filestore", im, p_out + f_out + '.' + fmt_out, fmt_out)
+    # JAI.create("filestore", im, p_out + f_out + '.' + fmt_out, fmt_out)
+    JAI.create("filestore", im, p_out + f_out, fmt_out)
 
 
 def plotBands_rgb_np(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None):
