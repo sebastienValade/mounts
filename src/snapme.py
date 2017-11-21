@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 # --- load all available gpf operators
 # NB: not necessary anymore since version 5.0 (http://forum.step.esa.int/t/a-fatal-java-error-occurs-when-running-snappy-scripts/2093/10)
-# GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis()
+GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis()
 
 # --- import hashmap
 # NB: http://forum.step.esa.int/t/example-script-for-multiple-operations/2636/2
