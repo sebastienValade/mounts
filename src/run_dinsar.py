@@ -108,8 +108,8 @@ for k, r in enumerate(msp, start=start_idx):
     # p = gpt.subset(p, geoRegion=polygon_wkt)
 
     # --- set output file name based on metadata
-    metadata_master = gpt.get_metadata_abstracted(m)
-    metadata_slave = gpt.get_metadata_abstracted(s)
+    metadata_master = gpt.get_metadata_S1(m)
+    metadata_slave = gpt.get_metadata_S1(s)
     fnameout_band1 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'ifg']) + '.png'
     fnameout_band2 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh']) + '.png'
 

@@ -13,6 +13,15 @@ def read_configfile(configfile):
     return cfg
 
 
+def create_thumbnail(fname, fname_thumb):
+    cmd = "convert -resize 256 {} {}".format(fname, fname_thumb)
+    try:
+        os.system(cmd)
+    except Exception as e:
+        print("Thumbnail creation failed, likely because ImageMagick not installed on system.")
+        raise e
+
+
 class PeriodicScheduler(object):
     def __init__(self):
         self.scheduler = sched.scheduler(time.time, time.sleep)
@@ -108,7 +117,7 @@ class Database:
         q = "DROP DATABASE " + dbname
         self.execute_query(q)
 
-    def create_tb(self, dbname=None, tbname=None, dicts=None, primarykey=None, foreignkey=None, foreignkey_ref=None):
+    def create_tb(self, dbname=None, tbname=None, dicts=None, primarykey=None, foreignkey=None, foreignkey_ref=None, unique_contraint=None):
         """Create table.
 
         Query statement: "CREATE TABLE table (field1 type1, field2 type2, ...)"
@@ -150,9 +159,19 @@ class Database:
             for k, fkey in enumerate(foreignkey):
                 a.append('FOREIGN KEY (' + foreignkey[k] + ') REFERENCES ' + foreignkey_ref[k])
 
+        # --- set UNIQUE constraint
+        if unique_contraint is not None:
+            # Syntax: UNIQUE (colname)
+            # Description:  The UNIQUE constraint ensures that all values in a column are different.
+            #               Both the UNIQUE and PRIMARY KEY constraints provide a guarantee for uniqueness for a column or set of columns.
+            #               A PRIMARY KEY constraint automatically has a UNIQUE constraint.
+            #               However, you can have many UNIQUE constraints per table, but only one PRIMARY KEY constraint per table.
+            # => on insert statement, will add row only if value in column defined by 'unique_contraint' is not duplicate. (NB: will update other fields if they have changed, thanks to the 'ON DUPLICATE KEY UPDATE' stmt)
+            a.append('UNIQUE (' + unique_contraint + ')')
+
         table = '.'.join([dbname, tbname])
-        q = 'create table {}'.format(table)
-        q += ' (' + ', '.join(a) + ') '
+        cols = ', '.join(a)
+        q = 'create table {} ({})'.format(table, cols)
 
         self.execute_query(q)
 
@@ -164,7 +183,7 @@ class Database:
         q = "TRUNCATE TABLE " + '.'.join([dbname, tbname])
         self.execute_query(q)
 
-    def gen_insert(self, dbname=None, tbname=None, dicts=None):
+    def gen_insert(self, dbname=None, tbname=None, dicts=None, behavior='dulpicate_update'):
         """Generate insert statement.
             One row:
                 dicts = {'col1':'val1', 'col2':'val2', ...}
@@ -173,7 +192,13 @@ class Database:
                 dicts = {'col1':['row1', 'row2'], 'col2':['row1', 'row2'], ...}
                 "INSERT INTO table1 (field1, field2, ...) VALUES ('row1_col1', 'row1_col2', ...), ('row2_col1', 'row2_col2', ...)"
 
-            NB: 'ignore' statement will generate a warning when entery already exists
+            Behavior when row with identical primary key exists:
+                behavior='dulpicate_update'
+                    => stmt = 'insert into {} {} values {} ON DUPLICATE KEY UPDATE {}'
+                    => 'update' statement will replace existing fields with new specified ones
+                behavior='dulpicate_ignore'
+                    => stmt = 'insert ignore into {} {} values {}'
+                    => 'ignore' statement will generate a warning when entery already exists
         """
 
         # === one row insertion only:
@@ -194,15 +219,15 @@ class Database:
         # --- get dbname.tbname
         tb_str = '.'.join([dbname, tbname])
 
-        # --- get keys (columns)
+        # --- format keys (= table columns)
         k_list = dicts.keys()
         k_str = '(' + ', '.join(k_list) + ') '
 
-        # --- get values
+        # --- format values (= table content)
         v_list = dicts.values()
-
         if isinstance(v_list[0], list):
             # => nested list: multiple rows to write
+            # => stmt = insert into db.table (col1, col2)  values ("row1", "row1"), ("row2", "row2")
             row_dict = []
             for r in zip(*v_list):
                 row_str = '(' + ', '.join('"' + item + '"' for item in r) + ')'
@@ -210,10 +235,28 @@ class Database:
             v_str = ', '.join(row_dict)
 
         else:
+            # => stmt = insert into db.table (col1, col2)  values ("row1", "row1")
             v_str = '(' + ', '.join('"' + item + '"' for item in v_list) + ')'
 
-        # --- assemble query string
-        q = 'insert ignore into {} {} values {}'.format(tb_str, k_str, v_str)
+        # --- format update statement (after "ON DUPLICATE KEY UPDATE" statement)
+        # => ON DUPLICATE KEY UPDATE key1="value1", key2="value2"
+        #    -> does not works with nested list
+        # r_list = [k + '="' + v + '"' for k, v in zip(k_list, v_list)]
+        # r_str = ', '.join(r_list)
+        # => ON DUPLICATE KEY UPDATE colname1=VALUES(colname1), colname2=VALUES(colname2)
+        #    -> works with nested list
+        r_list = [k + '=VALUES(' + k + ')' for k in k_list]
+        r_str = ', '.join(r_list)
+
+        # === assemble insert query statement
+        if behavior == 'dulpicate_ignore':
+            # => will skip if existing row, and give a warning
+            q = 'insert ignore into {} {} values {}'.format(tb_str, k_str, v_str)
+
+        elif behavior == 'dulpicate_update':
+            # => will update all fields if existing row
+            # EX: insert into dbname.tbname (col1, col2)  values ("row1", "row1"), ("row2", "row2") ON DUPLICATE KEY UPDATE col1=VALUES(col1), col2=VALUES(col2);
+            q = 'insert into {} {} values {} ON DUPLICATE KEY UPDATE {}'.format(tb_str, k_str, v_str, r_str)
 
         return q
 
@@ -253,19 +296,22 @@ class Database:
         # return rows
         return rows.all()
 
-    def get_product_metadata(self, path_and_file=None):
+    def get_product_metadata(self, path_and_file=None, product_type=None):
         from snapme import read_product
-        from snapme import get_metadata_abstracted
+        from snapme import get_metadata_S1, get_metadata_S2
 
         p = read_product(path_and_file=path_and_file)
         if p is None:
             logging.info('ERROR opening zip file = skipping')
-            metadata_abs = None
+            metadata = None
             return
 
-        metadata_abs = get_metadata_abstracted(p)
+        if product_type == 'S1':
+            metadata = get_metadata_S1(p)
+        elif product_type == 'S2':
+            metadata = get_metadata_S2(p)
 
-        return metadata_abs
+        return metadata
 
     # -----------------------------------------------------------------------------------------
 
@@ -293,7 +339,7 @@ class Database:
 
     # TODO: delete, obsolte as of v2
     # def dbarch_newtable(self, tbname=None):
-    #     """Use names recovered from "get_metadata_abstracted" (snapme)."""
+    #     """Use names recovered from "get_metadata_S1" (snapme)."""
     #     dicts = {'title': 'VARCHAR(100)',
     #              'abspath': 'TEXT',
     #              'producttype': 'TEXT',
@@ -347,6 +393,9 @@ class Database:
     #                    )
 
     def dbmounts_loadarchive(self, path_dir=None, target_name=None, print_metadata=None):
+        '''Read directory storing zip files of type S1 and/or S2, and store along with metadata in table DB_MOUNTS.archive'''
+
+        print('=== loading archive files: ' + target_name)
 
         # --- get 'target_id' => find in table 'DB_MOUNTS.target' element matching selected name
         stmt = "SELECT id FROM DB_MOUNTS.targets WHERE name = '{}'".format(target_name)
@@ -358,17 +407,19 @@ class Database:
 
         for k, fpath in enumerate(f):
             fname = os.path.basename(fpath)
+            ftype = fname[0:2]  # >> get product type = 'S1', 'S2'
 
-            # --- get metadata
-            metadata_abs = self.get_product_metadata(path_and_file=fpath)
+            # --- get metadata (both S1, S2)
+            print('  | retrieving metadata from ' + fname)
+            metadata = self.get_product_metadata(path_and_file=fpath, product_type=ftype)
 
-            if metadata_abs is None:
+            if metadata is None:
                 continue
 
             # --- dict with column/value to upload
             d = {}
             d = {'abspath': fpath, 'target_id': str(target_id), 'target_name': target_name}
-            d.update(metadata_abs)
+            d.update(metadata)
 
             if print_metadata:
                 print d
@@ -390,16 +441,32 @@ class Database:
                                    target_id=None,
                                    target_name=None):
 
-        # --- construct list of options => parse the locals() dictionnary (excluding 'self', 'acqstarttime', and None values)
-        options = [k[0] + "='" + str(k[1]) + "'" for k in locals().iteritems() if k[1] is not None and k[0] != 'self' and k[0] != 'acqstarttime']
+        # --- construct list of options => parse the locals() dictionnary (excluding 'self', None values, etc.)
+        options = [k[0] + "='" + str(k[1]) + "'" for k in locals().iteritems()
+                   if k[1] is not None
+                   and k[0] != 'self'
+                   and k[0] != 'acqstarttime'
+                   and k[0] != 'mission']
 
         # --- format option acqstarttime:
         # NB: acqstarttime='>=2017-01-01' formated as 'acqstarttime'>='2017-01-01'
         # TODO: allow multiple time options: acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01'"
+        # => use 'acqstarttime_ti' and 'acqstarttime_tf' options?
+        # => use acqstarttime='>=2017-01-01 <=2020-01-01' format?
+
         if acqstarttime is not None:
             import re
             (sign, date) = re.split(r'(^[^\d]+)', acqstarttime)[1:]
             options.append('acqstarttime' + sign + "'" + date + "'")
+
+        if mission is not None:
+            # NB: operator 'LIKE' instead of '=' allows usage of wildcards in query:
+            #   wildcard '%'    => represents zero, one, or multiple characters
+            #   wildcard '_'    => represents a single character
+            #
+            # EX: dbmounts_archive_querystmt(mission='SENTINEL-1%') will get both 'SENTINEL-1A' and 'SENTINEL-1B' products
+
+            options.append('mission LIKE ' + "'" + mission + "'")
 
         options = ' and '.join(options)
 

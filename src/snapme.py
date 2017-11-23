@@ -872,6 +872,10 @@ def dinsar(cfg_productselection,
     import utilityme as utils
     dbo = utils.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
 
+    # --- add mission in cfg_productselection if not specified (NB: '%'=wild card)
+    if 'mission' not in cfg_productselection:
+        cfg_productselection['mission'] = 'SENTINEL-1%'
+
     # --- query archive with selected options
     stmt = dbo.dbmounts_archive_querystmt(**cfg_productselection)
     rows = dbo.execute_query(stmt)
@@ -900,11 +904,15 @@ def dinsar(cfg_productselection,
     polarization = cfg_dinsar['polarization']
     subset_wkt = cfg_plot['subset_wkt']
     pathout_root = cfg_plot['pathout_root']
+    thumbnail = cfg_plot['thumbnail']
     target_name = cfg_productselection['target_name']
     target_id = dbo.dbmounts_target_nameid(target_name=target_name)
 
     start_idx = 0
     for k, r in enumerate(msp, start=start_idx):
+
+        if k != 1:
+            continue
 
         master_title = msp[k][0].title
         slave_title = msp[k][1].title
@@ -961,14 +969,15 @@ def dinsar(cfg_productselection,
         p = subset(p, geoRegion=subset_wkt)
 
         # --- set output file name based on metadata
-        metadata_master = get_metadata_abstracted(m)
-        metadata_slave = get_metadata_abstracted(s)
+        # TODO: take metadata info from sql record
+        metadata_master = get_metadata_S1(m)
+        metadata_slave = get_metadata_S1(s)
         fnameout_band1 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'ifg'])
         fnameout_band2 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh'])
 
         # --- plot
         p_out = pathout_root + target_name + '/'
-        plotBands(p, sourceBands, f_out=[fnameout_band1, fnameout_band2], p_out=p_out)
+        imgs_fullpath = plotBands(p, sourceBands, f_out=[fnameout_band1, fnameout_band2], p_out=p_out, thumbnail=thumbnail)
 
         # --- dispose => Releases all of the resources used by this object instance and all of its owned children.
         print('Product dispose (release all resources used by object)')
@@ -976,14 +985,81 @@ def dinsar(cfg_productselection,
 
         # --- store image file to database
         if store_result2db is True:
-            path_ln = 'data_mounts/' + target_name + '/'  # = abspath from data_mounts folder, linked to mountsweb static folder
+            path_ln = ['data_mounts' + i.split('/data_mounts')[1] for i in imgs_fullpath]  # = abspath from data_mounts folder, linked to mountsweb static folder
+
             print('Store to DB_MOUNTS.results_img')
             dict_val = {'title': [fnameout_band1, fnameout_band2],
-                        'abspath': [path_ln + fnameout_band1, path_ln + fnameout_band2],
+                        'abspath': path_ln,  # [path_ln + fnameout_band1, path_ln + fnameout_band2],
                         'type': ['ifg', 'coh'],
                         'id_master': [master_id, master_id],
                         'id_slave': [slave_id, slave_id],
                         'target_id': [str(target_id), str(target_id)]}
+            dbo.insert('DB_MOUNTS', 'results_img', dict_val)
+
+
+def nir(cfg_productselection,
+        cfg_nir,
+        cfg_plot,
+        store_result2db=None,
+        print_sqlQuery=None,
+        print_sqlResult=None,
+        file_credentials_mysql=None):
+
+    print('=== NIR PROCESSING')
+
+    # --- get database credentials
+    if file_credentials_mysql is None:
+        file_credentials_mysql = './conf/credentials_mysql.txt'
+    f = file(file_credentials_mysql)
+    (db_usr, db_pwd) = f.readline().split(' ')
+
+    # --- connect to database
+    import utilityme as utils
+    dbo = utils.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
+
+    # --- add mission in cfg_productselection if not specified (NB: '%'=wild card)
+    if 'mission' not in cfg_productselection:
+        cfg_productselection['mission'] = 'SENTINEL-2%'
+
+    # --- get processing parameters
+    subset_wkt = cfg_plot['subset_wkt']
+    pathout_root = cfg_plot['pathout_root']
+    thumbnail = cfg_plot['thumbnail']
+    bname_red = cfg_nir['bname_red']
+    bname_green = cfg_nir['bname_green']
+    bname_blue = cfg_nir['bname_blue']
+    target_name = cfg_productselection['target_name']
+    target_id = dbo.dbmounts_target_nameid(target_name=target_name)
+
+    # --- query archive with selected options
+    stmt = dbo.dbmounts_archive_querystmt(**cfg_productselection)
+    rows = dbo.execute_query(stmt)
+    dat = rows.all()
+    if print_sqlQuery is True:
+        print(stmt)
+
+    for r in dat:
+        print('  | ' + r.title)
+
+        p = read_product(path_and_file=r.abspath)
+        p = resample(p, referenceBand='B2')
+        p = subset(p, geoRegion=subset_wkt)
+
+        f_out = r.acqstarttime_str + '_' + bname_red + bname_green + bname_blue + '_nir'
+        p_out = pathout_root + target_name + '/'
+        img_fullpath = plotBands_rgb(p, bname_red=bname_red, bname_green=bname_green, bname_blue=bname_blue, p_out=p_out, f_out=f_out, thumbnail=thumbnail)
+
+        # --- store image file to database
+        if store_result2db is True:
+            path_ln = 'data_mounts' + img_fullpath.split('/data_mounts')[1]  # = abspath from data_mounts folder, linked to mountsweb static folder
+
+            print('Store to DB_MOUNTS.results_img')
+            dict_val = {'title': f_out,
+                        'abspath': path_ln,
+                        'type': 'nir',
+                        'id_master': str(r.id),
+                        'id_slave': str(r.id),
+                        'target_id': str(target_id)}
             dbo.insert('DB_MOUNTS', 'results_img', dict_val)
 
 
@@ -1149,7 +1225,7 @@ def plotBands_np(obj, band_name=None, cmap=None, f_out=None, p_out=None):
         # --- save png
         if f_out is None:
             # # - set file name based on metadata
-            # metadata_master = get_metadata_abstracted(obj)
+            # metadata_master = get_metadata_S1(obj)
             # metadata_slave = get_metadata_slave(obj, slave_idx=0)
             # fname_out = metadata_master['acqstarttime_str'] + '_' + metadata_slave['acqstarttime_str'] + '_' + '_'.join(bname.split('_')[0:3]) + '.png'
             fname_out = 'band_%s.png' % bname
@@ -1158,18 +1234,18 @@ def plotBands_np(obj, band_name=None, cmap=None, f_out=None, p_out=None):
             fname_out = f_out[k]
 
         if p_out is None:
-            pname_out = '../data/'
-        imgplot.write_png(pname_out + fname_out)
+            p_out = '../data/'
+        imgplot.write_png(p_out + fname_out)
 
         # --- check output file size
-        if os.path.getsize(pname_out + fname_out) < 10000:
+        if os.path.getsize(p_out + fname_out) < 10000:
             print 'WARNING: file size <10KB, abnormal'
             # pdb.set_trace()
 
     # return band
 
 
-def plotBands(obj, band_name=None, f_out=None, p_out=None, fmt_out=None):
+def plotBands(obj, band_name=None, f_out=None, p_out=None, fmt_out=None, thumbnail=None):
     """Plot band (or list of bands), using jpy.
 
     https://github.com/senbox-org/snap-engine/blob/b8c9e5c1c657bb8c022bb41439ffd59ec019fcc4/snap-python/src/main/resources/snappy/examples/snappy_write_image.py
@@ -1204,6 +1280,7 @@ def plotBands(obj, band_name=None, f_out=None, p_out=None, fmt_out=None):
         # check if band_name valid
         r, band_name_valid = is_bandinproduct(obj, band_name)
 
+    imgs_fullpath = []
     for k, bname in enumerate(band_name_valid):
 
         logging.info('plotting band "' + bname + '"')
@@ -1230,7 +1307,7 @@ def plotBands(obj, band_name=None, f_out=None, p_out=None, fmt_out=None):
         # --- save png
         if f_out is None:
             # # - set file name based on metadata
-            # metadata_master = get_metadata_abstracted(obj)
+            # metadata_master = get_metadata_S1(obj)
             # metadata_slave = get_metadata_slave(obj, slave_idx=0)
             # fname_out = metadata_master['acqstarttime_str'] + '_' + metadata_slave['acqstarttime_str'] + '_' + '_'.join(bname.split('_')[0:3]) + '.png'
             fname_out = 'band_%s.png' % bname
@@ -1242,18 +1319,25 @@ def plotBands(obj, band_name=None, f_out=None, p_out=None, fmt_out=None):
                 fname_out = f_out[k]
 
         if p_out is None:
-            pname_out = '../data/'
+            p_out = '../data/'
         else:
-            pname_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
+            p_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
 
         if fmt_out is None:
             fmt_out = 'png'
 
-        JAI.create("filestore", im, pname_out + fname_out + '.' + fmt_out, fmt_out)
-        # JAI.create("filestore", im, pname_out + fname_out, fmt_out)
+        file_fullpath = p_out + fname_out + '.' + fmt_out
+        imgs_fullpath.append(file_fullpath)
+        JAI.create("filestore", im, file_fullpath, fmt_out)
+
+        if thumbnail is True:
+            file_fullpath_thumb = p_out + fname_out + '_thumb.' + fmt_out
+            utils.create_thumbnail(file_fullpath, file_fullpath_thumb)
+
+    return imgs_fullpath
 
 
-def plotBands_rgb(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None, fmt_out=None):
+def plotBands_rgb(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None, fmt_out=None, thumbnail=None):
     """Plot RGB bands in optical data (e.g., S2, Envisat), using jpy.
 
     https://github.com/senbox-org/snap-engine/blob/b8c9e5c1c657bb8c022bb41439ffd59ec019fcc4/snap-python/src/main/resources/snappy/examples/snappy_write_image.py
@@ -1290,8 +1374,14 @@ def plotBands_rgb(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out
     if fmt_out is None:
         fmt_out = 'png'
 
-    # JAI.create("filestore", im, p_out + f_out + '.' + fmt_out, fmt_out)
-    JAI.create("filestore", im, p_out + f_out, fmt_out)
+    file_fullpath = p_out + f_out + '.' + fmt_out
+    JAI.create("filestore", im, file_fullpath, fmt_out)
+
+    if thumbnail is True:
+        file_fullpath_thumb = p_out + f_out + '_thumb.' + fmt_out
+        utils.create_thumbnail(file_fullpath, file_fullpath_thumb)
+
+    return file_fullpath
 
 
 def plotBands_rgb_np(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out=None, p_out=None):
@@ -1450,7 +1540,9 @@ def is_bandinproduct(obj, band_name):
     return is_band, band_name_valid
 
 
-def get_metadata_abstracted(self):
+def get_metadata_S1(self):
+    '''Get metadata for S1 products (Abstracted_Metadata node).'''
+
     # --- get list of metadata categories
     # print list(self.getMetadataRoot().getElementNames())
 
@@ -1481,21 +1573,21 @@ def get_metadata_abstracted(self):
     # NB: I'm not using datetime because of abbreviated month format
     # datetime.datetime.strptime(date_string, format1).strftime(format2)
 
-    # NB: keys should be identical to columns of DB_ARCHIVE's tables
-    metadata_abs = {'title': product_title,
-                    'producttype': product_type,
-                    'mission': mission,
-                    'acquisitionmode': acquisition_mode,
-                    'acqstarttime': acqstart_datetime,
-                    'acqstarttime_str': acqstart_iso,
-                    'relativeorbitnumber': orbit_relativenb,
-                    'orbitdirection': orbit_direction,
-                    'polarization': polarization}
+    # NB: keys should be identical to columns of DB_MOUNTS.archive table
+    metadata = {'title': product_title,
+                'producttype': product_type,
+                'mission': mission,
+                'acquisitionmode': acquisition_mode,
+                'acqstarttime': acqstart_datetime,
+                'acqstarttime_str': acqstart_iso,
+                'relativeorbitnumber': orbit_relativenb,
+                'orbitdirection': orbit_direction,
+                'polarization': polarization}
 
-    return metadata_abs
+    return metadata
 
 
-def get_metadata_slave(self, slave_idx=0):
+def get_metadata_S1_slave(self, slave_idx=0):
     # --- get list of metadata categories
     # print list(self.getMetadataRoot().getElementNames())
 
@@ -1561,3 +1653,46 @@ def metadata_naming_convention():
     metadata_names.append(['polarisationmode', '', '', 'VV VH'])
     metadata_names.append(['', 'mds1_tx_rx_polar', '', 'VV'])
     metadata_names.append(['', 'mds2_tx_rx_polar', '', 'VH'])
+
+
+def get_metadata_S2(self):
+    # This is intended to extract the main metadata of the product, similar to those obtained for s1 products with "get_metadata_S1"
+    # Although a field "Abstracted_Metadata" appears in SNAP Desktop Metadata section for S2 products, it cannot be accessed by command line
+    # Below is a way to gather them...
+
+    product_title = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getAttributeString('PRODUCT_URI')
+    product_title = product_title.split('.SAFE')[0]
+
+    product_type = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getAttributeString('PRODUCT_TYPE')
+
+    mission = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SPACECRAFT_NAME')
+    mission = mission.upper()  # >> 'Sentinel-2A' to 'SENTINEL-2A'
+
+    acquisition_mode = '-'
+
+    acqstart_str = self.getMetadataRoot().getElement('Level-1C_DataStrip_ID').getElement('General_Info').getElement('Datastrip_Time_Info').getAttributeString('DATASTRIP_SENSING_START')
+
+    orbit_relativenb = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SENSING_ORBIT_NUMBER')
+    orbit_direction = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SENSING_ORBIT_DIRECTION')
+
+    polarization = '-'
+
+    from dateutil.parser import parse
+    acqstart_datetime = parse(acqstart_str).strftime('%Y-%m-%d %H:%M:%S.%f')
+    acqstart_iso = parse(acqstart_str).strftime('%Y%m%dT%H%M%S')
+
+    # NB: I'm not using datetime because of abbreviated month format
+    # datetime.datetime.strptime(date_string, format1).strftime(format2)
+
+    # NB: keys should be identical to columns of DB_MOUNTS.archive table
+    metadata = {'title': product_title,
+                'producttype': product_type,
+                'mission': mission,
+                'acquisitionmode': acquisition_mode,
+                'acqstarttime': acqstart_datetime,
+                'acqstarttime_str': acqstart_iso,
+                'relativeorbitnumber': orbit_relativenb,
+                'orbitdirection': orbit_direction,
+                'polarization': polarization}
+
+    return metadata

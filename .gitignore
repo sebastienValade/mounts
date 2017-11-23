@@ -2,6 +2,7 @@
 /src/tmp/
 /src/log/
 /src/conf/_*
+/src/conf/credentials_*
 /src/_*
 /data/.gitkeep
 *.png

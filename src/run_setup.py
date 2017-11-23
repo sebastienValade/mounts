@@ -1,9 +1,11 @@
 import utilityme as utils
 import ast
 
-username = 'sebastien'
+username = 'khola'
 setup_database = 0
 process_archive = 1
+pcss_dinsar = 1
+pcss_nir = 1
 
 # --- get database credentials
 f = file('./conf/credentials_mysql.txt')
@@ -27,17 +29,17 @@ if setup_database:
     dicts = {'id': 'INT',               # = volcano number defined by GVP
              'fullname': 'CHAR(100)',   # = Erta Ale
              'name': 'CHAR(100)',       # = ertaale
-             'country': 'CHAR(100)',
+             'country': 'CHAR(100)',    # = Ethiopia
              'lat': 'FLOAT',
              'lon': 'FLOAT',
              'alt': 'INT',
              'download': 'INT',
-             'processing': 'CHAR(100)',
+             'processing': 'TEXT',
              'subset_wkt': 'TEXT'}
     dbo.create_tb(dbname='DB_MOUNTS', tbname=tbname, dicts=dicts, primarykey='id')
 
     # --- create tb "archive"
-    # NB: fieldnames taken from names recovered by "get_metadata_abstracted" (snapme)
+    # NB: fieldnames taken from names recovered by "get_metadata_S1" (snapme)
     tbname = 'archive'
     dicts = {'id': 'INT NOT NULL AUTO_INCREMENT',
              'title': 'VARCHAR(150)',
@@ -52,7 +54,11 @@ if setup_database:
              'polarization': 'CHAR(25)',
              'target_id': 'INT',
              'target_name': 'CHAR(100)'}
-    dbo.create_tb(dbname='DB_MOUNTS', tbname=tbname, dicts=dicts, primarykey='id', foreignkey='target_id', foreignkey_ref='DB_MOUNTS.targets(id)')
+    dbo.create_tb(dbname='DB_MOUNTS', tbname=tbname, dicts=dicts,
+                  primarykey='id',
+                  foreignkey='target_id',
+                  foreignkey_ref='DB_MOUNTS.targets(id)',
+                  unique_contraint='title')  # => title values cannot be duplicate
 
     # --- create tb "results_img"
     tbname = 'results_img'
@@ -63,13 +69,11 @@ if setup_database:
              'id_master': 'INT',
              'id_slave': 'INT',
              'target_id': 'INT'}
-    dbo.create_tb(dbname='DB_MOUNTS',
-                  tbname=tbname,
-                  dicts=dicts,
+    dbo.create_tb(dbname='DB_MOUNTS', tbname=tbname, dicts=dicts,
                   primarykey='id',
                   foreignkey=['id_master', 'id_slave', 'target_id'],
-                  foreignkey_ref=['DB_MOUNTS.archive(id)', 'DB_MOUNTS.archive(id)', 'DB_MOUNTS.targets(id)']
-                  )
+                  foreignkey_ref=['DB_MOUNTS.archive(id)', 'DB_MOUNTS.archive(id)', 'DB_MOUNTS.targets(id)'],
+                  unique_contraint='title')  # => title values cannot be duplicate
 
     # # --- create tb "processing"
     # tbname = 'processing'
@@ -91,7 +95,19 @@ if setup_database:
     dbo.dbmounts_addtarget(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613, processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV'} }", subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
     dbo.dbmounts_addtarget(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295, processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV'} }", subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
 
-    # --- store archive zip files of each listed target to database
+    # NB: alternative way to populate target list
+    # dict_targets = {'id': ['1', '2'],
+    #             'fullname': ['COCO', 'NUT'],
+    #             'name': ['BANANA', 'SHAKE'],
+    #             'country': ['Italy', 'Ethiopia'],
+    #             'lat': ['1', '1'],
+    #             'lon': ['2', '2'],
+    #             'alt': ['3', '3'],
+    #             'processing': ['a', 'b'],
+    #             'subset_wkt': ['a', 'b']}
+    # dbo.insert('DB_MOUNTS', 'targets', dict_targets)
+
+    # --- store archive zip files (S1+S2) of each listed target to database
     stmt = "SELECT name FROM DB_MOUNTS.targets"
     rows = dbo.execute_query(stmt)
     for r in rows:
@@ -107,6 +123,7 @@ if setup_database:
 if process_archive:
     # => loop through 'targets' and run field 'processing'
 
+    import snapme as gpt
     stmt = "SELECT * FROM DB_MOUNTS.targets"
     rows = dbo.execute_query(stmt)
     for r in rows:
@@ -125,10 +142,16 @@ if process_archive:
             pcss = ast.literal_eval(pcss_str)
 
         # --- run dinsar
-        if 'dinsar' in pcss:
+        if 'dinsar' in pcss and pcss_dinsar:
 
-            import snapme as gpt
-            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': '>2017-03-20'}     # = sql search options
+            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': '>2017-01-01'}     # = sql search options
             cfg_dinsar = pcss['dinsar']             # = dinsar options
-            cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/'}
+            cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
             gpt.dinsar(cfg_productselection, cfg_dinsar, cfg_plot, store_result2db=True, print_sqlResult=True)
+
+        # --- run nir
+        if 'nir' in pcss and pcss_nir:
+            cfg_nir = pcss['nir']             # = nir options
+            cfg_productselection = {'target_name': volcanoname}     # = sql search options
+            cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
+            gpt.nir(cfg_productselection, cfg_nir, cfg_plot, store_result2db=True, print_sqlResult=True)
