@@ -449,15 +449,25 @@ class Database:
                    and k[0] != 'mission']
 
         # --- format option acqstarttime:
-        # NB: acqstarttime='>=2017-01-01' formated as 'acqstarttime'>='2017-01-01'
-        # TODO: allow multiple time options: acqstarttime >= '2016-01-01' and acqstarttime < '2017-01-01'"
-        # => use 'acqstarttime_ti' and 'acqstarttime_tf' options?
-        # => use acqstarttime='>=2017-01-01 <=2020-01-01' format?
-
+        # NB: acqstarttime formats accepted: '>2017-01-01', '> 2017-01-01', '>=2017-01-01', '>2017-01-01 <2020-01-01', '>2017-01-01 <=2020-01-01', ...
         if acqstarttime is not None:
             import re
-            (sign, date) = re.split(r'(^[^\d]+)', acqstarttime)[1:]
-            options.append('acqstarttime' + sign + "'" + date + "'")
+
+            # NOTES re module:
+            # r'...'    Tell python to escape interpretation of the special characters, so that the entire string makes it to the re module
+            # ?=        Lookahead assertion
+            # \<        less then character character (\ is the escape character in this case)
+            # (...)     Capturing group
+            # ^         Start of string (or start of line in multi-line pattern)
+            # [^abc]    Not (a or b or c)
+            # [abc]       Range (a or b or c)
+            # \d        one digit
+            # +         1 or more
+
+            list_dates = re.split(r'[ ](?=[\<])', acqstarttime)             # >> splits '>=2017-03-29 <=2017-05-01' into ['>=2017-03-29', '<=2017-05-01']
+            for i, date_condition in enumerate(list_dates):
+                (sign, date) = re.split(r'(^[^\d]+)', date_condition)[1:]   # >> splits '>=2017-03-29' into sign='>=' and date='2017-03-29'
+                options.append('acqstarttime' + sign + "'" + date + "'")
 
         if mission is not None:
             # NB: operator 'LIKE' instead of '=' allows usage of wildcards in query:

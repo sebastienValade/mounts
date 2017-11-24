@@ -1,11 +1,11 @@
 import utilityme as utils
 import ast
 
-username = 'khola'
+username = 'sebastien'
 setup_database = 0
 process_archive = 1
 pcss_dinsar = 1
-pcss_nir = 1
+pcss_nir = 0
 
 # --- get database credentials
 f = file('./conf/credentials_mysql.txt')
@@ -92,8 +92,12 @@ if setup_database:
     # =============================================
 
     # --- add volcanoes to target list
-    dbo.dbmounts_addtarget(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613, processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV'} }", subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
-    dbo.dbmounts_addtarget(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295, processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV'} }", subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
+    dbo.dbmounts_addtarget(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613,
+                           processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV', 'bands2plot':['ifg', 'coh']}, 'nir': {'bname_red':'B12', 'bname_green':'B11', 'bname_blue':'B8A'} }",
+                           subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
+    dbo.dbmounts_addtarget(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295,
+                           processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV', 'bands2plot':['ifg', 'coh']}, 'nir': {'bname_red':'B12', 'bname_green':'B11', 'bname_blue':'B8A'} }",
+                           subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
 
     # NB: alternative way to populate target list
     # dict_targets = {'id': ['1', '2'],
@@ -143,8 +147,7 @@ if process_archive:
 
         # --- run dinsar
         if 'dinsar' in pcss and pcss_dinsar:
-
-            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': '>2017-01-01'}     # = sql search options
+            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': '>2017-02-01 <2017-03-01'}     # = sql search options
             cfg_dinsar = pcss['dinsar']             # = dinsar options
             cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
             gpt.dinsar(cfg_productselection, cfg_dinsar, cfg_plot, store_result2db=True, print_sqlResult=True)
@@ -152,6 +155,6 @@ if process_archive:
         # --- run nir
         if 'nir' in pcss and pcss_nir:
             cfg_nir = pcss['nir']             # = nir options
-            cfg_productselection = {'target_name': volcanoname}     # = sql search options
+            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': '>2017-01-01'}     # = sql search options
             cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
             gpt.nir(cfg_productselection, cfg_nir, cfg_plot, store_result2db=True, print_sqlResult=True)

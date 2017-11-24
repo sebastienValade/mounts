@@ -42,7 +42,7 @@ def read_product(*args, **kwargs):
     """Open product.
 
     Arguments:
-    Accepts .zip file (S1), or unzipped .SAFE directory (S1+S2)
+    Accepts: .zip, .dim, unzipped .SAFE directory
 
     *args
         object from class fetchme.Product() with attribute 'path_and_file'
@@ -902,6 +902,7 @@ def dinsar(cfg_productselection,
     # === PROCESS
     subswath = cfg_dinsar['subswath']
     polarization = cfg_dinsar['polarization']
+    bands2plot = cfg_dinsar['bands2plot']
     subset_wkt = cfg_plot['subset_wkt']
     pathout_root = cfg_plot['pathout_root']
     thumbnail = cfg_plot['thumbnail']
@@ -910,9 +911,6 @@ def dinsar(cfg_productselection,
 
     start_idx = 0
     for k, r in enumerate(msp, start=start_idx):
-
-        if k != 1:
-            continue
 
         master_title = msp[k][0].title
         slave_title = msp[k][1].title
@@ -975,26 +973,41 @@ def dinsar(cfg_productselection,
         fnameout_band1 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'ifg'])
         fnameout_band2 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh'])
 
-        # --- plot
-        p_out = pathout_root + target_name + '/'
-        imgs_fullpath = plotBands(p, sourceBands, f_out=[fnameout_band1, fnameout_band2], p_out=p_out, thumbnail=thumbnail)
+        # --- write result product
+        save_product = True
+        if save_product is True:
+            print('  writing product')
+            fout_product = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization])
+            write_product(p, f_out=fout_product, p_out='/home/sebastien/DATA/data_snap/')
 
-        # --- dispose => Releases all of the resources used by this object instance and all of its owned children.
+        # --- plot
+        # if bands2plot:
+        #     # TODO: plot only what has been requested in list, e.g. ['ig', 'coh']
+
+        #     p_out = pathout_root + target_name + '/'
+        #     imgs_fullpath = plotBands(p, sourceBands, f_out=[fnameout_band1, fnameout_band2], p_out=p_out, thumbnail=thumbnail)
+
+        #     # --- store image file to database
+        #     if store_result2db is True:
+        #         path_ln = ['data_mounts' + i.split('/data_mounts')[1] for i in imgs_fullpath]  # = abspath from data_mounts folder, linked to mountsweb static folder
+
+        #         print('Store to DB_MOUNTS.results_img')
+        #         dict_val = {'title': [fnameout_band1, fnameout_band2],
+        #                     'abspath': path_ln,  # [path_ln + fnameout_band1, path_ln + fnameout_band2],
+        #                     'type': ['ifg', 'coh'],
+        #                     'id_master': [master_id, master_id],
+        #                     'id_slave': [slave_id, slave_id],
+        #                     'target_id': [str(target_id), str(target_id)]}
+        #         dbo.insert('DB_MOUNTS', 'results_img', dict_val)
+
+        # # --- analyze
+        # bands2analyze = ['coh']
+        # if bands2analyze:
+        #     print 'TODO'
+
+            # --- dispose => Releases all of the resources used by this object instance and all of its owned children.
         print('Product dispose (release all resources used by object)')
         p.dispose()
-
-        # --- store image file to database
-        if store_result2db is True:
-            path_ln = ['data_mounts' + i.split('/data_mounts')[1] for i in imgs_fullpath]  # = abspath from data_mounts folder, linked to mountsweb static folder
-
-            print('Store to DB_MOUNTS.results_img')
-            dict_val = {'title': [fnameout_band1, fnameout_band2],
-                        'abspath': path_ln,  # [path_ln + fnameout_band1, path_ln + fnameout_band2],
-                        'type': ['ifg', 'coh'],
-                        'id_master': [master_id, master_id],
-                        'id_slave': [slave_id, slave_id],
-                        'target_id': [str(target_id), str(target_id)]}
-            dbo.insert('DB_MOUNTS', 'results_img', dict_val)
 
 
 def nir(cfg_productselection,
