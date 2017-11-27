@@ -161,13 +161,22 @@ class Database:
 
         # --- set UNIQUE constraint
         if unique_contraint is not None:
-            # Syntax: UNIQUE (colname)
             # Description:  The UNIQUE constraint ensures that all values in a column are different.
             #               Both the UNIQUE and PRIMARY KEY constraints provide a guarantee for uniqueness for a column or set of columns.
             #               A PRIMARY KEY constraint automatically has a UNIQUE constraint.
             #               However, you can have many UNIQUE constraints per table, but only one PRIMARY KEY constraint per table.
             # => on insert statement, will add row only if value in column defined by 'unique_contraint' is not duplicate. (NB: will update other fields if they have changed, thanks to the 'ON DUPLICATE KEY UPDATE' stmt)
-            a.append('UNIQUE (' + unique_contraint + ')')
+
+            if isinstance(unique_contraint, str):
+                # => 1 column constraint: UNIQUE (colname)
+                # NB: Syntax for MySQL only
+                a.append('UNIQUE (' + unique_contraint + ')')
+
+            elif isinstance(unique_contraint, list):
+                # => To name a UNIQUE constraint, and to define a UNIQUE constraint on multiple columns:
+                col_str = ', '.join(unique_contraint)
+                UC_str = 'CONSTRAINT unique_constraint_name UNIQUE({})'.format(col_str)
+                a.append(UC_str)
 
         table = '.'.join([dbname, tbname])
         cols = ', '.join(a)

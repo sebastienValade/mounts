@@ -65,7 +65,7 @@ if setup_database:
     dicts = {'id': 'INT NOT NULL AUTO_INCREMENT',
              'title': 'VARCHAR(100)',
              'abspath': 'TEXT',
-             'type': 'TEXT',
+             'type': 'CHAR(25)',    # ifg, coh, nir, ref (= reference process used to analyze rather then plot)
              'id_master': 'INT',
              'id_slave': 'INT',
              'target_id': 'INT'}
@@ -74,6 +74,20 @@ if setup_database:
                   foreignkey=['id_master', 'id_slave', 'target_id'],
                   foreignkey_ref=['DB_MOUNTS.archive(id)', 'DB_MOUNTS.archive(id)', 'DB_MOUNTS.targets(id)'],
                   unique_contraint='title')  # => title values cannot be duplicate
+
+    # --- create tb "results_dat"
+    tbname = 'results_dat'
+    dicts = {'id': 'INT NOT NULL AUTO_INCREMENT',
+             'time': 'DATETIME',
+             'data': 'FLOAT',
+             'type': 'CHAR(25)',
+             'id_image': 'INT',
+             'target_id': 'INT'}
+    dbo.create_tb(dbname='DB_MOUNTS', tbname=tbname, dicts=dicts,
+                  primarykey='id',
+                  foreignkey=['id_image', 'target_id'],
+                  foreignkey_ref=['DB_MOUNTS.results_img(id)', 'DB_MOUNTS.targets(id)'],
+                  unique_contraint=['time', 'type'])    #=> combination of time/type values should be unique, no duplicates
 
     # # --- create tb "processing"
     # tbname = 'processing'
