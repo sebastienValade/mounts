@@ -81,13 +81,13 @@ if setup_database:
              'time': 'DATETIME',
              'data': 'FLOAT',
              'type': 'CHAR(25)',
-             'id_image': 'INT',
+             'id_image': 'INT',     # -> id result_img
              'target_id': 'INT'}
     dbo.create_tb(dbname='DB_MOUNTS', tbname=tbname, dicts=dicts,
                   primarykey='id',
                   foreignkey=['id_image', 'target_id'],
                   foreignkey_ref=['DB_MOUNTS.results_img(id)', 'DB_MOUNTS.targets(id)'],
-                  unique_contraint=['time', 'type'])    #=> combination of time/type values should be unique, no duplicates
+                  unique_contraint=['time', 'type'])  # => combination of time/type values should be unique, no duplicates
 
     # # --- create tb "processing"
     # tbname = 'processing'
@@ -161,7 +161,7 @@ if process_archive:
 
         # --- run dinsar
         if 'dinsar' in pcss and pcss_dinsar:
-            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': '>2017-02-01 <2017-03-01'}     # = sql search options
+            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': '>2014-01-01 <2017-01-01'}     # = sql search options
             cfg_dinsar = pcss['dinsar']             # = dinsar options
             cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
             gpt.dinsar(cfg_productselection, cfg_dinsar, cfg_plot, store_result2db=True, print_sqlResult=True)

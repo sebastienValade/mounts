@@ -1058,22 +1058,52 @@ def nir(cfg_productselection,
         p = resample(p, referenceBand='B2')
         p = subset(p, geoRegion=subset_wkt)
 
-        f_out = r.acqstarttime_str + '_' + bname_red + bname_green + bname_blue + '_nir'
-        p_out = pathout_root + target_name + '/'
-        img_fullpath = plotBands_rgb(p, bname_red=bname_red, bname_green=bname_green, bname_blue=bname_blue, p_out=p_out, f_out=f_out, thumbnail=thumbnail)
+        plot_nir = 0
+        if plot_nir:
+            f_out = r.acqstarttime_str + '_' + bname_red + bname_green + bname_blue + '_nir'
+            p_out = pathout_root + target_name + '/'
+            img_fullpath = plotBands_rgb(p, bname_red=bname_red, bname_green=bname_green, bname_blue=bname_blue, p_out=p_out, f_out=f_out, thumbnail=thumbnail)
 
-        # --- store image file to database
-        if store_result2db is True:
-            path_ln = 'data_mounts' + img_fullpath.split('/data_mounts')[1]  # = abspath from data_mounts folder, linked to mountsweb static folder
+            # --- store image file to database
+            if store_result2db is True:
+                path_ln = 'data_mounts' + img_fullpath.split('/data_mounts')[1]  # = abspath from data_mounts folder, linked to mountsweb static folder
 
-            print('Store to DB_MOUNTS.results_img')
-            dict_val = {'title': f_out,
-                        'abspath': path_ln,
-                        'type': 'nir',
-                        'id_master': str(r.id),
-                        'id_slave': str(r.id),
-                        'target_id': str(target_id)}
-            dbo.insert('DB_MOUNTS', 'results_img', dict_val)
+                print('Store to DB_MOUNTS.results_img')
+                dict_val = {'title': f_out,
+                            'abspath': path_ln,
+                            'type': 'nir',
+                            'id_master': str(r.id),
+                            'id_slave': str(r.id),
+                            'target_id': str(target_id)}
+                dbo.insert('DB_MOUNTS', 'results_img', dict_val)
+
+        analyze_nir = 0
+        if analyze_nir:
+
+            R_rad = p.getBand(bname_red)
+            width = R_rad.getRasterWidth()
+            height = R_rad.getRasterHeight()
+            R_rad_data = np.zeros(width * height, dtype=np.float32)
+            R_rad.readPixels(0, 0, height, width, R_rad_data)
+            R_rad_data.shape = width, height
+
+            mask = np.where(R_rad_data > 0.5, 1, 0)
+            hot_nbpix = np.count_nonzero(mask)
+
+            # --- store data to database
+            if store_result2db is True:
+                id_image = 1  # TODO: link to plotted image or process
+
+                from dateutil.parser import parse
+                time_datetime = parse(r.acqstarttime_str).strftime('%Y-%m-%d %H:%M:%S.%f')
+
+                print('Store to DB_MOUNTS.results_dat')
+                dict_val = {'time': time_datetime,
+                            'type': 'nir',
+                            'data': str(hot_nbpix),
+                            'id_image': str(id_image),
+                            'target_id': str(target_id)}
+                dbo.insert('DB_MOUNTS', 'results_dat', dict_val)
 
 
 def graph_processing(config_file):
