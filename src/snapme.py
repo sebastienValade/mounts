@@ -852,6 +852,119 @@ def band_maths(product, expression=None, targetband_name='band_new'):
 
 ####################################################################
 
+def sar(cfg_productselection,
+        cfg_sar,
+        cfg_plot,
+        store_result2db=None,
+        print_sqlQuery=None,
+        print_sqlResult=None,
+        file_credentials_mysql=None):
+
+    import fnmatch
+
+    print('=== SAR PROCESSING')
+
+    # --- get database credentials
+    if file_credentials_mysql is None:
+        file_credentials_mysql = './conf/credentials_mysql.txt'
+    f = file(file_credentials_mysql)
+    (db_usr, db_pwd) = f.readline().split(' ')
+
+    # --- connect to database
+    import utilityme as utils
+    dbo = utils.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
+
+    # --- add mission in cfg_productselection if not specified (NB: '%'=wild card)
+    if 'mission' not in cfg_productselection:
+        cfg_productselection['mission'] = 'SENTINEL-1%'
+
+    # --- query archive with selected options
+    stmt = dbo.dbmounts_archive_querystmt(**cfg_productselection)
+    rows = dbo.execute_query(stmt)
+    dat = rows.all()
+    if print_sqlQuery is True:
+        print(stmt)
+
+    # === PROCESS
+    subswath = cfg_sar['subswath']
+    bands2plot = cfg_sar['bands2plot']
+    subset_wkt = cfg_plot['subset_wkt']
+    pathout_root = cfg_plot['pathout_root']
+    thumbnail = cfg_plot['thumbnail']
+    target_name = cfg_productselection['target_name']
+    target_id = dbo.dbmounts_target_nameid(target_name=target_name)
+
+    polarization = 'VV'
+
+    for k, r in enumerate(dat):
+        
+        if (k < 1) or (k >= 2):
+            continue
+
+        print('  | ' + r.title)
+
+        extra_optn = []
+        p = read_product(path_and_file=r.abspath)
+        # p = topsar_split(p, subswath=subswath, polarisation=polarization)        
+        p = apply_orbit_file(p)
+        p = deburst(p)
+        # p = subset(p, geoRegion=subset_wkt) # NB: if subset geocode, image "cropped" then "orientated", leaving white spaces in jpg
+        bdnames = get_bandnames(p, print_bands=1)
+        band_int = fnmatch.filter(bdnames, 'Intensity_*')
+        sourceBands = band_int # add here bands to analyze
+        p = terrain_correction(p, sourceBands)
+
+        if 'speckle_filter' in cfg_sar:
+            p = speckle_filter(p, sourceBands)
+            extra_optn.append('spkle')
+
+        # if 'polar' in cfg_sar:
+        #     # --- get polarimetric covariance matrix
+        #     s1_bis = read_product(path_and_file=s1_abspath)
+        #     s1_bis = deburst(s1_bis)
+        #     polmat = polarimetric_matrix(s1_bis)
+        #     polmat = apply_orbit_file(polmat)
+        #     gpt.get_bandnames(polmat, print_bands=1)
+        #     polmat_bands = ['C11', 'C12_real', 'C12_imag', 'C22']
+        #     polmat = gpt.terrain_correction(polmat, polmat_bands)
+        #     polmat = gpt.subset(polmat, **subset_bounds)
+
+        #     # --- compute C12_ampl (band math + merge)
+        #     bandmath_expression = 'ampl(C12_real, C12_imag)'
+        #     targetband_name = 'C12_ampl'
+        #     p_new = gpt.band_maths(polmat, expression=bandmath_expression, targetband_name=targetband_name)
+        #     polmat = gpt.merge(polmat, p_new)
+        
+        p = subset(p, geoRegion=subset_wkt)
+
+        # --- set output file name based on metadata
+        metadata = get_metadata_S1(p)
+        fnameout_band = '_'.join([metadata['acqstarttime_str'], subswath, polarization, 'int'] + extra_optn)
+
+        # --- plot
+        plotBands(p, band_name=sourceBands, f_out=fnameout_band, p_out=p_out, thumbnail=thumbnail)
+
+        # --- export
+        # fmt_out = 'GeoTIFF'
+        # f_out = '_'.join([metadata['acqstarttime_str'], subswath, polarization, 'int'])
+        # write_product(p, f_out=f_out, fmt_out=fmt_out)
+
+        # # --- store image file to database
+        # if store_result2db is True:
+        #     path_ln = ['data_mounts' + i.split('/data_mounts')[1] for i in imgs_fullpath]  # = abspath from data_mounts folder, linked to mountsweb static folder
+
+        #     print('Store to DB_MOUNTS.results_img')
+        #     dict_val = {'title': [fnameout_ifg, fnameout_coh],
+        #                 'abspath': path_ln,  # [path_ln + fnameout_ifg, path_ln + fnameout_coh],
+        #                 'type': ['ifg', 'coh'],
+        #                 'id_master': [master_id, master_id],
+        #                 'id_slave': [slave_id, slave_id],
+        #                 'target_id': [str(target_id), str(target_id)]}
+        #     dbo.insert('DB_MOUNTS', 'results_img', dict_val)
+        
+        p.dispose()
+
+
 def dinsar(cfg_productselection,
            cfg_dinsar,
            cfg_plot,
@@ -859,6 +972,8 @@ def dinsar(cfg_productselection,
            print_sqlQuery=None,
            print_sqlResult=None,
            file_credentials_mysql=None):
+
+    import fnmatch
 
     print('=== DINSAR PROCESSING')
 
@@ -955,11 +1070,16 @@ def dinsar(cfg_productselection,
         # --- phase filtering
         p = goldstein_phase_filtering(p)
 
-        # --- terrain correction (geocoding)
+        # --- define bands to analyze
+        # TODO: select based on 'bands2plot'
         bdnames = get_bandnames(p, print_bands=None)
-        idx_phase = [idx for idx, dbname in enumerate(bdnames) if 'Phase_' in dbname][0]
-        idx_coh = [idx for idx, dbname in enumerate(bdnames) if 'coh_' in dbname][0]
-        sourceBands = [bdnames[idx_phase], bdnames[idx_coh]]
+
+        band_ifg = fnmatch.filter(bdnames, 'Phase_*')
+        band_coh = fnmatch.filter(bdnames, 'coh_*')
+        # band_int = fnmatch.filter(bdnames, 'Intensity_*') # >> combination of  slave/master intensity?
+        sourceBands = [band_ifg[0], band_coh[0]]
+
+        # --- terrain correction (geocoding)
         p = terrain_correction(p, sourceBands)
 
         # --- subset
@@ -967,11 +1087,10 @@ def dinsar(cfg_productselection,
         p = subset(p, geoRegion=subset_wkt)
 
         # --- set output file name based on metadata
-        # TODO: take metadata info from sql record
         metadata_master = get_metadata_S1(m)
         metadata_slave = get_metadata_S1(s)
-        fnameout_band1 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'ifg'])
-        fnameout_band2 = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh'])
+        fnameout_ifg = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'ifg'])
+        fnameout_coh = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh'])
 
         # --- write result product
         save_product = True
@@ -982,18 +1101,18 @@ def dinsar(cfg_productselection,
 
         # --- plot
         # if bands2plot:
-        #     # TODO: plot only what has been requested in list, e.g. ['ig', 'coh']
+        #     # TODO: plot only what has been requested in list, e.g. ['ifg', 'coh', 'amp'] => when defining source bands
 
         #     p_out = pathout_root + target_name + '/'
-        #     imgs_fullpath = plotBands(p, sourceBands, f_out=[fnameout_band1, fnameout_band2], p_out=p_out, thumbnail=thumbnail)
+        #     imgs_fullpath = plotBands(p, sourceBands, f_out=[fnameout_ifg, fnameout_coh], p_out=p_out, thumbnail=thumbnail)
 
         #     # --- store image file to database
         #     if store_result2db is True:
         #         path_ln = ['data_mounts' + i.split('/data_mounts')[1] for i in imgs_fullpath]  # = abspath from data_mounts folder, linked to mountsweb static folder
 
         #         print('Store to DB_MOUNTS.results_img')
-        #         dict_val = {'title': [fnameout_band1, fnameout_band2],
-        #                     'abspath': path_ln,  # [path_ln + fnameout_band1, path_ln + fnameout_band2],
+        #         dict_val = {'title': [fnameout_ifg, fnameout_coh],
+        #                     'abspath': path_ln,  # [path_ln + fnameout_ifg, path_ln + fnameout_coh],
         #                     'type': ['ifg', 'coh'],
         #                     'id_master': [master_id, master_id],
         #                     'id_slave': [slave_id, slave_id],
