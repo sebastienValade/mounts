@@ -234,6 +234,8 @@ class Database:
 
         # --- format values (= table content)
         v_list = dicts.values()
+        print v_list
+        print v_list[0]
         if isinstance(v_list[0], list):
             # => nested list: multiple rows to write
             # => stmt = insert into db.table (col1, col2)  values ("row1", "row1"), ("row2", "row2")
@@ -245,6 +247,7 @@ class Database:
 
         else:
             # => stmt = insert into db.table (col1, col2)  values ("row1", "row1")
+            v_list = [i[0] if isinstance(i, list) else i for i in v_list]    # flatten list: ['1', ['2'], ['3']] --> ['1', '2', '3']
             v_str = '(' + ', '.join('"' + item + '"' for item in v_list) + ')'
 
         # --- format update statement (after "ON DUPLICATE KEY UPDATE" statement)

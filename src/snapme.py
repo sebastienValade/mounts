@@ -885,6 +885,11 @@ def sar(cfg_productselection,
     if print_sqlQuery is True:
         print(stmt)
 
+    if print_sqlResult is True:
+        print('--- Selected products (ordered by orbit direction / acqstarttime):')
+        for k, r in enumerate(dat):
+            print(str(k), r.title, r.orbitdirection)
+
     # === PROCESS
     subswath = cfg_sar['subswath']
     bands2plot = cfg_sar['bands2plot']
@@ -894,24 +899,31 @@ def sar(cfg_productselection,
     target_name = cfg_productselection['target_name']
     target_id = dbo.dbmounts_target_nameid(target_name=target_name)
 
-    polarization = 'VV'
+    start_idx = 0
+    for k, r in enumerate(dat, start=start_idx):
 
-    for k, r in enumerate(dat):
-        
-        if (k < 1) or (k >= 2):
-            continue
+        # TODO: wtf, why r.title always start from idx = 0
+        print str(k) + ' ' + r.title
+        print str(k) + ' ' + dat[k].title
 
-        print('  | ' + r.title)
+        # if (k < start_idx):  # or (k >= 2):
+        #     continue
+
+        print('  | ' + str(k) + ' - ' + dat[k].title)
 
         extra_optn = []
-        p = read_product(path_and_file=r.abspath)
-        # p = topsar_split(p, subswath=subswath, polarisation=polarization)        
+        p = read_product(path_and_file=dat[k].abspath)
+        # p = topsar_split(p, subswath=subswath, polarisation=polarization)
         p = apply_orbit_file(p)
         p = deburst(p)
         # p = subset(p, geoRegion=subset_wkt) # NB: if subset geocode, image "cropped" then "orientated", leaving white spaces in jpg
-        bdnames = get_bandnames(p, print_bands=1)
-        band_int = fnmatch.filter(bdnames, 'Intensity_*')
-        sourceBands = band_int # add here bands to analyze
+
+        # TODO: adapt to query of which polarization to plot
+        bdnames = get_bandnames(p, print_bands=None)
+        bandname_int = fnmatch.filter(bdnames, 'Intensity_*')
+        bandpolar = [i.split('Intensity_', 1)[1] for i in bandname_int]
+        sourceBands = bandname_int  # add here bands to analyze
+
         p = terrain_correction(p, sourceBands)
 
         if 'speckle_filter' in cfg_sar:
@@ -934,35 +946,48 @@ def sar(cfg_productselection,
         #     targetband_name = 'C12_ampl'
         #     p_new = gpt.band_maths(polmat, expression=bandmath_expression, targetband_name=targetband_name)
         #     polmat = gpt.merge(polmat, p_new)
-        
+
         p = subset(p, geoRegion=subset_wkt)
 
         # --- set output file name based on metadata
         metadata = get_metadata_S1(p)
-        fnameout_band = '_'.join([metadata['acqstarttime_str'], subswath, polarization, 'int'] + extra_optn)
+        f_out = []
+        for pol in bandpolar:
+            fnameout_band = '_'.join([metadata['acqstarttime_str'], subswath, pol, 'int'] + extra_optn)
+            f_out.append(fnameout_band)
 
         # --- plot
-        plotBands(p, band_name=sourceBands, f_out=fnameout_band, p_out=p_out, thumbnail=thumbnail)
+        p_out = pathout_root + target_name + '/'
+        imgs_fullpath = plotBands(p, band_name=sourceBands, f_out=f_out, p_out=p_out, thumbnail=thumbnail)
+        # plotBands_np(p, band_name=sourceBands, f_out=f_out)
 
         # --- export
         # fmt_out = 'GeoTIFF'
         # f_out = '_'.join([metadata['acqstarttime_str'], subswath, polarization, 'int'])
         # write_product(p, f_out=f_out, fmt_out=fmt_out)
 
-        # # --- store image file to database
-        # if store_result2db is True:
-        #     path_ln = ['data_mounts' + i.split('/data_mounts')[1] for i in imgs_fullpath]  # = abspath from data_mounts folder, linked to mountsweb static folder
+        # --- store image file to database
+        if store_result2db is True:
+            path_ln = ['data_mounts' + i.split('/data_mounts')[1] for i in imgs_fullpath]  # = abspath from data_mounts folder, linked to mountsweb static folder
+            imgs_type = ['int_' + s for s in bandpolar]
+            id_master = [str(dat[k].id)] * len(sourceBands)
+            id_slave = id_master
+            id_target = [str(target_id)] * len(sourceBands)
 
-        #     print('Store to DB_MOUNTS.results_img')
-        #     dict_val = {'title': [fnameout_ifg, fnameout_coh],
-        #                 'abspath': path_ln,  # [path_ln + fnameout_ifg, path_ln + fnameout_coh],
-        #                 'type': ['ifg', 'coh'],
-        #                 'id_master': [master_id, master_id],
-        #                 'id_slave': [slave_id, slave_id],
-        #                 'target_id': [str(target_id), str(target_id)]}
-        #     dbo.insert('DB_MOUNTS', 'results_img', dict_val)
-        
+            print('Store to DB_MOUNTS.results_img')
+            dict_val = {'title': f_out,
+                        'abspath': path_ln,  # [path_ln + fnameout_ifg, path_ln + fnameout_coh],
+                        'type': imgs_type,
+                        'id_master': id_master,
+                        'id_slave': id_slave,
+                        'target_id': id_target}
+            dbo.insert('DB_MOUNTS', 'results_img', dict_val)
+
         p.dispose()
+
+        # print 'pausing'
+        # import time
+        # time.sleep(5)
 
 
 def dinsar(cfg_productselection,
@@ -1093,8 +1118,8 @@ def dinsar(cfg_productselection,
         fnameout_coh = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh'])
 
         # --- write result product
-        save_product = True
-        if save_product is True:
+        save_product = 1
+        if save_product:
             print('  writing product')
             fout_product = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization])
             write_product(p, f_out=fout_product, p_out='/home/sebastien/DATA/data_snap/')
@@ -1177,7 +1202,7 @@ def nir(cfg_productselection,
         p = resample(p, referenceBand='B2')
         p = subset(p, geoRegion=subset_wkt)
 
-        plot_nir = 0
+        plot_nir = 1
         if plot_nir:
             f_out = r.acqstarttime_str + '_' + bname_red + bname_green + bname_blue + '_nir'
             p_out = pathout_root + target_name + '/'

@@ -4,9 +4,11 @@ import ast
 username = 'sebastien'
 setup_database = 0
 process_archive = 1
-pcss_dinsar = 0
-pcss_sar = 1
+pcss_dinsar = 1
+pcss_sar = 0
 pcss_nir = 0
+
+acqstarttime = '>2017-02-20 <2017-05-05'
 
 # --- get database credentials
 f = file('./conf/credentials_mysql.txt')
@@ -162,21 +164,33 @@ if process_archive:
 
         # --- run dinsar
         if 'dinsar' in pcss and pcss_dinsar:
-            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': '>2017-01-01 <2018-01-01'}     # = sql search options
+            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': acqstarttime}     # = sql search options
             cfg_dinsar = pcss['dinsar']             # = dinsar options
             cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
             gpt.dinsar(cfg_productselection, cfg_dinsar, cfg_plot, store_result2db=True, print_sqlResult=True)
 
         # --- run dinsar
         if 'sar' in pcss and pcss_sar:
-            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': '>2017-01-01 <2018-01-01'}     # = sql search options
+            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': acqstarttime}     # = sql search options
             cfg_sar = pcss['sar']             # = dinsar options
             cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
             gpt.sar(cfg_productselection, cfg_sar, cfg_plot, store_result2db=True, print_sqlResult=True)
 
+            # FAILED ATTEMPS TO RELEASE MEMORY
+            # NB: exiting the function is not enough, to release the program must exit ...
+            #
+            # http://forum.step.esa.int/t/how-to-free-java-memory-snappy/5738
+            # import jpy
+            # System = jpy.get_type('java.lang.System')
+            # System.gc()
+            #
+            # https://github.com/kedziorm/mySNAPscripts/blob/master/myScripts.py
+            # import os
+            # os.system('ulimit -c unlimited')
+
         # --- run nir
         if 'nir' in pcss and pcss_nir:
             cfg_nir = pcss['nir']             # = nir options
-            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': '>2017-01-01'}     # = sql search options
+            cfg_productselection = {'target_name': volcanoname, 'acqstarttime': acqstarttime}     # = sql search options
             cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
             gpt.nir(cfg_productselection, cfg_nir, cfg_plot, store_result2db=True, print_sqlResult=True)

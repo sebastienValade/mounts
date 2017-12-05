@@ -6,7 +6,7 @@ import glob
 import matplotlib.pyplot as plt
 from dateutil.parser import parse
 
-path_dir = '/home/khola/DATA/data_snap/'
+path_dir = '/home/sebastien/DATA/data_snap/'
 # f = glob.glob(os.path.join(path_dir, '') + '20170104*.dim')
 f = glob.glob(os.path.join(path_dir, '') + '*.dim')
 
@@ -27,10 +27,12 @@ for k, fpath in enumerate(f):
     print('  | ' + title)
 
     # get info from database
-    time_str = title[0:15]  # 20161218T152714
-    time_datetime = parse(time_str).strftime('%Y-%m-%d %H:%M:%S.%f')
+    timeM_str = title[0:15]  # 20161218T152714
+    timeS_str = title[16:31]  # 20161218T152714
+    timeS_datetime = parse(timeS_str).strftime('%Y-%m-%d %H:%M:%S.%f')
+
     target_id = 221080
-    id_image = 4        # = id of saved image (coh, ...) or saved process (ref)
+    id_image = 1        # = id of saved image (coh, ...) or saved process (ref)
 
     p = gpt.read_product(path_and_file=fpath)
     bdnames = gpt.get_bandnames(p, print_bands=None)
@@ -59,7 +61,7 @@ for k, fpath in enumerate(f):
     # plt.imsave(title + '.png', img, cmap='gray')
 
     print('Store to DB_MOUNTS.results_dat')
-    dict_val = {'time': time_datetime,
+    dict_val = {'time': timeS_datetime,
                 'type': 'coh',
                 'data': str(idx_change),
                 'id_image': str(id_image),

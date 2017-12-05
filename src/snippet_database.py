@@ -59,6 +59,12 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # rows = dbo.get_dataset(dbname='DB_MOUNTS', tbname='targets')
 # for r in rows:
 #     print(r.name, r.id)
+#
+# with tablib functionalities:
+# A = rows.dataset
+# A['name']
+# 
+# or: rows.dataset['name']
 
 # --- get specific dataset: select elts containing specific string (ex: string '1SSV' at char nb 13)
 # stmt = "SELECT * FROM DB_MOUNTS.archive WHERE SUBSTRING(title,13,4) = '1SSV'"
