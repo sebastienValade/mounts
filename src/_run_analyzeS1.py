@@ -46,27 +46,35 @@ for k, fpath in enumerate(f):
     band.readPixels(0, 0, w, h, band_data)
     band_data.shape = h, w
 
-    # --- analyze
-    img = band_data.copy()
+    # --- analyze v1
+    #img = band_data.copy()
+    #idx_change = img[img < 0.5].sum()
+    #print idx_change
 
-    idx_change = img[img < 0.5].sum()
-    print idx_change
-    # print band_data.min()
-    # print band_data.max()
-
-    img[img > 0.5] = 1
-    img[img < 0.5] = 0
-    plt.imshow(img)
+    # --- analyze v2
+    if k == 10:
+      mask = np.where(band_data < 0.5, 0, 1)
+      #idx_change = np.count_nonzero(mask)
+      idx_change = len(np.where( mask == 0))
+      print idx_change
+      print len(mask)
+      #plt.imshow(mask)
+      plt.imsave(title + '.png', mask, cmap='gray')
+    
+    # --- plot
+    # img[img > 0.5] = 1
+    # img[img < 0.5] = 0
+    # plt.imshow(img)
     # plt.show()
     # plt.imsave(title + '.png', img, cmap='gray')
 
-    print('Store to DB_MOUNTS.results_dat')
-    dict_val = {'time': timeS_datetime,
-                'type': 'coh',
-                'data': str(idx_change),
-                'id_image': str(id_image),
-                'target_id': str(target_id)}
-    dbo.insert('DB_MOUNTS', 'results_dat', dict_val)
+    #print('Store to DB_MOUNTS.results_dat')
+    #dict_val = {'time': timeS_datetime,
+                #'type': 'coh',
+                #'data': str(idx_change),
+                #'id_image': str(id_image),
+                #'target_id': str(target_id)}
+    #dbo.insert('DB_MOUNTS', 'results_dat', dict_val)
 
 
 # --------------------------------------------------------------------------------------
