@@ -52,14 +52,16 @@ for k, fpath in enumerate(f):
     #print idx_change
 
     # --- analyze v2
-    if k == 10:
-      mask = np.where(band_data < 0.5, 0, 1)
-      #idx_change = np.count_nonzero(mask)
-      idx_change = len(np.where( mask == 0))
-      print idx_change
-      print len(mask)
-      #plt.imshow(mask)
-      plt.imsave(title + '.png', mask, cmap='gray')
+    mask = np.where(band_data < 0.5, 0, 1)
+    #idx_change = np.count_nonzero(mask)
+    idx_change = np.count_nonzero(mask == 0)
+    
+    if idx_change > 730000:
+      idx_change = 0
+      
+    print idx_change
+    #plt.imshow(mask)
+    #plt.imsave(title + '.png', mask, cmap='gray')
     
     # --- plot
     # img[img > 0.5] = 1
@@ -69,12 +71,12 @@ for k, fpath in enumerate(f):
     # plt.imsave(title + '.png', img, cmap='gray')
 
     #print('Store to DB_MOUNTS.results_dat')
-    #dict_val = {'time': timeS_datetime,
-                #'type': 'coh',
-                #'data': str(idx_change),
-                #'id_image': str(id_image),
-                #'target_id': str(target_id)}
-    #dbo.insert('DB_MOUNTS', 'results_dat', dict_val)
+    dict_val = {'time': timeS_datetime,
+                'type': 'coh',
+                'data': str(idx_change),
+                'id_image': str(id_image),
+                'target_id': str(target_id)}
+    dbo.insert('DB_MOUNTS', 'results_dat', dict_val)
 
 
 # --------------------------------------------------------------------------------------

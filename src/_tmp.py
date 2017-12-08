@@ -6,13 +6,39 @@ f = file('./conf/credentials_mysql.txt')
 (db_usr, db_pwd) = f.readline().split(' ')
 dbo = utils.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
 
+
 # === LOAD TARGETS
+
+# --- using harccoded script
 # dbo.dbmounts_addtarget(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613,
 #                        processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV', 'bands2plot':['ifg', 'coh']}, 'sar': {'subswath': 'IW2', 'bands2plot': ['int_HV']}, 'nir': {'bname_red':'B12', 'bname_green':'B11', 'bname_blue':'B8A'} }",
 #                        subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
 # dbo.dbmounts_addtarget(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295,
 #                        processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV', 'bands2plot':['ifg', 'coh']}, 'sar': {'subswath': 'IW2', 'bands2plot': ['int_HV']}, 'nir': {'bname_red':'B12', 'bname_green':'B11', 'bname_blue':'B8A'} }",
 #                        subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
+
+# --- using sql alchemy
+processing = dict(
+    dinsar=dict(
+        subswath='IW2',
+        polarization='VV',
+        bands2plot=['ifg', 'coh']),
+    sar=dict(
+        subswath='IW2',
+        bands2plot=['int_HV']),
+    nir=dict(
+        bname_red='B12',
+        bname_green='B11',
+        bname_blue='B8A')
+)
+
+dbo.dbmounts_addtarget_sqlalchemy(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613,
+                                  processing=processing,
+                                  subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
+dbo.dbmounts_addtarget_sqlalchemy(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295,
+                                  processing=processing,
+                                  subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
+
 
 # # === LOAD S2 files to DB_MOUNTS.archive
 # stmt = "SELECT name FROM DB_MOUNTS.targets"

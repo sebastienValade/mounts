@@ -4,11 +4,11 @@ import ast
 username = 'sebastien'
 setup_database = 0
 process_archive = 1
-pcss_dinsar = 1
+pcss_dinsar = 0
 pcss_sar = 0
-pcss_nir = 0
+pcss_nir = 1
 
-acqstarttime = '>2017-02-20 <2017-05-05'
+acqstarttime = '>2016-12-01 <2017-01-01'
 
 # --- get database credentials
 f = file('./conf/credentials_mysql.txt')

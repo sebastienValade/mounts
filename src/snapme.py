@@ -1202,7 +1202,15 @@ def nir(cfg_productselection,
         p = resample(p, referenceBand='B2')
         p = subset(p, geoRegion=subset_wkt)
 
-        plot_nir = 1
+        # --- write result product
+        save_product = 0
+        if save_product:
+            print('  writing product')
+            metadata_master = get_metadata_S2(p)
+            fout_product = '_'.join(['S2', metadata_master['acqstarttime_str']])
+            write_product(p, f_out=fout_product, p_out='/home/sebastien/DATA/data_snap/ertaale/')
+            
+        plot_nir = 0
         if plot_nir:
             f_out = r.acqstarttime_str + '_' + bname_red + bname_green + bname_blue + '_nir'
             p_out = pathout_root + target_name + '/'
@@ -1221,7 +1229,7 @@ def nir(cfg_productselection,
                             'target_id': str(target_id)}
                 dbo.insert('DB_MOUNTS', 'results_img', dict_val)
 
-        analyze_nir = 0
+        analyze_nir = 1
         if analyze_nir:
 
             R_rad = p.getBand(bname_red)
@@ -1231,8 +1239,13 @@ def nir(cfg_productselection,
             R_rad.readPixels(0, 0, height, width, R_rad_data)
             R_rad_data.shape = width, height
 
-            mask = np.where(R_rad_data > 0.5, 1, 0)
+            thresh = 0.7
+            mask = np.where(R_rad_data > thresh, 1, 0)
             hot_nbpix = np.count_nonzero(mask)
+            
+            # tmp: when pb in image it returns the total nb of pixels in image... set to 0 instead
+            #if hot_nbpix > 730000:
+	      #hot_nbpix = 0
 
             # --- store data to database
             if store_result2db is True:

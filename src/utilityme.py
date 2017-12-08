@@ -4,6 +4,7 @@ import time
 import records
 import logging
 import os
+import json
 
 
 def read_configfile(configfile):
@@ -210,19 +211,10 @@ class Database:
                     => 'ignore' statement will generate a warning when entery already exists
         """
 
-        # === one row insertion only:
-        # table = '.'.join([dbname, tbname])
-        # q = 'insert ignore into {}'.format(table)
-
-        # ksql = []
-        # vsql = []
-        # for k, v in dicts.items():
-        #     ksql.append(str(k))
-        #     vsql.append("'" + str(v) + "'")
-        # q += ' (' + ','.join(ksql) + ') '
-        # q += ' values (' + ','.join(vsql) + ')'
-
-        # TODO: check example on Records lib website using variables !? (https://github.com/kennethreitz/records/blob/master/examples/randomuser-sqlite.py)
+        # TODO: use python api to sql rather then concatenating string manualy.
+        # Prevents from errors due to escaping quotes, double-quotes, security attacks, ...
+        # or use SQLalchemy for the Object Relational Mapper approach
+        # Example on Records lib website using variables !? (https://github.com/kennethreitz/records/blob/master/examples/randomuser-sqlite.py)
         # db.query('INSERT INTO persons (key, fname, lname, email) VALUES(:key, :fname, :lname, :email)', key=key, fname=fname, lname=lname, email=email)
 
         # --- get dbname.tbname
@@ -234,8 +226,6 @@ class Database:
 
         # --- format values (= table content)
         v_list = dicts.values()
-        print v_list
-        print v_list[0]
         if isinstance(v_list[0], list):
             # => nested list: multiple rows to write
             # => stmt = insert into db.table (col1, col2)  values ("row1", "row1"), ("row2", "row2")
@@ -517,11 +507,63 @@ class Database:
     #     self.insert('DB_MOUNTS', 'targets', dicts_no_none)
 
     def dbmounts_addtarget(self, **kwargs):
+        # WARNING: this method uses self constructed SQL queries, which fails when escaping quotes and double quotes with json.dumps
 
         # --- make sure every values is passed in as string in mysql statement
         dicts = dict((k, str(v)) for k, v in kwargs.iteritems())
 
+        # WARNING: json dump fails
+        # dicts['processing'] = json.dumps(kwargs['processing'])
+
         self.insert('DB_MOUNTS', 'targets', dicts)
+
+    def dbmounts_addtarget_sqlalchemy(self, **kwargs):
+        from sqlalchemy import create_engine
+        from sqlalchemy import MetaData
+        from sqlalchemy import update
+        from sqlalchemy.exc import IntegrityError
+
+        db_uri = self.db_url
+        db_uri += 'DB_MOUNTS'
+
+        engine = create_engine(db_uri)
+        conn = engine.connect()
+        metadata = MetaData(engine, reflect=True)
+
+        targets = metadata.tables['targets']
+
+        # insert statement
+        ins = targets.insert().values(
+            id=kwargs['id'],
+            fullname=kwargs['fullname'],
+            name=kwargs['name'],
+            country=kwargs['country'],
+            lat=kwargs['lat'],
+            lon=kwargs['lon'],
+            alt=kwargs['alt'],
+            processing=json.dumps(kwargs['processing']),
+            subset_wkt=kwargs['subset_wkt']
+        )
+
+        # update statment
+        upd = targets.update().where(targets.c.id == kwargs['id']).values(
+            id=kwargs['id'],
+            fullname=kwargs['fullname'],
+            name=kwargs['name'],
+            country=kwargs['country'],
+            lat=kwargs['lat'],
+            lon=kwargs['lon'],
+            alt=kwargs['alt'],
+            processing=json.dumps(kwargs['processing']),
+            subset_wkt=kwargs['subset_wkt']
+        )
+
+        try:
+            conn.execute(ins)
+
+        except IntegrityError as error:
+            # print(error.orig.message, error.params)
+            conn.execute(upd)
 
     def dbmounts_target_nameid(self, target_name=None, target_id=None):
         """ Get target_id from name, or target_name from id. """
