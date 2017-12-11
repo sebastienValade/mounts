@@ -279,6 +279,60 @@ class Database:
 
         self.db_conn.query(q)
 
+    def insert_sqlalchemy_hybrid(self, dbname=None, tbname=None, dicts=None):
+        q = self.gen_insert(dbname=dbname, tbname=tbname, dicts=dicts)
+
+        from sqlalchemy import create_engine
+        from sqlalchemy import MetaData
+        from sqlalchemy import update
+        from sqlalchemy.exc import IntegrityError
+
+        db_uri = self.db_url
+        db_uri += 'DB_MOUNTS'
+
+        engine = create_engine(db_uri)
+        conn = engine.connect()
+        result = conn.execute(q)
+        print(' ===> id of inserted row:' + str(result.inserted_primary_key[0]))
+
+    def insert_sqlalchemy(self, dbname=None, tbname=None, dicts=None):
+        from sqlalchemy import create_engine
+        from sqlalchemy import MetaData
+        from sqlalchemy import update
+        from sqlalchemy.exc import IntegrityError
+        from sqlalchemy.dialects.mysql import insert
+
+        db_uri = self.db_url
+        db_uri += dbname
+
+        engine = create_engine(db_uri)
+        conn = engine.connect()
+        metadata = MetaData(engine, reflect=True)
+        tbl = metadata.tables[tbname]
+
+        # --- INSERT statement
+        ins = insert(tbl).values(dicts)
+
+        # --- ON DUPLICATE KEY UPDATE support for mysql
+        # http://docs.sqlalchemy.org/en/latest/changelog/migration_12.html#support-for-insert-on-duplicate-key-update
+        on_conflict_stmt = ins.on_duplicate_key_update(
+            data=ins.inserted.data,
+            status='U'
+        )
+
+        # --- EXECUTE
+        result = conn.execute(on_conflict_stmt)
+
+        # --- get id from newly inserted row
+        # http://docs.sqlalchemy.org/en/rel_1_0/core/tutorial.html#executing
+        # https://groups.google.com/forum/#!topic/sqlalchemy/3LZJ0X62ZPw
+        # ins = records.insert().returning(tbl.c.id)
+
+        # print(' ===> id of inserted row:' + str(result.inserted_primary_key[0]))
+        # NB: returns 0 if updated row ...
+
+        return result
+
     def print_dataset(self, dbname=None, tbname=None, colname='*'):
 
         q = self.gen_select(dbname=dbname, tbname=tbname, colname=colname)
@@ -559,11 +613,12 @@ class Database:
         )
 
         try:
-            conn.execute(ins)
+            result = conn.execute(ins)
+            print(' ===> id of inserted row:' + str(result.inserted_primary_key[0]))
 
         except IntegrityError as error:
             # print(error.orig.message, error.params)
-            conn.execute(upd)
+            result = conn.execute(upd)
 
     def dbmounts_target_nameid(self, target_name=None, target_id=None):
         """ Get target_id from name, or target_name from id. """

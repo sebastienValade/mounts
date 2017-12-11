@@ -32,7 +32,6 @@ for k, fpath in enumerate(f):
     timeS_datetime = parse(timeS_str).strftime('%Y-%m-%d %H:%M:%S.%f')
 
     target_id = 221080
-    id_image = 1        # = id of saved image (coh, ...) or saved process (ref)
 
     p = gpt.read_product(path_and_file=fpath)
     bdnames = gpt.get_bandnames(p, print_bands=None)
@@ -49,20 +48,20 @@ for k, fpath in enumerate(f):
     # --- analyze v1
     #img = band_data.copy()
     #idx_change = img[img < 0.5].sum()
-    #print idx_change
+    # print idx_change
 
     # --- analyze v2
     mask = np.where(band_data < 0.5, 0, 1)
     #idx_change = np.count_nonzero(mask)
     idx_change = np.count_nonzero(mask == 0)
-    
+
     if idx_change > 730000:
-      idx_change = 0
-      
+        idx_change = 0
+
     print idx_change
-    #plt.imshow(mask)
+    # plt.imshow(mask)
     #plt.imsave(title + '.png', mask, cmap='gray')
-    
+
     # --- plot
     # img[img > 0.5] = 1
     # img[img < 0.5] = 0
@@ -70,13 +69,34 @@ for k, fpath in enumerate(f):
     # plt.show()
     # plt.imsave(title + '.png', img, cmap='gray')
 
-    #print('Store to DB_MOUNTS.results_dat')
+    # --- get id of image
+    # => id of saved image (coh, ...) or saved process (ref)
+    time_MS = title[0:31]
+    print time_MS
+    stmt = "SELECT title, id FROM DB_MOUNTS.results_img WHERE type='coh' AND SUBSTRING(title,1,31) = '{}'".format(time_MS)
+    rows = dbo.execute_query(stmt)
+    dat = rows.all()
+    if not dat:
+        print 'no image stored'
+        id_image = 1
+    else:
+        print '   => title = ' + dat[0].title
+        print '   => id = ' + str(dat[0].id)
+        id_image = dat[0].id
+
+    # --- store to database
     dict_val = {'time': timeS_datetime,
                 'type': 'coh',
                 'data': str(idx_change),
                 'id_image': str(id_image),
                 'target_id': str(target_id)}
-    dbo.insert('DB_MOUNTS', 'results_dat', dict_val)
+    print dict_val
+    # dbo.insert('DB_MOUNTS', 'results_dat', dict_val)
+
+    # --- store using sqlalchemy
+    # dbo.insert_sqlalchemy_hybrid('DB_MOUNTS', 'results_dat', dict_val)
+    result = dbo.insert_sqlalchemy('DB_MOUNTS', 'results_dat', dict_val)
+    print(' ===> id of inserted row:' + str(result.inserted_primary_key[0]))
 
 
 # --------------------------------------------------------------------------------------

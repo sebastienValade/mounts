@@ -1,6 +1,6 @@
 import utilityme as utils
 
-username = 'khola'
+username = 'sebastien'
 
 f = file('./conf/credentials_mysql.txt')
 (db_usr, db_pwd) = f.readline().split(' ')
@@ -25,7 +25,7 @@ processing = dict(
         export={'format': 'BEAM-DIMAP', 'path': '/home/sebastien/DATA/data_snap/'},
         bands2plot=['ifg', 'coh'],
         bands2analyze=dict(
-            coh={'nbpixel_thresh': 0.5})),
+            coh={'operation': 'count_pixels', 'thresh': 0.5})),
     sar=dict(
         subswath='IW2',
         bands2plot=['int_HV'],
@@ -43,7 +43,9 @@ dbo.dbmounts_addtarget_sqlalchemy(id=221080, fullname='Erta Ale', name='ertaale'
 dbo.dbmounts_addtarget_sqlalchemy(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295,
                                   processing=processing,
                                   subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
-
+dbo.dbmounts_addtarget_sqlalchemy(id=3, fullname='ciao', name='bella', country='Italy', lat=37.748, lon=14.999, alt=3295,
+                                  processing=processing,
+                                  subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
 
 # # === LOAD S2 files to DB_MOUNTS.archive
 # stmt = "SELECT name FROM DB_MOUNTS.targets"
