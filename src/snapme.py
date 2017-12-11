@@ -858,6 +858,7 @@ def sar(cfg_productselection,
         store_result2db=None,
         print_sqlQuery=None,
         print_sqlResult=None,
+        quit_after_querydb=None,
         file_credentials_mysql=None):
 
     import fnmatch
@@ -882,6 +883,10 @@ def sar(cfg_productselection,
     stmt = dbo.dbmounts_archive_querystmt(**cfg_productselection)
     rows = dbo.execute_query(stmt)
     dat = rows.all()
+    if not dat:
+        print('---> no product found with the provided query options')
+        return
+
     if print_sqlQuery is True:
         print(stmt)
 
@@ -889,6 +894,9 @@ def sar(cfg_productselection,
         print('--- Selected products (ordered by orbit direction / acqstarttime):')
         for k, r in enumerate(dat):
             print(str(k), r.title, r.orbitdirection)
+
+    if quit_after_querydb is not None:
+        return
 
     # === PROCESS
     subswath = cfg_sar['subswath']
@@ -963,8 +971,21 @@ def sar(cfg_productselection,
 
         # --- export
         # fmt_out = 'GeoTIFF'
-        # f_out = '_'.join([metadata['acqstarttime_str'], subswath, polarization, 'int'])
-        # write_product(p, f_out=f_out, fmt_out=fmt_out)
+        if 'export' in cfg_sar and cfg_sar['export'] is not None:
+            if 'format' not in cfg_sar['export'] or cfg_sar['export']['format'] is None:
+                fmt_out = None
+            else:
+                fmt_out = cfg_sar['export']['format']
+
+            if 'path' not in cfg_sar['export'] or cfg_sar['export']['path'] is None:
+                p_out = '../data/'
+            else:
+                p_out = cfg_sar['export']['path']
+
+            f_export = '_'.join([metadata['acqstarttime_str'], subswath, pol, 'int'])
+            print('  => exporting result to: ' + f_export + '.' + fmt_out)
+
+            write_product(p, f_out=f_export, p_out=p_out, fmt_out=fmt_out)
 
         # --- store image file to database
         if store_result2db is True:
@@ -996,6 +1017,7 @@ def dinsar(cfg_productselection,
            store_result2db=None,
            print_sqlQuery=None,
            print_sqlResult=None,
+           quit_after_querydb=None,
            file_credentials_mysql=None):
 
     import fnmatch
@@ -1020,6 +1042,10 @@ def dinsar(cfg_productselection,
     stmt = dbo.dbmounts_archive_querystmt(**cfg_productselection)
     rows = dbo.execute_query(stmt)
     dat = rows.all()
+    if not dat:
+        print('---> no product found with the provided query options')
+        return
+
     if print_sqlQuery is True:
         print(stmt)
 
@@ -1039,10 +1065,14 @@ def dinsar(cfg_productselection,
             print '  master = ' + msp[k][0].title + ' ' + msp[k][0].orbitdirection
             print '  slave = ' + msp[k][1].title + ' ' + msp[k][1].orbitdirection
 
+    if quit_after_querydb is not None:
+        return
+
     # === PROCESS
     subswath = cfg_dinsar['subswath']
     polarization = cfg_dinsar['polarization']
     bands2plot = cfg_dinsar['bands2plot']
+    bands2analyze = cfg_dinsar['bands2analyze']
     subset_wkt = cfg_plot['subset_wkt']
     pathout_root = cfg_plot['pathout_root']
     thumbnail = cfg_plot['thumbnail']
@@ -1096,9 +1126,7 @@ def dinsar(cfg_productselection,
         p = goldstein_phase_filtering(p)
 
         # --- define bands to analyze
-        # TODO: select based on 'bands2plot'
         bdnames = get_bandnames(p, print_bands=None)
-
         band_ifg = fnmatch.filter(bdnames, 'Phase_*')
         band_coh = fnmatch.filter(bdnames, 'coh_*')
         # band_int = fnmatch.filter(bdnames, 'Intensity_*') # >> combination of  slave/master intensity?
@@ -1108,51 +1136,109 @@ def dinsar(cfg_productselection,
         p = terrain_correction(p, sourceBands)
 
         # --- subset
-        # p = subset(p, **subset_bounds)
         p = subset(p, geoRegion=subset_wkt)
 
         # --- set output file name based on metadata
         metadata_master = get_metadata_S1(m)
         metadata_slave = get_metadata_S1(s)
-        fnameout_ifg = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'ifg'])
-        fnameout_coh = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, 'coh'])
 
-        # --- write result product
-        save_product = 1
-        if save_product:
-            print('  writing product')
-            fout_product = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization])
-            write_product(p, f_out=fout_product, p_out='/home/sebastien/DATA/data_snap/')
+        # --- export result
+        if 'export' in cfg_dinsar and cfg_dinsar['export'] is not None:
+            if 'format' not in cfg_dinsar['export'] or cfg_dinsar['export']['format'] is None:
+                fmt_out = None
+            else:
+                fmt_out = cfg_dinsar['export']['format']
+
+            if 'path' not in cfg_dinsar['export'] or cfg_dinsar['export']['path'] is None:
+                p_out = '../data/'
+            else:
+                p_out = cfg_dinsar['export']['path']
+
+            f_export = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization])
+            print('  => exporting result to: ' + f_export + '.' + fmt_out)
+
+            write_product(p, f_out=f_export, p_out=p_out, fmt_out=fmt_out)
 
         # --- plot
-        # if bands2plot:
-        #     # TODO: plot only what has been requested in list, e.g. ['ifg', 'coh', 'amp'] => when defining source bands
+        if bands2plot is not None:
 
-        #     p_out = pathout_root + target_name + '/'
-        #     imgs_fullpath = plotBands(p, sourceBands, f_out=[fnameout_ifg, fnameout_coh], p_out=p_out, thumbnail=thumbnail)
+            b_name = []
+            f_out = []
+            f_type = []
 
-        #     # --- store image file to database
-        #     if store_result2db is True:
-        #         path_ln = ['data_mounts' + i.split('/data_mounts')[1] for i in imgs_fullpath]  # = abspath from data_mounts folder, linked to mountsweb static folder
+            for b_type in bands2analyze:
+                if b_type == 'coh':
+                    txt2search = 'coh_*'
+                elif b_type == 'ifg':
+                    txt2search = 'Phase_*'
 
-        #         print('Store to DB_MOUNTS.results_img')
-        #         dict_val = {'title': [fnameout_ifg, fnameout_coh],
-        #                     'abspath': path_ln,  # [path_ln + fnameout_ifg, path_ln + fnameout_coh],
-        #                     'type': ['ifg', 'coh'],
-        #                     'id_master': [master_id, master_id],
-        #                     'id_slave': [slave_id, slave_id],
-        #                     'target_id': [str(target_id), str(target_id)]}
-        #         dbo.insert('DB_MOUNTS', 'results_img', dict_val)
+                f_type.append(b_type)
 
-        # # --- analyze
-        # bands2analyze = ['coh']
-        # if bands2analyze:
-        #     print 'TODO'
+                bdnames = get_bandnames(p, print_bands=None)
+                bname = fnmatch.filter(bdnames, txt2search)[0]
+                b_name.append(bname)
 
-            # --- dispose => Releases all of the resources used by this object instance and all of its owned children.
-        print('Product dispose (release all resources used by object)')
+                fname = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization, b_type])
+                f_out.append(fname)
+
+            p_out = pathout_root + target_name + '/'
+
+            imgs_fullpath = plotBands(p, b_name, f_out=f_out, p_out=p_out, thumbnail=thumbnail)
+
+            # --- store image file to database
+            if store_result2db is True:
+                path_ln = ['data_mounts' + i.split('/data_mounts')[1] for i in imgs_fullpath]  # = abspath from data_mounts folder, linked to mountsweb static folder
+
+                print('Store to DB_MOUNTS.results_img')
+                dict_val = {'title': f_out,
+                            'abspath': path_ln,
+                            'type': f_type,
+                            'id_master': [master_id] * len(f_type),
+                            'id_slave': [slave_id] * len(f_type),
+                            'target_id': [str(target_id)] * len(f_type)}
+                dbo.insert('DB_MOUNTS', 'results_img', dict_val)
+
+        # --- analyze
+        if bands2analyze is not None:
+
+            for b_type in bands2analyze:
+                if b_type == 'coh':
+                    txt2search = 'coh_*'
+                elif b_type == 'ifg':
+                    txt2search = 'Phase_*'
+
+                bdnames = get_bandnames(p)
+                bname = fnmatch.filter(bdnames, txt2search)[0]
+
+                # --- get band data
+                band = p.getBand(bname)
+                w, h = get_rasterDim(p, bname)
+                band_data = np.zeros(w * h, np.float32)
+                band.readPixels(0, 0, w, h, band_data)
+                band_data.shape = h, w
+
+                # --- analyze
+                mask = np.where(band_data < 0.5, 0, 1)
+                idx_change = np.count_nonzero(mask == 0)
+
+                # --- store result to database
+                if store_result2db is True:
+                    # TODO: id_image should reference plotted image, or process refering to where the analyzed image came from
+                    id_image = 1
+
+                    print('Store to DB_MOUNTS.results_dat')
+                    dict_val = {'time': metadata_master['acqstarttime'],    #= 2017-01-11 15:27:12.327001
+                                'type': b_type,                             #= 'coh'
+                                'data': str(idx_change),
+                                'id_image': str(id_image),                  #= should reference image plotted!
+                                'target_id': str(target_id)}
+                    dbo.insert('DB_MOUNTS', 'results_dat', dict_val)
+
+
+        # --- dispose => Releases all of the resources used by this object instance and all of its owned children.
         p.dispose()
 
+        return
 
 def nir(cfg_productselection,
         cfg_nir,
@@ -1160,6 +1246,7 @@ def nir(cfg_productselection,
         store_result2db=None,
         print_sqlQuery=None,
         print_sqlResult=None,
+        quit_after_querydb=None,
         file_credentials_mysql=None):
 
     print('=== NIR PROCESSING')
@@ -1178,7 +1265,21 @@ def nir(cfg_productselection,
     if 'mission' not in cfg_productselection:
         cfg_productselection['mission'] = 'SENTINEL-2%'
 
-    # --- get processing parameters
+    # --- query archive with selected options
+    stmt = dbo.dbmounts_archive_querystmt(**cfg_productselection)
+    rows = dbo.execute_query(stmt)
+    dat = rows.all()
+    if not dat:
+        print('---> no product found with the provided query options')
+        return
+
+    if print_sqlQuery is True:
+        print(stmt)
+
+    if quit_after_querydb is not None:
+        return
+
+    # === PROCESS
     subset_wkt = cfg_plot['subset_wkt']
     pathout_root = cfg_plot['pathout_root']
     thumbnail = cfg_plot['thumbnail']
@@ -1188,13 +1289,6 @@ def nir(cfg_productselection,
     target_name = cfg_productselection['target_name']
     target_id = dbo.dbmounts_target_nameid(target_name=target_name)
 
-    # --- query archive with selected options
-    stmt = dbo.dbmounts_archive_querystmt(**cfg_productselection)
-    rows = dbo.execute_query(stmt)
-    dat = rows.all()
-    if print_sqlQuery is True:
-        print(stmt)
-
     for r in dat:
         print('  | ' + r.title)
 
@@ -1202,13 +1296,23 @@ def nir(cfg_productselection,
         p = resample(p, referenceBand='B2')
         p = subset(p, geoRegion=subset_wkt)
 
-        # --- write result product
-        save_product = 0
-        if save_product:
-            print('  writing product')
+        # --- export result
+        if 'export' in cfg_nir and cfg_nir['export'] is not None:
+            if 'format' not in cfg_nir['export'] or cfg_nir['export']['format'] is None:
+                fmt_out = None
+            else:
+                fmt_out = cfg_nir['export']['format']
+
+            if 'path' not in cfg_nir['export'] or cfg_nir['export']['path'] is None:
+                p_out = '../data/'
+            else:
+                p_out = cfg_nir['export']['path']
+
             metadata_master = get_metadata_S2(p)
-            fout_product = '_'.join(['S2', metadata_master['acqstarttime_str']])
-            write_product(p, f_out=fout_product, p_out='/home/sebastien/DATA/data_snap/ertaale/')
+            f_export = '_'.join(['S2', metadata_master['acqstarttime_str']])
+            print('  => exporting result to: ' + f_export + '.' + fmt_out)
+
+            write_product(p, f_out=f_export, p_out=p_out, fmt_out=fmt_out)
             
         plot_nir = 0
         if plot_nir:

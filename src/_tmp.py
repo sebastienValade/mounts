@@ -1,6 +1,6 @@
 import utilityme as utils
 
-username = 'sebastien'
+username = 'khola'
 
 f = file('./conf/credentials_mysql.txt')
 (db_usr, db_pwd) = f.readline().split(' ')
@@ -22,14 +22,19 @@ processing = dict(
     dinsar=dict(
         subswath='IW2',
         polarization='VV',
-        bands2plot=['ifg', 'coh']),
+        export={'format': 'BEAM-DIMAP', 'path': '/home/sebastien/DATA/data_snap/'},
+        bands2plot=['ifg', 'coh'],
+        bands2analyze=dict(
+            coh={'nbpixel_thresh': 0.5})),
     sar=dict(
         subswath='IW2',
-        bands2plot=['int_HV']),
+        bands2plot=['int_HV'],
+        export={'format': 'BEAM-DIMAP', 'path': '/home/sebastien/DATA/data_snap/ertaale/'}),
     nir=dict(
         bname_red='B12',
         bname_green='B11',
-        bname_blue='B8A')
+        bname_blue='B8A',
+        export={'format': 'BEAM-DIMAP', 'path': '/home/sebastien/DATA/data_snap/ertaale/'})
 )
 
 dbo.dbmounts_addtarget_sqlalchemy(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613,

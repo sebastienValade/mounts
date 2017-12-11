@@ -1,14 +1,14 @@
 import utilityme as utils
 import ast
 
-username = 'sebastien'
+username = 'khola'
 setup_database = 0
 process_archive = 1
-pcss_dinsar = 0
+pcss_dinsar = 1
 pcss_sar = 0
-pcss_nir = 1
+pcss_nir = 0
 
-acqstarttime = '>2016-12-01 <2017-01-01'
+acqstarttime = '>2017-01-01 <2018-01-01'
 
 # --- get database credentials
 f = file('./conf/credentials_mysql.txt')
@@ -92,30 +92,17 @@ if setup_database:
                   foreignkey_ref=['DB_MOUNTS.results_img(id)', 'DB_MOUNTS.targets(id)'],
                   unique_contraint=['time', 'type'])  # => combination of time/type values should be unique, no duplicates
 
-    # # --- create tb "processing"
-    # tbname = 'processing'
-    # dicts = {'id': 'INT',               # = volcano number defined by GVP
-    #          'name': 'CHAR(100)',       # = ertaale
-    #          'dinsar': 'CHAR(100)',
-    #          'subset': 'CHAR(250)'}
-    # dbo.create_tb(dbname='DB_MOUNTS', tbname=tbname, dicts=dicts, primarykey='id')
-    # # --- add processing options
-    # # => copy columns 'name', 'id' from table 'targets'
-    # stmt = "INSERT INTO DB_MOUNTS.processing (id, name) SELECT id, name FROM DB_MOUNTS.targets"
-    # rows = dbo.execute_query(stmt)
-
     # =============================================
     # load DATABASE
     # =============================================
 
-    # --- add volcanoes to target list
-    dbo.dbmounts_addtarget(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613,
-                           processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV', 'bands2plot':['ifg', 'coh']}, 'sar': {'subswath': 'IW2', 'bands2plot': ['int_HV']}, 'nir': {'bname_red':'B12', 'bname_green':'B11', 'bname_blue':'B8A'} }",
-                           subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
-    dbo.dbmounts_addtarget(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295,
-                           processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV', 'bands2plot':['ifg', 'coh']}, 'sar': {'subswath': 'IW2', 'bands2plot': ['int_HV']}, 'nir': {'bname_red':'B12', 'bname_green':'B11', 'bname_blue':'B8A'} }",
-                           subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
-
+    # --- add volcanoes to target list (no json)
+    # dbo.dbmounts_addtarget(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613,
+    #                        processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV', 'bands2plot':['ifg', 'coh']}, 'sar': {'subswath': 'IW2', 'bands2plot': ['int_HV']}, 'nir': {'bname_red':'B12', 'bname_green':'B11', 'bname_blue':'B8A'} }",
+    #                        subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
+    # dbo.dbmounts_addtarget(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295,
+    #                        processing="{'dinsar': {'subswath':'IW2', 'polarization':'VV', 'bands2plot':['ifg', 'coh']}, 'sar': {'subswath': 'IW2', 'bands2plot': ['int_HV']}, 'nir': {'bname_red':'B12', 'bname_green':'B11', 'bname_blue':'B8A'} }",
+    #                        subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
     # NB: alternative way to populate target list
     # dict_targets = {'id': ['1', '2'],
     #             'fullname': ['COCO', 'NUT'],
@@ -127,6 +114,28 @@ if setup_database:
     #             'processing': ['a', 'b'],
     #             'subset_wkt': ['a', 'b']}
     # dbo.insert('DB_MOUNTS', 'targets', dict_targets)
+
+    # --- add volcanoes to target list (json supported)
+    processing = dict(
+        dinsar=dict(
+            subswath='IW2',
+            polarization='VV',
+            bands2plot=['ifg', 'coh']),
+        sar=dict(
+            subswath='IW2',
+            bands2plot=['int_HV']),
+        nir=dict(
+            bname_red='B12',
+            bname_green='B11',
+            bname_blue='B8A')
+    )
+
+    dbo.dbmounts_addtarget_sqlalchemy(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613,
+                                      processing=processing,
+                                      subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
+    dbo.dbmounts_addtarget_sqlalchemy(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295,
+                                      processing=processing,
+                                      subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
 
     # --- store archive zip files (S1+S2) of each listed target to database
     stmt = "SELECT name FROM DB_MOUNTS.targets"
@@ -167,14 +176,14 @@ if process_archive:
             cfg_productselection = {'target_name': volcanoname, 'acqstarttime': acqstarttime}     # = sql search options
             cfg_dinsar = pcss['dinsar']             # = dinsar options
             cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
-            gpt.dinsar(cfg_productselection, cfg_dinsar, cfg_plot, store_result2db=True, print_sqlResult=True)
+            gpt.dinsar(cfg_productselection, cfg_dinsar, cfg_plot, store_result2db=True, print_sqlResult=True, quit_after_querydb=None)
 
         # --- run dinsar
         if 'sar' in pcss and pcss_sar:
             cfg_productselection = {'target_name': volcanoname, 'acqstarttime': acqstarttime}     # = sql search options
             cfg_sar = pcss['sar']             # = dinsar options
             cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
-            gpt.sar(cfg_productselection, cfg_sar, cfg_plot, store_result2db=True, print_sqlResult=True)
+            gpt.sar(cfg_productselection, cfg_sar, cfg_plot, store_result2db=True, print_sqlResult=True, quit_after_querydb=None)
 
             # FAILED ATTEMPS TO RELEASE MEMORY
             # NB: exiting the function is not enough, to release the program must exit ...
@@ -193,4 +202,4 @@ if process_archive:
             cfg_nir = pcss['nir']             # = nir options
             cfg_productselection = {'target_name': volcanoname, 'acqstarttime': acqstarttime}     # = sql search options
             cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
-            gpt.nir(cfg_productselection, cfg_nir, cfg_plot, store_result2db=True, print_sqlResult=True)
+            gpt.nir(cfg_productselection, cfg_nir, cfg_plot, store_result2db=True, print_sqlResult=True, quit_after_querydb=None)
