@@ -595,6 +595,7 @@ class Database:
             lat=kwargs['lat'],
             lon=kwargs['lon'],
             alt=kwargs['alt'],
+            download=json.dumps(kwargs['download']),
             processing=json.dumps(kwargs['processing']),
             subset_wkt=kwargs['subset_wkt']
         )
@@ -608,6 +609,7 @@ class Database:
             lat=kwargs['lat'],
             lon=kwargs['lon'],
             alt=kwargs['alt'],
+            download=json.dumps(kwargs['download']),
             processing=json.dumps(kwargs['processing']),
             subset_wkt=kwargs['subset_wkt']
         )

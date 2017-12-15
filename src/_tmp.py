@@ -37,16 +37,27 @@ processing = dict(
         export={'format': 'BEAM-DIMAP', 'path': '/home/sebastien/DATA/data_snap/ertaale/'})
 )
 
+scihub_optn = dict(
+    platformname='Sentinel-1',
+    producttype='SLC',
+    sensoroperationalmode='IW')
+
+scihub_optn = dict(
+    platformname='Sentinel-1',
+    producttype='SLC',
+    sensoroperationalmode='IW',
+    footprint='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))',
+    maxrecords=2)
+
 dbo.dbmounts_addtarget_sqlalchemy(id=221080, fullname='Erta Ale', name='ertaale', country='Ethiopia', lat=13.6, lon=40.67, alt=613,
+                                  download={'fq': 120.0, 'scihub_optn': scihub_optn, 'download_rootdir': '/home/sebastien/DATA/data_satellite/'},
                                   processing=processing,
                                   subset_wkt='POLYGON((40.63 13.64, 40.735 13.64, 40.735 13.53, 40.63 13.53, 40.63 13.64))')
 dbo.dbmounts_addtarget_sqlalchemy(id=211060, fullname='Etna', name='etna', country='Italy', lat=37.748, lon=14.999, alt=3295,
+                                  download={'fq': 7200, 'scihub_optn': scihub_optn, 'download_rootdir': '/home/sebastien/DATA/data_satellite/'},
                                   processing=processing,
                                   subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
-dbo.dbmounts_addtarget_sqlalchemy(id=3, fullname='ciao', name='bella', country='Italy', lat=37.748, lon=14.999, alt=3295,
-                                  processing=processing,
-                                  subset_wkt='POLYGON((14.916129 37.344437, 14.979386 37.344437, 14.979386 37.306283, 14.916129 37.306283, 14.916129 37.344437))')
-
+#
 # # === LOAD S2 files to DB_MOUNTS.archive
 # stmt = "SELECT name FROM DB_MOUNTS.targets"
 # rows = dbo.execute_query(stmt)

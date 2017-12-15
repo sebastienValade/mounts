@@ -178,6 +178,8 @@ class Product(Esa):
         # --- save where product stored
         self.path_and_file = path_and_file
 
+        return path_and_file
+
     def getMd5sum(self, print_md5sum=None, print_url=None):
         """Get product MD5 checksum. (verifying download integrity)
         Each product published on the Data Hub provides an MD5 checksum of the downloadable ZIP file.
@@ -238,7 +240,7 @@ class Scihub(Esa):
     def scihub_search(self,
                       filename=None,
                       platformname=None,
-                      productType=None,
+                      producttype=None,
                       polarisationmode=None,
                       sensoroperationalmode=None,
                       orbitdirection=None,
@@ -498,7 +500,7 @@ class Scihub(Esa):
 
             # --- apend formated option if dictionary key is valid
             optns_valid = ('filename', 'footprint', 'platformname', 'polarisationmode',
-                           'productType', 'sensoroperationalmode', 'orbitdirection',
+                           'producttype', 'sensoroperationalmode', 'orbitdirection',
                            'swathidentifier', 'cloudcoverpercentage',
                            'beginposition', 'endposition', 'ingestiondate',
                            )

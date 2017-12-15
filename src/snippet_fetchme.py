@@ -4,7 +4,9 @@ import fetchme
 obj = fetchme.Scihub()
 
 # - scihub authentification
-obj.query_auth('sebastien.valade', 'wave*worm')
+f = file('./conf/credentials_scihub.txt')
+(usr, pwd) = f.readline().split(' ')
+obj.query_auth(usr, pwd)
 
 # --- read config file
 # conffile = '_config_etna_archive.yml'
@@ -22,19 +24,28 @@ logging.info('>> script started')
 # QUERY
 # =============================================
 
-# --- scihub query
+# --- print scihub query url
 # productlist = obj.scihub_search(print_url=1)
 
+# --- doc with all options for scihub query:
+# see ./conf/config_options.txt
+
 # --- parse options from kwargs
-# ----- filename:
+# - ex: filename:
 # obj.scihub_search(filename='S1*')
-# ----- footprint:
-# ex: WKT format (http://boundingbox.klokantech.com/)
+# - ex: footprint WKT format (http://boundingbox.klokantech.com/)
 # obj.scihub_search(footprint='POLYGON((-2.211 49.9654, -0.835 49.9654, -0.835 49.1206, -2.211 49.1206, -2.211 49.9654))')
 
 # --- parse options from dict
-# optns = {'filename': 'S1A*', 'maxrecords': 5}
-# obj.scihub_search(**optns)
+optns = {'filename': 'S1A*', 'maxrecords': 5}
+
+optns = dict(
+    platformname='Sentinel-1',
+    producttype='SLC',
+    sensoroperationalmode='IW',
+    maxrecords=5)
+
+obj.scihub_search(**optns)
 
 # --- parse options from yaml configuration file
 # obj.scihub_search(configfile='./conf/_config_ertaale.yml')
@@ -60,6 +71,7 @@ logging.info('>> script started')
 
 # --- get product metadata
 # print(productlist[0].metadata)
+# print productlist[0].metadata['title']
 
 # --- get product md5sum
 # productlist[0].getMd5sum()

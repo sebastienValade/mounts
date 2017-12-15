@@ -1,5 +1,6 @@
 import utilityme as utils
-import ast
+import json
+# import ast
 
 username = 'sebastien'
 setup_database = 0
@@ -8,7 +9,7 @@ pcss_dinsar = 0
 pcss_sar = 0
 pcss_nir = 1
 
-acqstarttime = '>2017-01-10 <2018-01-01'
+acqstarttime = '>2016-12-29 <2017-01-01'
 quit_after_querydb = None
 print_sqlResult = 1
 
@@ -38,7 +39,7 @@ if setup_database:
              'lat': 'FLOAT',
              'lon': 'FLOAT',
              'alt': 'INT',
-             'download': 'INT',
+             'download': 'TEXT',
              'processing': 'TEXT',
              'subset_wkt': 'TEXT'}
     dbo.create_tb(dbname='DB_MOUNTS', tbname=tbname, dicts=dicts, primarykey='id')
@@ -171,7 +172,8 @@ if process_archive:
         if pcss_str is None or not pcss_str:
             continue
         else:
-            pcss = ast.literal_eval(pcss_str)
+            # pcss = ast.literal_eval(pcss_str)
+            pcss = json.loads(pcss_str)
 
         # --- run dinsar
         if 'dinsar' in pcss and pcss_dinsar:

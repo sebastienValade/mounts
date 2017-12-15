@@ -50,6 +50,16 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # tbl = rows.dataset
 # # tble.append_col([22, 20, 12, 11], header='Age') #= append new column
 
+# --- records lib simplest usage
+# db_url = 'mysql://root:br12Fol!@127.0.0.1/DB_MOUNTS'
+# dbo = records.Database(db_url)
+# stmt = "SELECT * FROM DB_MOUNTS.archive WHERE target_id = 221080 ORDER BY acqstarttime DESC LIMIT 10".format(target_id)
+# rows = dbo.query(stmt)
+# for r in rows:
+#     print r.title
+# 
+# - if only 1 row expected:
+# print rows.first().title
 
 # --- print content
 # dbo.print_dataset(dbname='DB_MOUNTS', tbname='targets')  # , colname='prod_title')
@@ -63,7 +73,7 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type=
 # with tablib functionalities:
 # A = rows.dataset
 # A['name']
-# 
+#
 # or: rows.dataset['name']
 
 # --- get specific dataset: select elts containing specific string (ex: string '1SSV' at char nb 13)

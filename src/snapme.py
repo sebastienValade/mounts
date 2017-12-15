@@ -911,6 +911,7 @@ def sar(cfg_productselection,
     for k, r in enumerate(dat, start=start_idx):
 
         # TODO: wtf, why r.title always start from idx = 0
+        # WARNING: confusion using  dbo.execute_query and dbo.get_dataset! One invokes row.all(), the other no?
         print str(k) + ' ' + r.title
         print str(k) + ' ' + dat[k].title
 

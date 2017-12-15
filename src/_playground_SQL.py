@@ -1,11 +1,28 @@
 import utilityme as utils
+import records
+
+db_url = 'mysql://root:br12Fol!@127.0.0.1/DB_MOUNTS'
+dbo = records.Database(db_url)
+
+target_id = '221080'
+# stmt = "SELECT title, id FROM DB_MOUNTS.archive WHERE target_id = {} ORDER BY acqstarttime DESC LIMIT 10".format(target_id)
+
+mission = 'Sentinel-1%'
+q = "SELECT title FROM DB_MOUNTS.archive WHERE target_id = {} AND mission LIKE '{}' ORDER BY acqstarttime DESC LIMIT 5"
+stmt = q.format(target_id, mission)
+
+rows = dbo.query(stmt)
+# for r in rows:
+#     print r.title
+print rows.first().title
+
 
 # dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
 # stmt = "SELECT * FROM DB_MOUNTS.results_img WHERE target_id = '221080'"
 
 
-db_name = 'DB_MOUNTS'
-dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='br12Fol!', db_type='mysql', db_name=db_name)
+# db_name = 'DB_MOUNTS'
+# dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='br12Fol!', db_type='mysql', db_name=db_name)
 # stmt = "SELECT r.title FROM results_img r INNER JOIN archive a ON r.id_master = a.id WHERE r.target_id = '221080' ORDER BY a.acqstarttime desc"
 
 # stmt = '''
@@ -18,80 +35,80 @@ dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='br12Fol!', db_t
 #     '''
 
 
-# -- USE PANDAS
-id = '221080'
+# # -- USE PANDAS
+# id = '221080'
 
-# --- get target s1 results (ifg+coh)
-q = '''
-    SELECT R.title, R.abspath, R.type, S.acqstarttime AS acqstarttime_slave, M.acqstarttime AS acqstarttime_master
-    FROM results_img AS R
-    INNER JOIN archive AS S ON R.id_slave = S.id
-    INNER JOIN archive AS M ON R.id_master = M.id
-    WHERE R.target_id = {} AND S.acqstarttime > '2017-01-01' AND (R.type = 'ifg' OR R.type = 'coh' OR R.type = 'int_VV')
-    ORDER BY S.acqstarttime desc, R.type desc
-'''
-stmtS1 = q.format(id)
+# # --- get target s1 results (ifg+coh)
+# q = '''
+#     SELECT R.title, R.abspath, R.type, S.acqstarttime AS acqstarttime_slave, M.acqstarttime AS acqstarttime_master
+#     FROM results_img AS R
+#     INNER JOIN archive AS S ON R.id_slave = S.id
+#     INNER JOIN archive AS M ON R.id_master = M.id
+#     WHERE R.target_id = {} AND S.acqstarttime > '2017-01-01' AND (R.type = 'ifg' OR R.type = 'coh' OR R.type = 'int_VV')
+#     ORDER BY S.acqstarttime desc, R.type desc
+# '''
+# stmtS1 = q.format(id)
 
-# --- get target s2 results (nir)
-q = '''
-    SELECT R.title, R.abspath, R.type, S.acqstarttime AS acqstarttime_slave, M.acqstarttime AS acqstarttime_master
-    FROM results_img AS R
-    INNER JOIN archive AS S ON R.id_slave = S.id
-    INNER JOIN archive AS M ON R.id_master = M.id
-    WHERE R.target_id = {} AND R.type = 'nir'
-    ORDER BY M.acqstarttime desc
-'''
-stmtS2 = q.format(id)
+# # --- get target s2 results (nir)
+# q = '''
+#     SELECT R.title, R.abspath, R.type, S.acqstarttime AS acqstarttime_slave, M.acqstarttime AS acqstarttime_master
+#     FROM results_img AS R
+#     INNER JOIN archive AS S ON R.id_slave = S.id
+#     INNER JOIN archive AS M ON R.id_master = M.id
+#     WHERE R.target_id = {} AND R.type = 'nir'
+#     ORDER BY M.acqstarttime desc
+# '''
+# stmtS2 = q.format(id)
 
 
-# -> records lib
-# imgS1 = dbo.execute_query(stmtS1)
-# imgS2 = dbo.execute_query(stmtS2)
-# A = imgS2.dataset
-# A['acqstarttime']
+# # -> records lib
+# # imgS1 = dbo.execute_query(stmtS1)
+# # imgS2 = dbo.execute_query(stmtS2)
+# # A = imgS2.dataset
+# # A['acqstarttime']
 
-# -> pandas lib
-import pandas as pd
-from sqlalchemy import create_engine  # database connection
-db_host = '127.0.0.1'
-db_usr = 'root'
-db_pwd = 'br12Fol!'
-db_type = 'mysql'
-db_name = 'DB_MOUNTS'
-db_url = db_type + '://' + db_usr + ':' + db_pwd + '@' + db_host + '/' + db_name
-disk_engine = create_engine(db_url)
-df_S1 = pd.read_sql(stmtS1, disk_engine)
-df_S2 = pd.read_sql(stmtS2, disk_engine)
+# # -> pandas lib
+# import pandas as pd
+# from sqlalchemy import create_engine  # database connection
+# db_host = '127.0.0.1'
+# db_usr = 'root'
+# db_pwd = 'br12Fol!'
+# db_type = 'mysql'
+# db_name = 'DB_MOUNTS'
+# db_url = db_type + '://' + db_usr + ':' + db_pwd + '@' + db_host + '/' + db_name
+# disk_engine = create_engine(db_url)
+# df_S1 = pd.read_sql(stmtS1, disk_engine)
+# df_S2 = pd.read_sql(stmtS2, disk_engine)
 
-gb = df_S1.groupby('acqstarttime_master', sort=False, as_index=False)
+# gb = df_S1.groupby('acqstarttime_master', sort=False, as_index=False)
 
-import numpy as np
-idx = [np.argmin(abs(i - df_S2.acqstarttime_master)) for i in sorted(gb.groups.iterkeys(), reverse=True)]
-imgS2 = df_S2.iloc[idx]
+# import numpy as np
+# idx = [np.argmin(abs(i - df_S2.acqstarttime_master)) for i in sorted(gb.groups.iterkeys(), reverse=True)]
+# imgS2 = df_S2.iloc[idx]
 
-df = pd.DataFrame(np.random.randn(2, 5), columns=['title', 'abspath', 'type', 'acqstarttime_slave', 'acqstarttime_master'])
-s = df.iloc[0]
+# df = pd.DataFrame(np.random.randn(2, 5), columns=['title', 'abspath', 'type', 'acqstarttime_slave', 'acqstarttime_master'])
+# s = df.iloc[0]
 
-for name, group in gb:
-    print '=========='
-    print name
-    idx = np.argmin(abs(name - df_S2.acqstarttime_master))
-    group = group.append(df_S2.iloc[idx], ignore_index=True)
-    # print group
-    # gb.update(group)
+# for name, group in gb:
+#     print '=========='
+#     print name
+#     idx = np.argmin(abs(name - df_S2.acqstarttime_master))
+#     group = group.append(df_S2.iloc[idx], ignore_index=True)
+#     # print group
+#     # gb.update(group)
 
-sg = []
-sgd = {}
-for name, group in gb:
-    print '=========='
-    print name
-    idx = np.argmin(abs(name - df_S2.acqstarttime_master))
-    group = group.append(df_S2.iloc[idx], ignore_index=True)
-    sg.append(group.to_dict('list'))
-    sgd[name] = group.to_dict('list')
+# sg = []
+# sgd = {}
+# for name, group in gb:
+#     print '=========='
+#     print name
+#     idx = np.argmin(abs(name - df_S2.acqstarttime_master))
+#     group = group.append(df_S2.iloc[idx], ignore_index=True)
+#     sg.append(group.to_dict('list'))
+#     sgd[name] = group.to_dict('list')
 
-for k, v in sgd:
-    print v
+# for k, v in sgd:
+#     print v
 
 
 # b = pd.concat([group, df_S2.iloc[idx]], ignore_index=True)
