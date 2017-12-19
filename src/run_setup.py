@@ -182,7 +182,7 @@ if process_archive:
             cfg_plot = {'subset_wkt': r.subset_wkt, 'pathout_root': '/home/' + username + '/DATA/data_mounts/', 'thumbnail': True}
             gpt.dinsar(cfg_productselection, cfg_dinsar, cfg_plot, store_result2db=True, print_sqlResult=print_sqlResult, quit_after_querydb=quit_after_querydb)
 
-        # --- run dinsar
+        # --- run sar
         if 'sar' in pcss and pcss_sar:
             cfg_productselection = {'target_name': volcanoname, 'acqstarttime': acqstarttime}     # = sql search options
             cfg_sar = pcss['sar']             # = dinsar options

@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 from tqdm import tqdm
 import utilityme as utils
 
+# TODO: look into "sentinelsat" python API:
+# http://sentinelsat.readthedocs.io/en/stable/api.html
 
 class Esa:
     """
@@ -253,6 +255,7 @@ class Scihub(Esa):
                       orderby=None,
                       cloudcoverpercentage=None,
                       hub='api',
+                      fullmeta=None, #TODO: full metadata: https://github.com/sentinelsat/sentinelsat/blob/127619f6baede1b5cc852b208d4e57e9f4d518ee/sentinelsat/sentinel.py
                       configfile=None,
                       export_result=None,
                       print_url=None,
@@ -357,6 +360,10 @@ class Scihub(Esa):
 
         if print_url is not None:
             print('query url = ' + req.url)
+
+        #full = True
+        #if full:
+        #    url += '&$expand=Attributes'
 
         # --- send request
         logging.info('querying DataHub archive')
@@ -485,6 +492,12 @@ class Scihub(Esa):
             # --- option "maxrecords"
             if k == 'maxrecords':
                 optns_fmtd['rows'] = v
+                continue
+
+            # --- option "fullmeta"
+            # TODO: still to implement/parse output
+            if k == 'fullmeta':
+                optns_fmtd['$expand'] = 'Attributes'
                 continue
 
             # --- option "orderby"

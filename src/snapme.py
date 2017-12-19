@@ -1966,6 +1966,17 @@ def get_metadata_S1_slave(self, slave_idx=0):
 def metadata_naming_convention():
     metadata_names = []
 
+    # TODO: look into "sentinelsat" python API (http://sentinelsat.readthedocs.io/en/stable/api.html)
+    # => get the product's full metadata available on the server
+    # api.get_product_odata(<product_id>, full=True)
+    #
+    # https://github.com/sentinelsat/sentinelsat/blob/127619f6baede1b5cc852b208d4e57e9f4d518ee/sentinelsat/sentinel.py
+    # If ``full`` is set to True, then the full, detailed metadata of the product is returned in addition to the above. For a mapping between the OpenSearch (Solr) and OData
+    # attribute names see the following definition files:
+    # https://github.com/SentinelDataHub/DataHubSystem/blob/master/addon/sentinel-1/src/main/resources/META-INF/sentinel-1.owl
+    # https://github.com/SentinelDataHub/DataHubSystem/blob/master/addon/sentinel-2/src/main/resources/META-INF/sentinel-2.owl
+    # https://github.com/SentinelDataHub/DataHubSystem/blob/master/addon/sentinel-3/src/main/resources/META-INF/sentinel-3.owl
+
     # --- metadata providers
     metadata_names.append(['opensearch', 'Abstracted_Metadata', 'Original_Product_Metadata', 'example'])
 
