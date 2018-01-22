@@ -2005,29 +2005,69 @@ def get_metadata_S2(self):
     # Although a field "Abstracted_Metadata" appears in SNAP Desktop Metadata section for S2 products, it cannot be accessed by command line
     # Below is a way to gather them...
 
-    product_title = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getAttributeString('PRODUCT_URI')
-    product_title = product_title.split('.SAFE')[0]
+    # --- get data product level
+    metadata_root = list(self.getMetadataRoot().getElementNames())
+    if 'Level-1C_User_Product' in metadata_root:
+        dataproduct_level = 'L1C'
+    elif 'Level-2A_User_Product' in metadata_root:
+        dataproduct_level = 'L2A'
 
-    product_type = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getAttributeString('PRODUCT_TYPE')
+    # --- L1C products
+    # NB: explore MTD_MSIL1C.xml
+    if dataproduct_level == 'L1C':
+        product_title = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getAttributeString('PRODUCT_URI')
+        product_title = product_title.split('.SAFE')[0]
 
-    mission = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SPACECRAFT_NAME')
-    mission = mission.upper()  # >> 'Sentinel-2A' to 'SENTINEL-2A'
+        product_type = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getAttributeString('PRODUCT_TYPE')
 
+        mission = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SPACECRAFT_NAME')
+        mission = mission.upper()  # >> 'Sentinel-2A' to 'SENTINEL-2A'
+
+        # acqstart_str = self.getMetadataRoot().getElement('Level-1C_DataStrip_ID').getElement('General_Info').getElement('Datastrip_Time_Info').getAttributeString('DATASTRIP_SENSING_START')
+        acqstart_str = self.getMetadataRoot().getElement('Level-1C_DataStrip_ID').getElement('General_Info').getElement('Product_Info').getAttributeString('PRODUCT_START_TIME')
+
+        orbit_relativenb = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SENSING_ORBIT_NUMBER')
+        orbit_direction = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SENSING_ORBIT_DIRECTION')
+
+        footprint = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('Geometric_Info').getElement('Product_Footprint').getElement('Product_Footprint').getElement('Global_Footprint').getAttributeString('EXT_POS_LIST')
+
+    # --- L2A products
+    # NB: explore MTD_MSIL2A.xml
+    if dataproduct_level == 'L2A':
+        product_title = self.getMetadataRoot().getElement('Level-2A_User_Product').getElement('General_Info').getElement('L2A_Product_Info').getAttributeString('PRODUCT_URI_2A')
+        product_title = product_title.split('.SAFE')[0]
+
+        product_type = self.getMetadataRoot().getElement('Level-2A_User_Product').getElement('General_Info').getElement('L2A_Product_Info').getAttributeString('PRODUCT_TYPE')
+
+        mission = self.getMetadataRoot().getElement('Level-2A_User_Product').getElement('General_Info').getElement('L2A_Product_Info').getElement('Datatake').getAttributeString('SPACECRAFT_NAME')
+        mission = mission.upper()  # >> 'Sentinel-2A' to 'SENTINEL-2A'
+
+        # acqstart_str = self.getMetadataRoot().getElement('Level-2A_DataStrip_ID').getElement('General_Info').getElement('Datastrip_Time_Info').getAttributeString('DATASTRIP_SENSING_START')
+        acqstart_str = self.getMetadataRoot().getElement('Level-2A_User_Product').getElement('General_Info').getElement('L2A_Product_Info').getAttributeString('PRODUCT_START_TIME')
+
+        orbit_relativenb = self.getMetadataRoot().getElement('Level-2A_User_Product').getElement('General_Info').getElement('L2A_Product_Info').getElement('Datatake').getAttributeString('SENSING_ORBIT_NUMBER')
+        orbit_direction = self.getMetadataRoot().getElement('Level-2A_User_Product').getElement('General_Info').getElement('L2A_Product_Info').getElement('Datatake').getAttributeString('SENSING_ORBIT_DIRECTION')
+
+        footprint = self.getMetadataRoot().getElement('Level-2A_User_Product').getElement('Geometric_Info').getElement('Product_Footprint').getElement('Product_Footprint').getElement('Global_Footprint').getAttributeString('EXT_POS_LIST')
+
+    # --- general sentinel-2 metadata
+    # ====================================================================================================================================================================================================
     acquisition_mode = '-'
-
-    acqstart_str = self.getMetadataRoot().getElement('Level-1C_DataStrip_ID').getElement('General_Info').getElement('Datastrip_Time_Info').getAttributeString('DATASTRIP_SENSING_START')
-
-    orbit_relativenb = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SENSING_ORBIT_NUMBER')
-    orbit_direction = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SENSING_ORBIT_DIRECTION')
-
     polarization = '-'
 
     from dateutil.parser import parse
     acqstart_datetime = parse(acqstart_str).strftime('%Y-%m-%d %H:%M:%S.%f')
     acqstart_iso = parse(acqstart_str).strftime('%Y%m%dT%H%M%S')
-
     # NB: I'm not using datetime because of abbreviated month format
     # datetime.datetime.strptime(date_string, format1).strftime(format2)
+
+    # --- footprint conversion to wkt format (lon1 lat1, lon2 lat2, ...)
+    footprint_elts = footprint.strip().split(' ')
+    lon = footprint_elts[::2]
+    lat = footprint_elts[1::2]
+    latlon = [str(lat) + ' ' + str(lon) for lat, lon in zip(lat, lon)]
+    latlon = ', '.join(latlon)
+    footprint_wkt = 'POLYGON(({}))'.format(latlon)
 
     # NB: keys should be identical to columns of DB_MOUNTS.archive table
     metadata = {'title': product_title,
@@ -2038,6 +2078,7 @@ def get_metadata_S2(self):
                 'acqstarttime_str': acqstart_iso,
                 'relativeorbitnumber': orbit_relativenb,
                 'orbitdirection': orbit_direction,
-                'polarization': polarization}
+                'polarization': polarization,
+                'footprint': footprint_wkt}
 
     return metadata

@@ -9,6 +9,7 @@ import utilityme as utils
 # TODO: look into "sentinelsat" python API:
 # http://sentinelsat.readthedocs.io/en/stable/api.html
 
+
 class Esa:
     """
     Parent class
@@ -82,9 +83,15 @@ class Product(Esa):
             # NB: some xml are found without uuid field => get field id
             product_uuid = self.metadata.id
 
+        # --- S1 quicklook
+        #uri_root = Scihub.uri_opendata
+        #uri = "{0}('{1}')/Nodes('{2}.SAFE')/Nodes('preview')/Nodes('quick-look.png')/$value".format(uri_root, product_uuid, product_title)
+        #fname = product_title + '_quicklook.png'
+
+        # --- S2 quicklook
         uri_root = Scihub.uri_opendata
-        uri = "{0}('{1}')/Nodes('{2}.SAFE')/Nodes('preview')/Nodes('quick-look.png')/$value".format(uri_root, product_uuid, product_title)
-        fname = product_title + '_quicklook.png'
+        uri = "{0}('{1}')/Products('Quicklook')/$value".format(uri_root, product_uuid)
+        fname = product_title + '_quicklook.jpg'
 
         # --- download product
         logging.info('downloading quicklook')
@@ -255,7 +262,7 @@ class Scihub(Esa):
                       orderby=None,
                       cloudcoverpercentage=None,
                       hub='api',
-                      fullmeta=None, #TODO: full metadata: https://github.com/sentinelsat/sentinelsat/blob/127619f6baede1b5cc852b208d4e57e9f4d518ee/sentinelsat/sentinel.py
+                      fullmeta=None,  # TODO: full metadata: https://github.com/sentinelsat/sentinelsat/blob/127619f6baede1b5cc852b208d4e57e9f4d518ee/sentinelsat/sentinel.py
                       configfile=None,
                       export_result=None,
                       print_url=None,
@@ -362,7 +369,7 @@ class Scihub(Esa):
             print('query url = ' + req.url)
 
         #full = True
-        #if full:
+        # if full:
         #    url += '&$expand=Attributes'
 
         # --- send request

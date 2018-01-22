@@ -48,7 +48,7 @@ cloudcoverpercentage 	= Percentage of cloud coverage of the product for each are
 
 # ----- DATE OPTIONS
 beginposition 		= time interval search based on the Sensing start Time of the products. 
-endposition		= time interval search based on the Sensing start Time of the products. 
+endposition			= time interval search based on the Sensing start Time of the products. 
 ingestiondate 		= time interval search based on the time of publication of the product on the Data Hub.
 			
 			= [<timestamp> TO <timestamp>]
@@ -65,6 +65,8 @@ ingestiondate 		= time interval search based on the time of publication of the p
 
 # ----- PAGING OPTIONS
 maxrecords		= number of results listed per page 
+				maximum value in search request = 100 (error message returned by HTTP Status 400)
+
 orderby	 		= order result by
 			    beginposition asc 	=> sorts results by sensing date arranged in ascending order
 			    beginposition desc 	=> sorts results by sensing date arranged in descending order

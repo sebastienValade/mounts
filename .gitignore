@@ -4,7 +4,10 @@
 /src/conf/_*
 /src/conf/credentials_*
 /src/__*
+/src/usr/
 /data/.gitkeep
+*.zip
+*.jpg
 *.png
 *.pyc
 *.xml
