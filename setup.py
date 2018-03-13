@@ -64,15 +64,14 @@ setup(
     # simple. Or you can use find_packages().
     # packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     packages=[
-            'fetchme',
-            'snapme'],
+            'mounts'
+            ],
     package_dir={
-        'fetchme': 'src',
-        'snapme': 'src',
+        'mounts': 'src',
         },
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
-    #   py_modules=["my_module"],
+    # py_modules=["snapme"],
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's

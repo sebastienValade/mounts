@@ -9,9 +9,8 @@ pcss_dinsar = 0
 pcss_sar = 0
 pcss_nir = 1
 
-# acqstarttime = '>2016-12-29 <2017-01-01'
-acqstarttime = '>2016-12-11 <2016-12-21'
-quit_after_querydb = 0
+acqstarttime = '>2016-12-29 <2017-01-01'
+quit_after_querydb = None
 print_sqlResult = 1
 
 # --- get database credentials

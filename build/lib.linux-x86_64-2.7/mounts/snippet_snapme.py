@@ -165,35 +165,12 @@ import snapme as gpt
 # --- print raster dimensions
 # gpt.print_rasterDim(p, 'Phase_ifg_IW2_VV_11Jan2017_11Jan2017')
 
+# --- get list of masks in product
+# mgrp = s2.getMaskGroup()
+# print list(mgrp.getNodeNames())
 
-# MASKS
-# ---------------------------------------------
-
-# # --- get list of masks in product
-# gpt.get_masknames(p, print_masks=1)
-
-# # --- compute masks from idepix
-# p = gpt.read_product(path_and_file=p + f)
-# p = gpt.resample(p, referenceBand='B2')
-# p = gpt.idepix_sentinel2(p)
-
-# # --- export mask
-# # NB: must use band math to convert mask to band, then export/plot
-# mask_2export = ['IDEPIX_CLOUD', 'IDEPIX_INVALID', 'IDEPIX_CLOUD_SHADOW']
-# gpt.export_mask(p, mask_2export=mask_2export, fmt_out='png', f_out=f_out, p_out=p_out)
-
-# # --- convert masks to bands
-# s2 = gpt.idepix_sentinel2(s2)
-# masknames = ['IDEPIX_CLOUD', 'IDEPIX_INVALID', 'IDEPIX_CLOUD_SHADOW']
-# pm = gpt.convert_mask2band(s2, maskname=masknames)  # >> convert masks into bands
-
-# # --- export mask collocated
-# # NB: order must be 1) compute masks, 2) convert masks into bands, 3) collocate the resulting product with polmat
-# s2 = gpt.idepix_sentinel2(s2)  # >> compute masks
-# masknames = ['IDEPIX_CLOUD', 'IDEPIX_INVALID', 'IDEPIX_CLOUD_SHADOW']
-# pm = gpt.convert_mask2band(s2, maskname=masknames)  # >> convert masks into bands
-# pm = gpt.collocate(polmat, pm)
-# pm = gpt.subset(pm, geoRegion=subset_wkt)
-# masknames_c = [m + '_S' for m in masknames]
-# fname_out = ['s2mask_' + m.split('_', 1)[1] for m in masknames]
-# gpt.plotBands(pm, band_name=masknames_c, f_out=fname_out, p_out=dir_pair, fmt_out='png')
+# --- EXPORT MASK => use band math!
+# s2 = gpt.read_product(path_and_file=s2_abspath)
+# mask_name = 'cirrus_clouds_10m'
+# p_new = gpt.band_maths(s2, expression=mask_name, targetband_name='new_band')
+# gpt.write_product(p_new, f_out=mask_name, fmt_out='GeoTIFF')

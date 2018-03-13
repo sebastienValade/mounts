@@ -4,11 +4,11 @@ from snappy import GPF
 from snappy import ProductIO
 from snappy import HashMap
 import logging
-import utilme
+import utilityme as utils
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import time 
+
 
 # --- load all available gpf operators
 # NB: not necessary anymore since version 5.0 (http://forum.step.esa.int/t/a-fatal-java-error-occurs-when-running-snappy-scripts/2093/10)
@@ -81,17 +81,7 @@ def read_product(*args, **kwargs):
     if len(kwargs) > 0 and 'path_and_file' in kwargs:
         pnf = kwargs['path_and_file']
 
-    if 'formatName' not in kwargs:
-        # --- opening with default reader
-        p = ProductIO.readProduct(pnf)
-    else:
-        # --- opening with specified reader
-        # see dcode from Marpet: https://senbox.atlassian.net/browse/SNAP-738
-        from snappy import File
-        formatName = kwargs['formatName']
-        productFile = File(pnf)
-        reader = ProductIO.getProductReader(formatName)
-        p = reader.readProductNodes(productFile, None)
+    p = ProductIO.readProduct(pnf)
 
     return p
 
@@ -860,134 +850,7 @@ def band_maths(product, expression=None, targetband_name='band_new'):
     """
 
 
-def reproject(obj):
-    """ (sh gpt -h Reproject)
-
-    Source Options:
-      - collocateWith=<file>    The source product will be collocated with this product.
-                                This is an optional source.
-      - source=<file>           The product which will be reprojected.
-                                This is a mandatory source.
-
-    Parameter Options:
-      - addDeltaBands=<boolean>           Whether to add delta longitude and latitude bands.
-                                          Default value is 'false'.
-      - crs=<string>                      A text specifying the target Coordinate Reference System, either in WKT or as an authority code. For appropriate EPSG authority codes see (www.epsg-registry.org). AUTO authority can be used with code 42001 (UTM), and 42002 (Transverse Mercator) where the scene center is used as reference. Examples: EPSG:4326, AUTO:42001
-      - easting=<double>                  The easting of the reference pixel.
-      - elevationModelName=<string>       The name of the elevation model for the orthorectification. If not given tie-point data is used.
-      - height=<integer>                  The height of the target product.
-      - includeTiePointGrids=<boolean>    Whether tie-point grids should be included in the output product.
-                                          Default value is 'true'.
-      - noDataValue=<double>              The value used to indicate no-data.
-      - northing=<double>                 The northing of the reference pixel.
-      - orientation=<double>              The orientation of the output product (in degree).
-                                          Valid interval is [-360,360].
-                                          Default value is '0'.
-      - orthorectify=<boolean>            Whether the source product should be orthorectified. (Not applicable to all products)
-                                          Default value is 'false'.
-      - pixelSizeX=<double>               The pixel size in X direction given in CRS units.
-      - pixelSizeY=<double>               The pixel size in Y direction given in CRS units.
-      - referencePixelX=<double>          The X-position of the reference pixel.
-      - referencePixelY=<double>          The Y-position of the reference pixel.
-      - resampling=<string>               The method used for resampling of floating-point raster data.
-                                          Value must be one of 'Nearest', 'Bilinear', 'Bicubic'.
-                                          Default value is 'Nearest'.
-      - tileSizeX=<integer>               The tile size in X direction.
-      - tileSizeY=<integer>               The tile size in Y direction.
-      - width=<integer>                   The width of the target product.
-      - wktFile=<file>                    A file which contains the target Coordinate Reference System in WKT format.
-    """
-
-    parameters = HashMap()
-    parameters.put('crs', 'EPSG:32638')
-    parameters.put('resampling', 'Nearest')
-    result = GPF.createProduct('Reproject', parameters, obj)
-
-    return result
-
-
-def idepix_sentinel2(obj):
-    """ (sh gpt -h Idepix.Sentinel2)
-
-    Description:
-      Pixel identification and classification for Sentinel-2.
-
-    Source Options:
-      - l1cProduct=<file>    The Sentinel-2 MSI L1C product.
-                             This is a mandatory source.
-
-    Parameter Options:
-      - cloudBufferWidth=<int>                          The width of the 'safety buffer' around a pixel identified as cloudy.
-                                                            Valid interval is [0,100].
-                                                            Default value is '2'.
-      - clThresh=<double>                               Threshold CL_THRESH
-                                                            Default value is '0.01'.
-      - computeCloudBuffer=<boolean>                    Sets parameter 'computeCloudBuffer' to <boolean>.
-                                                            Default value is 'true'.
-      - computeCloudBufferForCloudAmbiguous=<boolean>   Sets parameter 'computeCloudBufferForCloudAmbiguous' to <boolean>.
-                                                            Default value is 'true'.
-      - copyFeatureValues=<boolean>                     Write all Feature Values to the target product
-                                                            Default value is 'false'.
-      - copyToaReflectances=<boolean>                   Write TOA Reflectances to the target product
-                                                            Default value is 'true'.
-      - cwThresh=<double>                               Threshold CW_THRESH
-                                                            Default value is '0.01'.
-      - demName=<string>                                The digital elevation model.
-                                                            Default value is 'SRTM 3Sec'.
-      - gclThresh=<double>                              Threshold GCL_THRESH
-                                                            Default value is '-0.11'.
-
-    """
-
-    logging.info('gpt operator = Idepix.Sentinel2')
-
-    parameters = HashMap()
-
-    result = GPF.createProduct('Idepix.Sentinel2', parameters, obj)
-
-    return result
-
-
-def snaphu_export(obj):
-    """ (gpt -h SnaphuExport)
-
-    Parameter Options:
-      - colOverlap=<int>            Overlap, in pixels, between neighboring tiles.
-                                    Default value is '0'.
-      - initMethod=<string>         Algorithm used for initialization of the wrapped phase values
-                                    Value must be one of 'MST', 'MCF'.
-                                    Default value is 'MST'.
-      - numberOfProcessors=<int>    Number of concurrent processing threads. Set to 1 for single threaded.
-                                    Default value is '4'.
-      - numberOfTileCols=<int>      Divide the image into tiles and process in parallel. Set to 1 for single tiled.
-                                    Default value is '10'.
-      - numberOfTileRows=<int>      Divide the image into tiles and process in parallel. Set to 1 for single tiled.
-                                    Default value is '10'.
-      - rowOverlap=<int>            Overlap, in pixels, between neighboring tiles.
-                                    Default value is '0'.
-      - statCostMode=<string>       Size of coherence estimation window in Azimuth direction
-                                    Value must be one of 'TOPO', 'DEFO', 'SMOOTH', 'NOSTATCOSTS'.
-                                    Default value is 'DEFO'.
-      - targetFolder=<file>         The output folder to which the data product is written.
-      - tileCostThreshold=<int>     Cost threshold to use for determining boundaries of reliable regions
-                                     (long, dimensionless; scaled according to other cost constants).
-                                     Larger cost threshold implies smaller regions---safer, but more expensive computationally.
-                                    Default value is '500'.
-    """
-
-    # TODO: function not working ("RuntimeError: ambiguous Java method call, too many matching method overloads found")
-
-    logging.info('gpt operator = SnaphuExport')
-
-    parameters = HashMap()
-    parameters.put('targetFolder', None)
-
-    result = GPF.createProduct('SnaphuExport', parameters, obj)
-
-    return result
-
 ####################################################################
-
 
 def sar(cfg_productselection,
         cfg_sar,
@@ -1009,7 +872,8 @@ def sar(cfg_productselection,
     (db_usr, db_pwd) = f.readline().split(' ')
 
     # --- connect to database
-    dbo = utilme.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
+    import utilityme as utils
+    dbo = utils.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
 
     # --- add mission in cfg_productselection if not specified (NB: '%'=wild card)
     if 'mission' not in cfg_productselection:
@@ -1119,7 +983,7 @@ def sar(cfg_productselection,
             else:
                 p_out = cfg_sar['export']['path']
 
-            f_export = 'S1_' + '_'.join([metadata['acqstarttime_str'], subswath, pol, 'int'])
+            f_export = '_'.join([metadata['acqstarttime_str'], subswath, pol, 'int'])
             print('  => exporting result to: ' + f_export + '.' + fmt_out)
 
             write_product(p, f_out=f_export, p_out=p_out, fmt_out=fmt_out)
@@ -1168,7 +1032,8 @@ def dinsar(cfg_productselection,
     (db_usr, db_pwd) = f.readline().split(' ')
 
     # --- connect to database
-    dbo = utilme.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
+    import utilityme as utils
+    dbo = utils.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
 
     # --- add mission in cfg_productselection if not specified (NB: '%'=wild card)
     if 'mission' not in cfg_productselection:
@@ -1290,7 +1155,7 @@ def dinsar(cfg_productselection,
         #     else:
         #         p_out = cfg_dinsar['export']['path']
 
-        #     f_export = 'S1_' + '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization])
+        #     f_export = '_'.join([metadata_master['acqstarttime_str'], metadata_slave['acqstarttime_str'], subswath, polarization])
         #     print('  => exporting result to: ' + f_export + '.' + fmt_out)
 
         #     write_product(p, f_out=f_export, p_out=p_out, fmt_out=fmt_out)
@@ -1400,7 +1265,8 @@ def nir(cfg_productselection,
     (db_usr, db_pwd) = f.readline().split(' ')
 
     # --- connect to database
-    dbo = utilme.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
+    import utilityme as utils
+    dbo = utils.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
 
     # --- add mission in cfg_productselection if not specified (NB: '%'=wild card)
     if 'mission' not in cfg_productselection:
@@ -1422,7 +1288,7 @@ def nir(cfg_productselection,
     if print_sqlQuery is True:
         print(stmt)
 
-    if quit_after_querydb:
+    if quit_after_querydb is not None:
         return
 
     # === PROCESS
@@ -1435,28 +1301,14 @@ def nir(cfg_productselection,
     target_name = cfg_productselection['target_name']
     target_id = dbo.dbmounts_target_nameid(target_name=target_name)
 
-    k = 0
     for r in dat:
         print('  | ' + r.title)
-        
+
         p = read_product(path_and_file=r.abspath)
-        # p = read_product(path_and_file=r.abspath, formatName="SENTINEL-2-MSI-MultiRes-UTM37N") #>> for reading ertaale products with granules
         p = resample(p, referenceBand='B2')
         p = subset(p, geoRegion=subset_wkt)
 
-        # NB: if no intersection between subset_wkt and source product boundary, the bands will be empty, thus generating errors when accessing the data later on
-        # NB: If loading product with granules, and granules span several UTM zones, the default S2 reader may not be the one needed for the region of interest
-        #     => In such case the granule will not be loaded bands will be Null
-        #     => workaround 1: open specific granules (unzip file, navigate to desired granule, and open the granule .xml)
-        #           f = '.../DATA/data_satellite/ertaale/S2A_OPER_PRD_MSIL1C_PDMC_20160703T130732_R092_V20160703T074417_20160703T074417.SAFE/GRANULE/S2A_OPER_MSI_L1C_TL_SGS__20160703T112358_A005380_T37PFR_N02.04/S2A_OPER_MTD_L1C_TL_SGS__20160703T112358_A005380_T37PFR.xml'
-        #           p = read_product(path_and_file=f)
-        #     => workaround 2: open with specific reader format
-        #           EX: UTM for ertaale = 37N
-        #           p = read_product(path_and_file=f, formatName="SENTINEL-2-MSI-MultiRes-UTM37N")
-
-        metadata_master = get_metadata_S2(p)
-
-        # --- export result
+        # # --- export result
         # if 'export' in cfg_nir and cfg_nir['export'] is not None:
         #     if 'format' not in cfg_nir['export'] or cfg_nir['export']['format'] is None:
         #         fmt_out = None
@@ -1468,14 +1320,14 @@ def nir(cfg_productselection,
         #     else:
         #         p_out = cfg_nir['export']['path']
 
+        #     metadata_master = get_metadata_S2(p)
         #     f_export = '_'.join(['S2', metadata_master['acqstarttime_str']])
-        #     print('  => exporting NIR to: ' + f_export + '.' + fmt_out)
+        #     print('  => exporting result to: ' + f_export + '.' + fmt_out)
 
         #     write_product(p, f_out=f_export, p_out=p_out, fmt_out=fmt_out)
 
         plot_nir = 1
         if plot_nir:
-            print('  => plotting NIR')
             f_out = r.acqstarttime_str + '_' + bname_red + bname_green + bname_blue + '_nir'
             p_out = pathout_root + target_name + '/'
             img_fullpath = plotBands_rgb(p, bname_red=bname_red, bname_green=bname_green, bname_blue=bname_blue, p_out=p_out, f_out=f_out, thumbnail=thumbnail)
@@ -1484,7 +1336,7 @@ def nir(cfg_productselection,
             if store_result2db is True:
                 path_ln = 'data_mounts' + img_fullpath.split('/data_mounts')[1]  # = abspath from data_mounts folder, linked to mountsweb static folder
 
-                print('   + storing to DB_MOUNTS.results_img')
+                print('Store to DB_MOUNTS.results_img')
                 dict_val = {'title': f_out,
                             'abspath': path_ln,
                             'type': 'nir',
@@ -1493,18 +1345,17 @@ def nir(cfg_productselection,
                             'target_id': str(target_id)}
 
                 dbo.insert('DB_MOUNTS', 'results_img', dict_val)
-                time.sleep(1) #>> pause before analyzing_nir
-                
+                id_image = 0
+
                 # TODO: debug!
                 # res = dbo.insert_sqlalchemy('DB_MOUNTS', 'results_img', dict_val)
                 # id_image = res.inserted_primary_key[0]
-                id_image = 0 # >> 0 value => will search image id in analyze_nir
-                print('TODO: get id_image here')
+
+                print(' ===> id = ' + str(id_image))
                 # TODO: return id of inserted row to store in analyze_nir
 
         analyze_nir = 1
         if analyze_nir:
-            print('  => analyzing NIR')
 
             R_rad = p.getBand(bname_red)
             width = R_rad.getRasterWidth()
@@ -1536,19 +1387,13 @@ def nir(cfg_productselection,
                 from dateutil.parser import parse
                 time_datetime = parse(r.acqstarttime_str).strftime('%Y-%m-%d %H:%M:%S.%f')
 
-                print('   + storing to DB_MOUNTS.results_dat')
+                print('Store to DB_MOUNTS.results_dat')
                 dict_val = {'time': time_datetime,
                             'type': 'nir',
                             'data': str(nbpix),
                             'id_image': str(id_image),
                             'target_id': str(target_id)}
                 dbo.insert('DB_MOUNTS', 'results_dat', dict_val)
-
-        return
-        k += 1
-        if k == 2:
-            print('basta!')
-            return
 
 
 def graph_processing(config_file):
@@ -1579,7 +1424,7 @@ def graph_processing(config_file):
     """
 
     # --- read config file
-    cfg = utilme.read_configfile(config_file)
+    cfg = utils.read_configfile(config_file)
 
     p = []
 
@@ -1611,76 +1456,6 @@ def get_rasterDim(obj, band_name):
     return w, h
 
 
-def convert_mask2band(obj, maskname=None, printme=None):
-    """ Convert mask (or list of masks) into bands."""
-
-    if isinstance(maskname, str):
-        maskname = [maskname]
-
-    p_bandmasks = obj
-    for k, m in enumerate(maskname):
-        p_tmp = band_maths(obj, expression=m, targetband_name=m)
-        p_bandmasks = merge(p_bandmasks, p_tmp)
-
-    if printme:
-        get_bandnames(obj, print_bands=1)
-        get_bandnames(p_bandmasks, print_bands=1)
-
-    return p_bandmasks
-
-
-def export_mask(obj, mask_2export=None, fmt_out=None, f_out=None, p_out=None, print_masks=None):
-
-    # --- get available masks
-    mgrp = obj.getMaskGroup()
-    masks_available = list(mgrp.getNodeNames())
-
-    if print_masks:
-        print(masks_available)
-
-    # --- if mask_2export not defined, export all masks available
-    if not mask_2export:
-        mask_2export = masks_available
-    else:
-        if isinstance(mask_2export, str):
-            mask_2export = [mask_2export]
-
-    if fmt_out is None:
-        fmt_out = 'png'
-
-    if p_out is None:
-        p_out = '../data/'
-    else:
-        p_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
-
-    # --- export masks
-    for k, m in enumerate(mask_2export):
-
-        if m not in masks_available:
-            print('WARNING: mask "{}" not available in product'.format(m))
-            continue
-
-        # . get output filename
-        if f_out is None:
-            fname_out = m
-        else:
-            if isinstance(f_out, str):
-                fname_out = f_out
-            else:
-                fname_out = f_out[k]
-
-        # . convert mask to band
-        targetband_name = 'mask'
-        p_mask = band_maths(obj, expression=m, targetband_name=targetband_name)
-
-        # . export
-        print('  | Exporting mask ' + fname_out)
-        if fmt_out in ['png', 'PNG', 'jpg', 'JPG']:
-            plotBands(p_mask, band_name=targetband_name, f_out=fname_out, p_out=p_out, fmt_out=fmt_out)
-        else:
-            write_product(p_mask, f_out=fname_out, fmt_out=fmt_out, p_out=p_out)
-
-
 def print_rasterDim(obj, band_name):
     w, h = get_rasterDim(obj, band_name)
     print(str(w) + ' x ' + str(h))
@@ -1707,16 +1482,6 @@ def get_bandnames(obj, print_bands=None):
         print(r)
 
     return r
-
-
-def get_masknames(obj, print_masks=None):
-    mgrp = obj.getMaskGroup()
-    masks_available = list(mgrp.getNodeNames())
-
-    if print_masks:
-        print(masks_available)
-
-    return masks_available
 
 
 def get_name(obj):
@@ -1878,7 +1643,7 @@ def plotBands(obj, band_name=None, f_out=None, p_out=None, fmt_out=None, thumbna
             # metadata_master = get_metadata_S1(obj)
             # metadata_slave = get_metadata_slave(obj, slave_idx=0)
             # fname_out = metadata_master['acqstarttime_str'] + '_' + metadata_slave['acqstarttime_str'] + '_' + '_'.join(bname.split('_')[0:3]) + '.png'
-            fname_out = 'band_' + bname
+            fname_out = 'band_%s.png' % bname
 
         else:
             if isinstance(f_out, str):
@@ -1900,7 +1665,7 @@ def plotBands(obj, band_name=None, f_out=None, p_out=None, fmt_out=None, thumbna
 
         if thumbnail is True:
             file_fullpath_thumb = p_out + fname_out + '_thumb.' + fmt_out
-            utilme.create_thumbnail(file_fullpath, file_fullpath_thumb)
+            utils.create_thumbnail(file_fullpath, file_fullpath_thumb)
 
     return imgs_fullpath
 
@@ -1947,7 +1712,7 @@ def plotBands_rgb(self, bname_red='B4', bname_green='B3', bname_blue='B2', f_out
 
     if thumbnail is True:
         file_fullpath_thumb = p_out + f_out + '_thumb.' + fmt_out
-        utilme.create_thumbnail(file_fullpath, file_fullpath_thumb)
+        utils.create_thumbnail(file_fullpath, file_fullpath_thumb)
 
     return file_fullpath
 
@@ -2257,16 +2022,8 @@ def get_metadata_S2(self):
         mission = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SPACECRAFT_NAME')
         mission = mission.upper()  # >> 'Sentinel-2A' to 'SENTINEL-2A'
 
-        try:
-            acqstart_str = self.getMetadataRoot().getElement('Level-1C_DataStrip_ID').getElement('General_Info').getElement('Product_Info').getAttributeString('PRODUCT_START_TIME')
-
-        except AttributeError as e:
-            acqstart_str = self.getMetadataRoot().getElement('Level-1C_DataStrip_ID').getElement('General_Info').getElement('Datastrip_Time_Info').getAttributeString('DATASTRIP_SENSING_START')
-
-        else:
-            raise e
-            print('WARNING: unable to find "acquisition time" in metadata!')
-            return
+        # acqstart_str = self.getMetadataRoot().getElement('Level-1C_DataStrip_ID').getElement('General_Info').getElement('Datastrip_Time_Info').getAttributeString('DATASTRIP_SENSING_START')
+        acqstart_str = self.getMetadataRoot().getElement('Level-1C_DataStrip_ID').getElement('General_Info').getElement('Product_Info').getAttributeString('PRODUCT_START_TIME')
 
         orbit_relativenb = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SENSING_ORBIT_NUMBER')
         orbit_direction = self.getMetadataRoot().getElement('Level-1C_User_Product').getElement('General_Info').getElement('Product_Info').getElement('Datatake').getAttributeString('SENSING_ORBIT_DIRECTION')
@@ -2302,20 +2059,6 @@ def get_metadata_S2(self):
     acqstart_iso = parse(acqstart_str).strftime('%Y%m%dT%H%M%S')
     # NB: I'm not using datetime because of abbreviated month format
     # datetime.datetime.strptime(date_string, format1).strftime(format2)
-
-    #..... WARNING: for products <2016-12-06 set title as filename
-    #   Important: new format Naming Convention for Sentinel-2 Level-1C products generated after the 6th of December 2016
-    #   (https://sentinel.esa.int/web/sentinel/user-guides/sentinel-2-msi/naming-convention)
-    #   Old products (<2016-12-06) are organized in granules, each of which have an identifier.
-    from datetime import datetime
-    if datetime.strptime(acqstart_iso, '%Y%m%dT%H%M%S') < datetime.strptime('2016-12-01', '%Y-%m-%d'):
-        tile_idx = 0
-        tile_id = self.getMetadataRoot().getElement('Granules').getElementAt(tile_idx).getElement('General_Info').getAttributeString('TILE_ID')
-        product_title = tile_id
-
-        print('WARNING: title used for product is the id of the 1st tile found: ' + tile_id)
-        # TODO: search based on required tile, e.g. ertaale tile name = T37PFR
-    #.....
 
     # --- footprint conversion to wkt format (lon1 lat1, lon2 lat2, ...)
     footprint_elts = footprint.strip().split(' ')

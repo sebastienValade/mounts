@@ -5,6 +5,7 @@ import records
 import logging
 import os
 import json
+import dicttoxml
 
 
 def read_configfile(configfile):
@@ -21,6 +22,40 @@ def create_thumbnail(fname, fname_thumb):
     except Exception as e:
         print("Thumbnail creation failed, likely because ImageMagick not installed on system.")
         raise e
+
+
+def save_dict2yaml(D, f_out, p_out=None):
+    # --- check inputs
+    if not f_out.endswith('.yml'):
+        f_out += '.yml'
+
+    if p_out is None:
+        p_out = '../data/'
+    else:
+        p_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
+
+    # --- dump to yml file
+    with open(p_out + f_out, 'w') as yaml_file:
+        yaml.dump(D, yaml_file, default_flow_style=False)
+
+
+def save_dict2xml(D, f_out, p_out=None):
+    # --- check inputs
+    if not f_out.endswith('.xml'):
+        f_out += '.xml'
+
+    if p_out is None:
+        p_out = '../data/'
+    else:
+        p_out = os.path.join(p_out, '')  # add trailing slash if missing (os independent)
+
+    # --- convert to xml string
+    xml = dicttoxml.dicttoxml(D)
+
+    # --- dump to xml file
+    f = open(p_out + f_out, "wb")
+    f.write(xml)
+    f.close()
 
 
 class PeriodicScheduler(object):
@@ -70,7 +105,7 @@ class Database:
 
         # --- get value
         rows = dbo.get_dataset(dbname='DB_ARCHIVE', tbname='ertaale')
-        print rows[0][1]
+        print(rows[0][1])
         for r in rows:
             print(r.prod_title, r.prod_abspath)
 
@@ -448,7 +483,7 @@ class Database:
     #                    foreignkey_ref=['DB_ARCHIVE.' + tbname + '(title)', 'DB_ARCHIVE.' + tbname + '(title)']
     #                    )
 
-    def dbmounts_loadarchive(self, path_dir=None, target_name=None, print_metadata=None):
+    def dbmounts_loadarchive(self, path_dir=None, filename=None, target_name=None, loadarchive=None, print_metadata=None):
         '''Read directory storing zip files of type S1 and/or S2, and store along with metadata in table DB_MOUNTS.archive'''
 
         print('=== loading archive files: ' + target_name)
@@ -458,8 +493,11 @@ class Database:
         rows = self.execute_query(stmt)
         target_id = rows[0][0]
 
+        if not filename:
+            filename = '*.zip'
+
         import glob
-        f = glob.glob(os.path.join(path_dir, '') + '*.zip')
+        f = glob.glob(os.path.join(path_dir, '') + filename)
 
         for k, fpath in enumerate(f):
             fname = os.path.basename(fpath)
@@ -468,6 +506,10 @@ class Database:
             # --- get metadata (both S1, S2)
             print('  | retrieving metadata from ' + fname)
             metadata = self.get_product_metadata(path_and_file=fpath, product_type=ftype)
+
+            # --- remove footprint from dict, not stored in db
+            if 'footprint' in metadata:
+                del metadata['footprint']
 
             if metadata is None:
                 continue
@@ -478,9 +520,11 @@ class Database:
             d.update(metadata)
 
             if print_metadata:
-                print d
+                print(d)
 
-            self.insert('DB_MOUNTS', 'archive', d)
+            if loadarchive:
+                print(' => uploading product into database!')
+                self.insert('DB_MOUNTS', 'archive', d)
 
     def dbmounts_archive_querystmt(self,
                                    id=None,

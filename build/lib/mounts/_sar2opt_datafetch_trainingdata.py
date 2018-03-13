@@ -1,0 +1,19 @@
+import fetchme
+
+
+obj = fetchme.Scihub()
+
+
+# --- image 1 (wroclaw) => training image
+
+# --- image 2 (poznan) => testing image
+
+# TRAINING (wroclaw)
+# wroclaw_s2_wkt = 'POLYGON ((16.43887679440474 51.44235231685392, 18.017025008525813 51.41234265506691, 17.953869713140705 50.42629366061962, 16.408715109637644 50.45527216066188, 16.43887679440474 51.44235231685392))'
+# wroclaw_s2_title = 'S2A_MSIL2A_20170730T100031_N0205_R122_T33UXS_20170730T100535'
+# s2 = obj.scihub_search(filename=wroclaw_s2_title + '*', cloudcoverpercentage='[0 TO 2]')
+# p2 = s2[0]
+
+# TESTING (poznan)
+poznan_s2_wkt = 'POLYGON ((16.498460428340927 53.24020834947074,18.141769904481162 53.20820137275637,18.07167848704459 52.22256603361336,16.464980367164795 52.25345680664421,16.498460428340927 53.24020834947074))'
+s2 = obj.scihub_search(footprint=poznan_s2_wkt, beginposition="[2017-07-30T00:00:00.000Z TO 2017-07-31T00:00:00.000Z]", print_result=1)

@@ -64,10 +64,6 @@ obj.scihub_search(**optns)
 # ex: print url, export results as xml
 # obj.scihub_search(configfile='./conf/_config_pitonfournaise_archive.yml', print_url=1, export_result=1)
 
-# === filter results on the fly (default=by intersection percentage with footprint)
-# productlist = obj.scihub_search(
-#     footprint=footprint,
-#     filter_result=1)
 
 # =============================================
 # ANALYZE QUERY output
@@ -80,24 +76,6 @@ obj.scihub_search(**optns)
 # --- get product md5sum
 # productlist[0].getMd5sum()
 
-# --- plot product footprint
-# productlist[0].plotFootprint()
-# productlist[0].plotFootprint(wkt2plot_xtra=footprint)
-# productlist[0].plotFootprint(wkt2plot_xtra=footprint, plot_country='Ethiopia', f_out='oulala')
-#
-# --- plot all products' footprint
-# TODO: create class for productlist, and assign plot_footprints as a method (like 'plotFootprint' method for single product)
-# productlist = obj.scihub_search(
-#   plot_footprints=1,
-#   **s2_optn)
-
-# --- plot tile of each product in list
-# obj.print_product_title(productlist)
-
-# --- filter productlist (default=by intersection percentage with aoi footprint)
-# productlist_filt = obj.productlist_filter(productlist, aoi_footprint=footprint, filter_method='intersection_with_aoi')
-# print('FILTERED results:')
-# obj.print_product_title(productlist_filt)
 
 # =============================================
 # DOWNLOAD

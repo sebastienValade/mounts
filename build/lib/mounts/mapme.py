@@ -46,15 +46,9 @@ def plot_wkt(wkt2plot=None, f_out=None, p_out=None, plot_world=True, plot_countr
     ax.set_axis_off()
     plt.axis('equal')
 
-    # --- set axis limits
-    if plot_country and not country.empty:
+    if not country.empty:
         plt.xlim([country_bounds.minx.min() - 2, country_bounds.maxx.max() + 2])
         plt.ylim([country_bounds.miny.min() - 2, country_bounds.maxy.max() + 2])
-    else:
-        xspan = gdf.bounds.maxx.max() - gdf.bounds.minx.min()
-        yspan = gdf.bounds.maxy.max() - gdf.bounds.miny.min()
-        plt.xlim([gdf.bounds.minx.min() - xspan * 0.1, gdf.bounds.maxx.max() + xspan * 0.1])
-        plt.ylim([gdf.bounds.miny.min() - yspan * 0.1, gdf.bounds.maxy.max() + yspan * 0.1])
 
     plt.show()
 

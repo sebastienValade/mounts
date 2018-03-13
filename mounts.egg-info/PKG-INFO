@@ -1,0 +1,21 @@
+Metadata-Version: 1.1
+Name: mounts
+Version: 0.0.1
+Summary: Monitoring Unrest from Space
+Home-page: https://github.com/sebastienValade/mounts
+Author: Sebastien Valade
+Author-email: sebastien.valade@tu-berlin.de
+License: UNKNOWN
+Description: UNKNOWN
+Keywords: volcano monitoring ESA sentinel snap
+Platform: UNKNOWN
+Classifier: Development Status :: 1 - Planning
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Geohazards
+Classifier: Topic :: Geohazards :: Volcanology
+Classifier: License :: 
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5

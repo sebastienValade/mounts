@@ -1,6 +1,6 @@
 from celery import Celery, chain
 from celery.schedules import crontab
-import utilme
+import utilityme as utils
 import fetchme
 import records
 import json
@@ -19,9 +19,9 @@ db_name = 'DB_MOUNTS'
 db_url = db_type + '://' + db_usr + ':' + db_pwd + '@' + db_host + '/' + db_name
 dbo = records.Database(db_url)
 
-dbo_bis = utilme.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
+dbo_bis = utils.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
 
-# --- instance for scihub queries
+# --- instace for scihub queries
 obj = fetchme.Scihub()
 f = file('./conf/credentials_scihub.txt')
 (usr, pwd) = f.readline().split(' ')

@@ -90,12 +90,8 @@ dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type
 #     print(r.title)
 
 
-# --- common queries:
-# - get all sentinel-2 data in archive
-# SELECT * FROM `archive` WHERE target_name = 'ertaale' and mission like 'SENTINEL-1%' ORDER BY acqstarttime DESC LIMIT 5
-
 # --- get specific dataset into PANDAS data frame:
-# db_url = 'mysql://{}:{}@127.0.0.1/DB_MOUNTS'.format(db_usr, db_pwd)
+# db_url = 'mysql://user:pwd@127.0.0.1/DB_MOUNTS'
 # disk_engine = create_engine(db_url)
 # stmt = '''
 #     SELECT *
@@ -110,25 +106,24 @@ dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type
 # for index, row in df.iterrows():
 #     print(row['title'])
 
-
 # --- sort based on foreign key
 # EX: get ifg image titles (in 'result_img' table) sorted by acquisition time (in 'archive' table)
-# db_name = 'DB_MOUNTS'
-# dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql', db_name=db_name)
+db_name = 'DB_MOUNTS'
+dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql', db_name=db_name)
 
-# id = '22180'
-# stmt = '''
-#     SELECT R.title, A.acqstarttime
-#     FROM results_img AS R
-#     INNER JOIN archive AS A
-#     ON R.id_master = A.id
-#     WHERE R.target_id = {} AND R.type = 'ifg' OR R.type = 'coh'
-#     ORDER BY A.acqstarttime desc
-#     '''
-# stmt = stmt.format(88)
+id = '22180'
+stmt = '''
+    SELECT R.title, A.acqstarttime
+    FROM results_img AS R
+    INNER JOIN archive AS A
+    ON R.id_master = A.id
+    WHERE R.target_id = {} AND R.type = 'ifg' OR R.type = 'coh'
+    ORDER BY A.acqstarttime desc
+    '''
+stmt = stmt.format(88)
 
-# res = dbo.execute_query(stmt)
-# print(res.dataset)
+res = dbo.execute_query(stmt)
+print(res.dataset)
 
 
 # =============================================

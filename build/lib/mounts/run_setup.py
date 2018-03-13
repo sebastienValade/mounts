@@ -1,4 +1,4 @@
-import utilme
+import utilityme as utils
 import json
 # import ast
 
@@ -9,9 +9,8 @@ pcss_dinsar = 0
 pcss_sar = 0
 pcss_nir = 1
 
-# acqstarttime = '>2016-12-29 <2017-01-01'
-acqstarttime = '>2016-12-11 <2016-12-21'
-quit_after_querydb = 0
+acqstarttime = '>2016-12-29 <2017-01-01'
+quit_after_querydb = None
 print_sqlResult = 1
 
 # --- get database credentials
@@ -19,7 +18,7 @@ f = file('./conf/credentials_mysql.txt')
 (db_usr, db_pwd) = f.readline().split(' ')
 
 # --- connect to database
-dbo = utilme.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
+dbo = utils.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
 
 # =============================================
 # setup DATABASE

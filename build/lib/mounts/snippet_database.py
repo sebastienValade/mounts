@@ -1,6 +1,6 @@
-import utilme
+import utilityme as utils
 
-dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
+dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
 
 # =============================================
 # MANAGE db
@@ -44,7 +44,7 @@ dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type
 # =============================================
 
 # --- convert Records output to Tablib format, and use all of the library's functionalities:
-# dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
+# dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
 # stmt = "SELECT * FROM DB_MOUNTS.results_img WHERE target_id = '221080'"
 # rows = dbo.execute_query(stmt)
 # tbl = rows.dataset
@@ -57,7 +57,7 @@ dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type
 # rows = dbo.query(stmt)
 # for r in rows:
 #     print r.title
-#
+# 
 # - if only 1 row expected:
 # print rows.first().title
 
@@ -65,7 +65,7 @@ dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type
 # dbo.print_dataset(dbname='DB_MOUNTS', tbname='targets')  # , colname='prod_title')
 
 # --- get entire table dataset
-# dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
+# dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
 # rows = dbo.get_dataset(dbname='DB_MOUNTS', tbname='targets')
 # for r in rows:
 #     print(r.name, r.id)
@@ -81,7 +81,7 @@ dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type
 # rows = dbo.execute_query(stmt)
 # dat = rows.all()
 
-# --- get specific dataset (basic):
+# --- get specific dataset:
 # => AND condition: SELECT * FROM table WHERE column1 = 'var1' AND column2 = 'var2';
 # => OR condition: SELECT * FROM table WHERE column1 = 'var1' OR column2 = 'var2';
 # stmt = "SELECT * FROM DB_MOUNTS.archive WHERE target_id = '221080' and acqstarttime >= '2016-01-01' and acqstarttime < '2018-01-01' and orbitdirection = 'ASCENDING' and orbitdirection = 'ASCENDING' and polarization = 'VV' ORDER BY acqstarttime ASC"
@@ -89,46 +89,24 @@ dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type
 # for r in rows:
 #     print(r.title)
 
-
-# --- common queries:
-# - get all sentinel-2 data in archive
-# SELECT * FROM `archive` WHERE target_name = 'ertaale' and mission like 'SENTINEL-1%' ORDER BY acqstarttime DESC LIMIT 5
-
-# --- get specific dataset into PANDAS data frame:
-# db_url = 'mysql://{}:{}@127.0.0.1/DB_MOUNTS'.format(db_usr, db_pwd)
-# disk_engine = create_engine(db_url)
-# stmt = '''
-#     SELECT *
-#     FROM DB_MOUNTS.archive
-#     WHERE target_id = '221080'
-#         and acqstarttime >= '2016-10-01' and acqstarttime < '2017-04-01'
-#         and orbitdirection = 'DESCENDING'
-#         and polarization = 'VH VV'
-#     ORDER BY acqstarttime ASC
-# '''
-# df = pd.read_sql(stmt, disk_engine)
-# for index, row in df.iterrows():
-#     print(row['title'])
-
-
 # --- sort based on foreign key
 # EX: get ifg image titles (in 'result_img' table) sorted by acquisition time (in 'archive' table)
-# db_name = 'DB_MOUNTS'
-# dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql', db_name=db_name)
+db_name = 'DB_MOUNTS'
+dbo = utils.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql', db_name=db_name)
 
-# id = '22180'
-# stmt = '''
-#     SELECT R.title, A.acqstarttime
-#     FROM results_img AS R
-#     INNER JOIN archive AS A
-#     ON R.id_master = A.id
-#     WHERE R.target_id = {} AND R.type = 'ifg' OR R.type = 'coh'
-#     ORDER BY A.acqstarttime desc
-#     '''
-# stmt = stmt.format(88)
+id = '22180'
+stmt = '''
+    SELECT R.title, A.acqstarttime
+    FROM results_img AS R
+    INNER JOIN archive AS A
+    ON R.id_master = A.id
+    WHERE R.target_id = {} AND R.type = 'ifg' OR R.type = 'coh'
+    ORDER BY A.acqstarttime desc
+    '''
+stmt = stmt.format(88)
 
-# res = dbo.execute_query(stmt)
-# print(res.dataset)
+res = dbo.execute_query(stmt)
+print(res.dataset)
 
 
 # =============================================

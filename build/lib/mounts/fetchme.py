@@ -4,9 +4,7 @@ import logging
 import requests
 import xml.etree.ElementTree as ET
 from tqdm import tqdm
-import utilme
-import mapme
-import pandas as pd
+import utilityme as utils
 
 # TODO: look into "sentinelsat" python API:
 # http://sentinelsat.readthedocs.io/en/stable/api.html
@@ -35,7 +33,7 @@ class Esa:
         Args:
             configfile (TYPE): Description
         """
-        self.cfg = utilme.read_configfile(configfile)
+        self.cfg = utils.read_configfile(configfile)
 
     def reset_cfg(self):
         """Set instance attribute "cfg" storing search/download/processing options back to None"""
@@ -184,7 +182,8 @@ class Product(Esa):
                 f.write(data)
 
         # --- store information to database
-        # dbo = utilme.Database(...)
+        # import utilityme as utils
+        # dbo = utils.Database(...)
         # dbo.store_metadata(...)
 
         # --- save where product stored
@@ -221,49 +220,6 @@ class Product(Esa):
             print('product md5sum = ' + md5sum)
 
         return md5sum
-
-    def getIntersection(self, aoi_wkt, printme=None):
-        """Compute intersection of an area of interest with the product"""
-
-        from osgeo import ogr
-
-        # --- get product area
-        p_wkt = self.metadata.footprint
-        p_poly = ogr.CreateGeometryFromWkt(p_wkt)
-        p_area = p_poly.GetArea()
-
-        # --- get area of interest (aoi) area
-        aoi_poly = ogr.CreateGeometryFromWkt(aoi_wkt)
-        aoi_area = aoi_poly.GetArea()
-
-        # --- calculate intersection between product and area of interest
-        itsc = p_poly.Intersection(aoi_poly)
-        itsc_wkt = itsc.ExportToWkt()
-        itsc_area = itsc.GetArea()
-        overlap_pct = (itsc_area / aoi_area) * 100
-
-        if printme:
-            print('area of aoi = ' + str(aoi_area))
-            print('area of product = ' + str(p_area))
-            print('area of intersection = ' + str(itsc_area))
-            print('overlap percentage of aoi with product = ' + str(overlap_pct))
-
-        return overlap_pct
-
-    def plotFootprint(self, wkt2plot_xtra=None, plot_country=None, f_out=None, p_out=None):
-        """Plot product footprint on world map"""
-
-        wkt2plot = [self.metadata.footprint]
-        if wkt2plot_xtra:
-            wkt2plot.append(wkt2plot_xtra)
-
-        if not f_out:
-            f_out = self.metadata.title + '_footprint'
-
-        if not p_out:
-            p_out = '../data/'
-
-        mapme.plot_wkt(wkt2plot=wkt2plot, plot_country=plot_country, f_out=f_out, p_out=p_out)
 
     # def read(self):
     #     """Open with snapme once downloaded"""
@@ -310,11 +266,9 @@ class Scihub(Esa):
                       hub='api',
                       fullmeta=None,  # TODO: full metadata: https://github.com/sentinelsat/sentinelsat/blob/127619f6baede1b5cc852b208d4e57e9f4d518ee/sentinelsat/sentinel.py
                       configfile=None,
-                      filter_result=None,
                       export_result=None,
                       print_result=None,
                       print_url=None,
-                      plot_footprints=None,
                       download_pnode=None,
                       download_dir=None):
         """Query Open Search API to discover products in the Data Hub archive.
@@ -372,7 +326,6 @@ class Scihub(Esa):
                 = 'api' => API Hub : access point for API users with no graphical interface. All API users regularly downloading the latest data are encouraged to use this access point for a better performance.
                 = 'openaccess' => Open Access Hub : access point for all Sentinel missions with access to the interactive graphical user interface.
             configfile (None, optional): path to yaml configuration file
-            filter_result (None, optional): filter results (by intersection percentage with requested footprint, ...)
             export_result (None, optional): export search results as xml
             print_result: print products found (title or summary)
             print_url (None, optional): display url string generated
@@ -446,28 +399,10 @@ class Scihub(Esa):
         elif export_fmt == 'json':
             productlist = self.parse_json(resp)
 
-        # --- filter products
-        if filter_result:
-            filter_method = 'intersection_with_aoi'
-            print('Filtered results by "{}"'.format(filter_method))
-            productlist_filt = self.productlist_filter(productlist, aoi_footprint=footprint, filter_method=filter_method)
-            # print('ORIGINAL LIST: ')
-            # self.print_product_title(productlist)
-            # print('FILTERED LIST: ')
-            # self.print_product_title(productlist_filt)
-            productlist = productlist_filt
-
         # --- print product summary/title
         if print_result:
             # self.print_product_summary(productlist)
             self.print_product_title(productlist)
-
-        # --- plot footprints of all products found on single image
-        # TODO: create class for productlist, and assign plot_footprints as a method (like 'plotFootprint' method for single product)
-        if plot_footprints:
-            wkt2plot = [p.metadata.footprint for p in productlist]
-            wkt2plot.append(footprint)
-            mapme.plot_wkt(wkt2plot=wkt2plot, plot_country=None, f_out='products_zoom', p_out='../data/')
 
         # --- download
         if download_pnode is not None:
@@ -519,41 +454,6 @@ class Scihub(Esa):
             except Exception as e:
                 logging.info('--> DOWNLOAD FAILED! continuing to next product')
                 continue
-
-    def productlist_filter(self, productlist, aoi_footprint=None, filter_method='intersection_with_aoi', printme=None):
-        """Filter product list. 
-
-        Args:
-            productlist = list of products
-            filter_method = 'intersection_with_aoi' => by intersection percentage with requested footprint
-            aoi_footprint = wkt of area of interest
-
-        Returns:
-            productlist_filtered
-        """
-
-        # --- filter products by largest intersection area with area of interest
-        # => if several products have same acquisition date (i.e. tiles), select by largest intersection area
-        if filter_method == 'intersection_with_aoi':
-
-            # --- get for each product in productlist: time, tile_id, intesection_percentage with aoi_footprint
-            # NB: if S1 product => tileid = None
-            p_time = [p.metadata.beginposition for p in productlist]
-            p_tile = [p.metadata.tileid for p in productlist]
-            p_itsc = [p.getIntersection(aoi_footprint) for p in productlist]
-            df = pd.DataFrame({'product': productlist, 'time': p_time, 'tile': p_tile, 'intersection': p_itsc})
-
-            # --- sort dataframe based on 'intersection' (from largest to smallest), and remove duplicate rows where 'time' is identical => keep largest intersection value
-            df_filt = df.sort_values('intersection', ascending=False).drop_duplicates(['time'])
-            productlist_filt = df_filt['product'].tolist()
-
-            if printme:
-                print('ORIGINAL:')
-                print(df)
-                print('FILTERED:')
-                print(df_filt)
-
-        return productlist_filt
 
     def format_query_optns(self, optns):
         """Format options into format valid for scihub product query.

@@ -21,7 +21,7 @@ dbo = records.Database(db_url)
 
 dbo_bis = utilme.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
 
-# --- instance for scihub queries
+# --- instace for scihub queries
 obj = fetchme.Scihub()
 f = file('./conf/credentials_scihub.txt')
 (usr, pwd) = f.readline().split(' ')
