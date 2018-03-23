@@ -7,6 +7,7 @@ from tqdm import tqdm
 import utilme
 import mapme
 import pandas as pd
+from dateutil.parser import parse
 
 # TODO: look into "sentinelsat" python API:
 # http://sentinelsat.readthedocs.io/en/stable/api.html
@@ -100,7 +101,9 @@ class Product(Esa):
         # --- download product
         logging.info('downloading quicklook')
         print('   | ' + product_title)
-        self.getUri(uri, fname, download_dir)
+        path_and_file = self.getUri(uri, fname, download_dir)
+
+        return path_and_file
 
     def getFullproduct(self, download_dir=None, check_md5sum=True):
         """Download full product (zip)"""
@@ -119,7 +122,9 @@ class Product(Esa):
         # --- download product
         logging.info('downloading full product')
         print('   | ' + product_title)
-        self.getUri(uri, fname, download_dir, check_md5sum=check_md5sum)
+        path_and_file = self.getUri(uri, fname, download_dir, check_md5sum=check_md5sum)
+
+        return path_and_file
 
     def getUri(self, uri, fname, download_dir=None, check_md5sum=True):
         """Download product from uri address.
@@ -167,7 +172,7 @@ class Product(Esa):
         # --- if file exists and integrity is verified, do not download
         if file_exists & file_complete:
             print('      => file already downloaded and integrety checked.')
-            return
+            return path_and_file
 
         # --- send request
         try:
@@ -310,7 +315,7 @@ class Scihub(Esa):
                       hub='api',
                       fullmeta=None,  # TODO: full metadata: https://github.com/sentinelsat/sentinelsat/blob/127619f6baede1b5cc852b208d4e57e9f4d518ee/sentinelsat/sentinel.py
                       configfile=None,
-                      filter_result=None,
+                      filter_products=None,
                       export_result=None,
                       print_result=None,
                       print_url=None,
@@ -372,7 +377,7 @@ class Scihub(Esa):
                 = 'api' => API Hub : access point for API users with no graphical interface. All API users regularly downloading the latest data are encouraged to use this access point for a better performance.
                 = 'openaccess' => Open Access Hub : access point for all Sentinel missions with access to the interactive graphical user interface.
             configfile (None, optional): path to yaml configuration file
-            filter_result (None, optional): filter results (by intersection percentage with requested footprint, ...)
+            filter_products (None, optional): filter results if several with same acquisition date (ignoring seconds) (by intersection percentage with requested footprint, ...)
             export_result (None, optional): export search results as xml
             print_result: print products found (title or summary)
             print_url (None, optional): display url string generated
@@ -447,20 +452,23 @@ class Scihub(Esa):
             productlist = self.parse_json(resp)
 
         # --- filter products
-        if filter_result:
+        if filter_products:
+            # TODO: add filter by p.metadata.tileid
             filter_method = 'intersection_with_aoi'
-            print('Filtered results by "{}"'.format(filter_method))
-            productlist_filt = self.productlist_filter(productlist, aoi_footprint=footprint, filter_method=filter_method)
-            # print('ORIGINAL LIST: ')
-            # self.print_product_title(productlist)
-            # print('FILTERED LIST: ')
-            # self.print_product_title(productlist_filt)
-            productlist = productlist_filt
+            productlist_nofilt = productlist
+            productlist, productlist_dropped = self.productlist_filter(productlist, aoi_footprint=footprint, filter_method=filter_method)
 
         # --- print product summary/title
         if print_result:
-            # self.print_product_summary(productlist)
+            if filter_products:
+                print('Non-filtered results:')
+                self.print_product_title(productlist_nofilt)
+                print('Dropped results (by "{}"):'.format(filter_method))
+                self.print_product_title(productlist_dropped)
+                print('Filtered results (by "{}"):'.format(filter_method))
+
             self.print_product_title(productlist)
+            # self.print_product_summary(productlist)
 
         # --- plot footprints of all products found on single image
         # TODO: create class for productlist, and assign plot_footprints as a method (like 'plotFootprint' method for single product)
@@ -532,28 +540,37 @@ class Scihub(Esa):
             productlist_filtered
         """
 
-        # --- filter products by largest intersection area with area of interest
+        # --- filter when several products have same date, keeping by largest intersection area with area of interest
         # => if several products have same acquisition date (i.e. tiles), select by largest intersection area
         if filter_method == 'intersection_with_aoi':
 
             # --- get for each product in productlist: time, tile_id, intesection_percentage with aoi_footprint
             # NB: if S1 product => tileid = None
             p_time = [p.metadata.beginposition for p in productlist]
+            p_datetime = [parse(p).strftime('%Y-%m-%d %H:%M:%S.%f') for p in p_time]
+            p_time4sorting = [parse(p).strftime('%Y%m%d_%H%M') for p in p_datetime]
+            # TODO: time yyyymmdd_hhmm used to groupby, but would be better with timedifference between products
             p_tile = [p.metadata.tileid for p in productlist]
             p_itsc = [p.getIntersection(aoi_footprint) for p in productlist]
-            df = pd.DataFrame({'product': productlist, 'time': p_time, 'tile': p_tile, 'intersection': p_itsc})
+            df = pd.DataFrame({'product': productlist, 'time': p_time4sorting, 'tile': p_tile, 'intersection': p_itsc})
 
             # --- sort dataframe based on 'intersection' (from largest to smallest), and remove duplicate rows where 'time' is identical => keep largest intersection value
             df_filt = df.sort_values('intersection', ascending=False).drop_duplicates(['time'])
             productlist_filt = df_filt['product'].tolist()
 
+            # --- extract dropped products
+            df_dropped = df[~df.index.isin(df_filt.index)]
+            productlist_dropped = df_dropped['product'].tolist()
+
             if printme:
                 print('ORIGINAL:')
                 print(df)
-                print('FILTERED:')
+                print('CONSERVED products:')
                 print(df_filt)
+                print('DROPPED products:')
+                print(df_dropped)
 
-        return productlist_filt
+        return productlist_filt, productlist_dropped
 
     def format_query_optns(self, optns):
         """Format options into format valid for scihub product query.
@@ -739,12 +756,17 @@ class Scihub(Esa):
 
         logging.info('queried product title:')
 
+        ptitle = []
+
         if not productlist:
             print('   | 0 product found')
-            return
+            return ptitle
 
         for i, prod in enumerate(productlist):
             print('   | ' + productlist[i].metadata.title)
+            ptitle.append(productlist[i].metadata.title)
+
+        return ptitle
 
 
 def chk_dir(d):

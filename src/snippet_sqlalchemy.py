@@ -4,7 +4,9 @@ from sqlalchemy import create_engine
 
 
 # === Connect
-db_uri = 'mysql://root:br12Fol!@127.0.0.1/DB_MOUNTS'
+f = file('./conf/credentials_mysql.txt')
+(db_usr, db_pwd) = f.readline().split(' ')
+db_uri = 'mysql://{}:{}@127.0.0.1/DB_MOUNTS'.format(db_usr, db_pwd)
 engine = create_engine(db_uri)
 
 

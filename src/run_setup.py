@@ -147,7 +147,7 @@ if setup_database:
     for r in rows:
         volcanoname = r.name
         archive_dir = '/home/' + username + '/DATA/data_satellite/' + volcanoname
-        dbo.dbmounts_loadarchive(path_dir=archive_dir, target_name=volcanoname, print_metadata=0)
+        dbo.dbmounts_loadarchive(path_dir=archive_dir, target_name=volcanoname, printme=0)
 
 
 # =============================================

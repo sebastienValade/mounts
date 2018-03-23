@@ -67,7 +67,7 @@ obj.scihub_search(**optns)
 # === filter results on the fly (default=by intersection percentage with footprint)
 # productlist = obj.scihub_search(
 #     footprint=footprint,
-#     filter_result=1)
+#     filter_tiles=1)
 
 # =============================================
 # ANALYZE QUERY output
@@ -94,10 +94,15 @@ obj.scihub_search(**optns)
 # --- plot tile of each product in list
 # obj.print_product_title(productlist)
 
-# --- filter productlist (default=by intersection percentage with aoi footprint)
-# productlist_filt = obj.productlist_filter(productlist, aoi_footprint=footprint, filter_method='intersection_with_aoi')
+# --- filter productlist (default=filter when several products have same acq time, select tile havest largest area with aoi footprint)
+# productlist_filt, productlist_dropped = obj.productlist_filter(productlist, aoi_footprint=footprint, filter_method='intersection_with_aoi')
 # print('FILTERED results:')
 # obj.print_product_title(productlist_filt)
+
+# --- find products stored/not stored in DB_MOUNTS:
+# dbo = utilme.Database()
+# p_inDB, p_noDB = dbo.dbmounts_isproduct_archived(p)
+# fetchme.Scihub().print_product_title(p_noDB)  # +> print products not found in DB
 
 # =============================================
 # DOWNLOAD

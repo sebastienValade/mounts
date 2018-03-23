@@ -6,6 +6,9 @@ import logging
 import os
 import json
 import dicttoxml
+from dateutil.parser import parse
+import pandas as pd
+from sqlalchemy import create_engine
 
 
 def read_configfile(configfile):
@@ -125,7 +128,12 @@ class Database:
 
     """
 
-    def __init__(self, db_host='127.0.0.1', db_usr='root', db_pwd='root', db_type='mysql', db_name=None):
+    def __init__(self, db_host='127.0.0.1', db_usr=None, db_pwd=None, db_type='mysql', db_name=None):
+
+        if db_usr is None or db_pwd is None:
+            f = file('./conf/credentials_mysql.txt')
+            (db_usr, db_pwd) = f.readline().split(' ')
+
         self.db_host = db_host
         self.db_usr = db_usr
         self.db_pwd = db_pwd
@@ -134,6 +142,7 @@ class Database:
             self.db_url += db_name
 
         self.db_conn = self.connect()
+        self.dbe = create_engine(self.db_url)  # >> database engine (sqlalchemy)
 
     def connect(self):
         """Connect to database from url. Return database connector."""
@@ -483,8 +492,12 @@ class Database:
     #                    foreignkey_ref=['DB_ARCHIVE.' + tbname + '(title)', 'DB_ARCHIVE.' + tbname + '(title)']
     #                    )
 
-    def dbmounts_loadarchive(self, path_dir=None, filename=None, target_name=None, loadarchive=None, print_metadata=None):
-        '''Read directory storing zip files of type S1 and/or S2, and store along with metadata in table DB_MOUNTS.archive'''
+    def dbmounts_loadarchive(self, path_dir=None, filename=None, target_name=None, loadarchive=None, printme=None):
+        '''Read directory storing zip files of type S1 and/or S2, and store along with metadata in table DB_MOUNTS.archive
+        NB: this method should be used when uploading zip file from a directory (=> has to open to get metadata).
+            Use 'dbmounts_loadproduct' to load a product (i.e. fetchme instance).
+        TODO: rename 'dbmounts_loadarchive'->'dbmounts_loadzip', to have 'dbmounts_loadzip' & 'dbmounts_loadproduct' ???
+        '''
 
         print('=== loading archive files: ' + target_name)
 
@@ -519,12 +532,139 @@ class Database:
             d = {'abspath': fpath, 'target_id': str(target_id), 'target_name': target_name}
             d.update(metadata)
 
-            if print_metadata:
+            if printme:
+                print('Dictionary loaded in DB_MOUNTS.archive:')
                 print(d)
 
             if loadarchive:
                 print(' => uploading product into database!')
                 self.insert('DB_MOUNTS', 'archive', d)
+
+    def dbmounts_loadproduct(self, p, fpath, target_name, target_id, loadarchive=None, printme=None):
+        '''TODO: rename 'dbmounts_loadarchive'->'dbmounts_loadzip', to have 'dbmounts_loadzip' & 'dbmounts_loadproduct' ???'''
+
+        title = p.metadata.title
+        ftype = title[0:2]  # >> get product type = 'S1' | 'S2'
+        platform = title[2]  # >> get platform type = 'A' | 'B'
+
+        # # --- get metadata (both S1, S2)
+        # print('  | uploading ' + title)
+
+        acqstart_str = p.metadata.beginposition
+        acqstart_datetime = parse(acqstart_str).strftime('%Y-%m-%d %H:%M:%S.%f')
+        acqstart_iso = parse(acqstart_str).strftime('%Y%m%dT%H%M%S')
+
+        metadata = {'title': p.metadata.title,
+                    'producttype': p.metadata.producttype,
+                    'mission': (p.metadata.platformname + platform).upper(),
+                    'acquisitionmode': p.metadata.sensoroperationalmode if ftype == 'S1' else '-',
+                    'acqstarttime': acqstart_datetime,
+                    'acqstarttime_str': acqstart_iso,
+                    'relativeorbitnumber': p.metadata.relativeorbitnumber,
+                    'orbitdirection': p.metadata.orbitdirection,
+                    'polarization': p.metadata.polarisationmode if p.metadata.polarisationmode is not None else '-',
+                    'abspath': fpath,
+                    'target_id': str(target_id),
+                    'target_name': target_name
+                    }
+
+        if printme:
+            print('Dictionary loaded in DB_MOUNTS.archive:')
+            print(metadata)
+
+        # --- load to data base
+        if loadarchive:
+            self.insert('DB_MOUNTS', 'archive', metadata)
+            # TODO: return id of new archive
+
+    def dbmounts_isproduct_archived(self, productlist):
+        """Check if product (or list of products) are stored in archive.
+        Args: productlist = list of products (fetchme instance)
+        """
+
+        p_indb = []
+        p_nodb = []
+        for p in productlist:
+
+            stmt = '''
+                    SELECT *
+                    FROM DB_MOUNTS.archive
+                    WHERE title = "{}"
+                    '''.format(p.metadata.title)
+            df = pd.read_sql(stmt, self.dbe)
+
+            if df.empty:
+                p_nodb.append(p)
+            else:
+                p_indb.append(p)
+
+        return p_indb, p_nodb
+
+    def dbmounts_isproduct_processed(self, dat, check_masterID=1, check_slaveID=0, check_type=None):
+        """Check if product (or list of products) from archive have been processed.
+        Args: 
+            dat = list of products (Records instance)
+            check_masterID = 1|0    => check for DB_MOUNTS.results_img(id_master)
+            check_salveID = 1|0     => check for DB_MOUNTS.results_img(id_slave)
+        """
+
+        p_indb = []
+        p_nodb = []
+        for k, r in enumerate(dat):
+            print(str(k), r.title, r.id)
+
+            if check_masterID and not check_slaveID:
+                stmt = '''SELECT * FROM DB_MOUNTS.results_img WHERE id_master = "{}"
+                       '''.format(str(r.id))
+            elif check_slaveID and not check_masterID:
+                stmt = '''SELECT * FROM DB_MOUNTS.results_img WHERE id_slave = "{}"
+                       '''.format(str(r.id))
+
+            if check_type:
+                # => sql syntax: AND type like 'int%' => will find for int_VV, int_VH, ...
+                df = pd.read_sql(stmt + ' AND type LIKE %(imgtype)s', self.dbe, params={'imgtype': check_type + '%'})
+            else:
+                df = pd.read_sql(stmt, self.dbe)
+
+            if df.empty:
+                p_nodb.append(r)
+            else:
+                p_indb.append(r)
+
+        return p_indb, p_nodb
+
+    def dbmounts_ispair_processed(self, msp):
+        """Check if interferometric pair processed.
+        Args: 
+            msp = list of pairs
+        """
+
+        msp_indb = []
+        msp_nodb = []
+        for k, r in enumerate(msp):
+
+            master_title = msp[k][0].title
+            slave_title = msp[k][1].title
+            master_id = str(msp[k][0].id)
+            slave_id = str(msp[k][1].id)
+
+            # print('- pair ' + str(k + 1) + '/' + str(len(msp)))
+            # print('MASTER = ' + master_title + ' (' + msp[k][0].orbitdirection + ')')
+            # print('SLAVE = ' + slave_title + ' (' + msp[k][1].orbitdirection + ')')
+
+            stmt = '''SELECT * FROM DB_MOUNTS.results_img 
+                    WHERE id_master = "{}"
+                    AND id_slave = "{}"
+                    '''.format(master_id, slave_id)
+
+            df = pd.read_sql(stmt, self.dbe)
+
+            if df.empty:
+                msp_nodb.append(r)
+            else:
+                msp_indb.append(r)
+
+        return msp_indb, msp_nodb
 
     def dbmounts_archive_querystmt(self,
                                    id=None,
@@ -542,11 +682,22 @@ class Database:
                                    target_name=None):
 
         # --- construct list of options => parse the locals() dictionnary (excluding 'self', None values, etc.)
+        # => sql syntax: WHERE x = y
         options = [k[0] + "='" + str(k[1]) + "'" for k in locals().iteritems()
                    if k[1] is not None
+                   and not isinstance(k[1], list)
                    and k[0] != 'self'
                    and k[0] != 'acqstarttime'
                    and k[0] != 'mission']
+
+        # => sql syntax: WHERE x IN (y1, y2)
+        options_special = [k[0] + " IN " + str(tuple(k[1])) for k in locals().iteritems()
+                           if isinstance(k[1], list)
+                           and k[1]  # >> check if list not empty
+                           and k[0] != 'options']  # >> !!! exclude variable "options" declared above
+
+        options.extend(options_special)
+        print options
 
         # --- format option acqstarttime:
         # NB: acqstarttime formats accepted: '>2017-01-01', '> 2017-01-01', '>=2017-01-01', '>2017-01-01 <2020-01-01', '>2017-01-01 <=2020-01-01', ...
@@ -616,7 +767,6 @@ class Database:
         self.insert('DB_MOUNTS', 'targets', dicts)
 
     def dbmounts_addtarget_sqlalchemy(self, **kwargs):
-        from sqlalchemy import create_engine
         from sqlalchemy import MetaData
         from sqlalchemy import update
         from sqlalchemy.exc import IntegrityError
@@ -667,7 +817,7 @@ class Database:
             result = conn.execute(upd)
 
     def dbmounts_target_nameid(self, target_name=None, target_id=None):
-        """ Get target_id from name, or target_name from id. """
+        """Get target_id from name, or target_name from id. """
 
         if target_id is None and target_name is not None:
             stmt = "SELECT id FROM DB_MOUNTS.targets WHERE name = '{}'".format(target_name)
@@ -677,3 +827,17 @@ class Database:
         rows = self.execute_query(stmt)
 
         return rows[0][0]
+
+    def dbmounts_gettarget(self, target_name=None, target_id=None):
+        """Get target properties.
+        Args: 'target_id' or 'target_name'
+        Returns: pandas DataFrame
+        Ex:
+        """
+
+        if target_id is None and target_name is not None:
+            stmt = "SELECT * FROM DB_MOUNTS.targets WHERE name = '{}'".format(target_name)
+        elif target_id is not None and target_name is None:
+            stmt = "SELECT * FROM DB_MOUNTS.targets WHERE id = '{}'".format(target_id)
+
+        df = pd.read_sql(stmt, self.dbe)  # =>  name = df.name[0]

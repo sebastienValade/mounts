@@ -1,6 +1,10 @@
 import utilme
 
-dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type='mysql')
+# - connect to database
+f = file('./conf/credentials_mysql.txt')
+(db_usr, db_pwd) = f.readline().split(' ')
+dbo = utilme.Database(db_host='127.0.0.1', db_usr=db_usr, db_pwd=db_pwd, db_type='mysql')
+
 
 # =============================================
 # MANAGE db
@@ -51,7 +55,9 @@ dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type
 # # tble.append_col([22, 20, 12, 11], header='Age') #= append new column
 
 # --- records lib simplest usage
-# db_url = 'mysql://root:br12Fol!@127.0.0.1/DB_MOUNTS'
+# f = file('./conf/credentials_mysql.txt')
+# (db_usr, db_pwd) = f.readline().split(' ')
+# db_url = 'mysql://{}:{}@127.0.0.1/DB_MOUNTS'.format(db_usr, db_pwd)
 # dbo = records.Database(db_url)
 # stmt = "SELECT * FROM DB_MOUNTS.archive WHERE target_id = 221080 ORDER BY acqstarttime DESC LIMIT 10".format(target_id)
 # rows = dbo.query(stmt)
@@ -138,7 +144,7 @@ dbo = utilme.Database(db_host='127.0.0.1', db_usr='root', db_pwd='wave', db_type
 # === store archive S1 zip files to database
 # volcanoname = 'ertaale'
 # archive_dir = '/home/sebastien/DATA/data_satellite/' + volcanoname
-# dbo.dbmounts_loadarchive(path_dir=archive_dir, print_metadata=1)
+# dbo.dbmounts_loadarchive(path_dir=archive_dir, printme=1)
 
 # === query targets table
 # --- ex: get target id
