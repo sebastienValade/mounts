@@ -31,15 +31,15 @@ p[0].getFullproduct()
 import snapme as gpt
 
 # --- dinsar processing chain
-master_path = '/home/khola/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.zip'
-slave_path = '/home/khola/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD.zip'
-m = gpt.read_product(path_and_file=master_path) 						# open master product
-s = gpt.read_product(path_and_file=slave_path)							# open slave product
-m = gpt.topsar_split(m, subswath='IW2', polarisation='VV')				# select swath master
-s = gpt.topsar_split(s, subswath='IW2', polarisation='VV') 				# select swath slave
-m = gpt.apply_orbit_file(m) 											# apply orbit file master
-s = gpt.apply_orbit_file(s)												# apply orbit file slave
-p = gpt.back_geocoding(m, s)			 								# coregister master/slave
+main_path = '/home/khola/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.zip'
+subordinate_path = '/home/khola/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD.zip'
+m = gpt.read_product(path_and_file=main_path) 						# open main product
+s = gpt.read_product(path_and_file=subordinate_path)							# open subordinate product
+m = gpt.topsar_split(m, subswath='IW2', polarisation='VV')				# select swath main
+s = gpt.topsar_split(s, subswath='IW2', polarisation='VV') 				# select swath subordinate
+m = gpt.apply_orbit_file(m) 											# apply orbit file main
+s = gpt.apply_orbit_file(s)												# apply orbit file subordinate
+p = gpt.back_geocoding(m, s)			 								# coregister main/subordinate
 p = gpt.interferogram(p) 												# interferogram generation
 p = gpt.deburst(p)														# deburst
 p = gpt.topo_phase_removal(p) 											# topographic phase removal

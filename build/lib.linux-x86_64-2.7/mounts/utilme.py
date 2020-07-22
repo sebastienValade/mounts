@@ -182,10 +182,10 @@ class Database:
         if foreignkey is not None and foreignkey_ref is not None:
             # Syntax: FOREIGN KEY (foreignkey) REFERENCES foreignkey_ref
             #   where: foreignkey = colname, foreignkey_ref = dbref_name.tbref_name(colref_name)
-            # Example: FOREIGN KEY (ref_master) REFERENCES DB_ARCHIVE.etna(title)
+            # Example: FOREIGN KEY (ref_main) REFERENCES DB_ARCHIVE.etna(title)
             # Source: https://www.w3schools.com/sql/sql_foreignkey.asp
             # Usage: => The INNER JOIN keyword selects records that have matching values in both tables.
-            #   stmt = "SELECT acqstarttime_str FROM DB_ARCHIVE.ertaale INNER JOIN DB_RESULTS.ertaale ON DB_ARCHIVE.ertaale.title=DB_RESULTS.ertaale.ref_master;"
+            #   stmt = "SELECT acqstarttime_str FROM DB_ARCHIVE.ertaale INNER JOIN DB_RESULTS.ertaale ON DB_ARCHIVE.ertaale.title=DB_RESULTS.ertaale.ref_main;"
             #   rows = dbo.execute_query(stmt)
 
             if isinstance(foreignkey, str):
@@ -472,14 +472,14 @@ class Database:
     #     dicts = {'title': 'VARCHAR(100)',
     #              'abspath': 'TEXT',
     #              'type': 'TEXT',
-    #              'master_title': 'VARCHAR(100)',
-    #              'slave_title': 'VARCHAR(100)'}
+    #              'main_title': 'VARCHAR(100)',
+    #              'subordinate_title': 'VARCHAR(100)'}
     #
     #     self.create_tb(dbname='DB_RESULTS',
     #                    tbname=tbname,
     #                    dicts=dicts,
     #                    primarykey='title',
-    #                    foreignkey=['master_title', 'slave_title'],
+    #                    foreignkey=['main_title', 'subordinate_title'],
     #                    foreignkey_ref=['DB_ARCHIVE.' + tbname + '(title)', 'DB_ARCHIVE.' + tbname + '(title)']
     #                    )
 

@@ -81,8 +81,8 @@ for k, r in enumerate(pairs[start_idx::], start=start_idx):
 
     # collocate s1/s2
     # =====================================================================
-    # NB1: 1st arg = master (pixel conserved), 2nd arg = slave (pixel resampled on master grid)
-    # NB2: Default renaming of bands in collocated product: master components = ${ORIGINAL_NAME}_M, slave components = ${ORIGINAL_NAME}_S
+    # NB1: 1st arg = main (pixel conserved), 2nd arg = subordinate (pixel resampled on main grid)
+    # NB2: Default renaming of bands in collocated product: main components = ${ORIGINAL_NAME}_M, subordinate components = ${ORIGINAL_NAME}_S
     # NB3: export 'collocation_flags' to avoid error when opening in SNAP Desktop
     p = gpt.collocate(s2, polmat)
     gpt.get_bandnames(p, print_bands=0)

@@ -116,7 +116,7 @@ stmt = '''
     SELECT R.title, A.acqstarttime
     FROM results_img AS R
     INNER JOIN archive AS A
-    ON R.id_master = A.id
+    ON R.id_main = A.id
     WHERE R.target_id = {} AND R.type = 'ifg' OR R.type = 'coh'
     ORDER BY A.acqstarttime desc
     '''
