@@ -72,12 +72,12 @@ if setup_database:
              'title': 'VARCHAR(100)',
              'abspath': 'TEXT',
              'type': 'CHAR(25)',    # ifg, coh, nir, ref (= reference process used to analyze rather then plot)
-             'id_master': 'INT',
-             'id_slave': 'INT',
+             'id_main': 'INT',
+             'id_subordinate': 'INT',
              'target_id': 'INT'}
     dbo.create_tb(dbname='DB_MOUNTS', tbname=tbname, dicts=dicts,
                   primarykey='id',
-                  foreignkey=['id_master', 'id_slave', 'target_id'],
+                  foreignkey=['id_main', 'id_subordinate', 'target_id'],
                   foreignkey_ref=['DB_MOUNTS.archive(id)', 'DB_MOUNTS.archive(id)', 'DB_MOUNTS.targets(id)'],
                   unique_contraint='title')  # => title values cannot be duplicate
 

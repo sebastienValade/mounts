@@ -145,10 +145,10 @@ for k, r in enumerate(pairs[start_idx::], start=start_idx):
 
     # collocate s1/s2
     # =====================================================================
-    # NB1: 1st arg = master (pixel conserved), 2nd arg = slave (pixel resampled on master grid)
-    # NB2: Default renaming of bands in collocated product: master components = ${ORIGINAL_NAME}_M, slave components = ${ORIGINAL_NAME}_S
+    # NB1: 1st arg = main (pixel conserved), 2nd arg = subordinate (pixel resampled on main grid)
+    # NB2: Default renaming of bands in collocated product: main components = ${ORIGINAL_NAME}_M, subordinate components = ${ORIGINAL_NAME}_S
     # NB3: export 'collocation_flags' to avoid error when opening in SNAP Desktop
-    p = gpt.collocate(polmat, s2)  # >> master=S1, slave=S2
+    p = gpt.collocate(polmat, s2)  # >> main=S1, subordinate=S2
     gpt.get_bandnames(p, print_bands=0)
     p = gpt.subset(p, geoRegion=subset_wkt)
 
@@ -196,8 +196,8 @@ for k, r in enumerate(pairs[start_idx::], start=start_idx):
     # =====================================================================
     if export_ifgcoh:
         print('  | exporting s1_ifgcoh.tif')
-        day_ifgslave = s1_metadata['acqstarttime_str'][0:8]
-        f = '/home/sebastien/DATA/data_snap/*_{}*.dim'.format(day_ifgslave)
+        day_ifgsubordinate = s1_metadata['acqstarttime_str'][0:8]
+        f = '/home/sebastien/DATA/data_snap/*_{}*.dim'.format(day_ifgsubordinate)
         fpath = glob.glob(f)
         if fpath:
             p_pcssed = gpt.read_product(path_and_file=fpath[0])
@@ -210,7 +210,7 @@ for k, r in enumerate(pairs[start_idx::], start=start_idx):
     s2p = gpt.read_product(path_and_file=s2p_abspath)
     s2p = gpt.resample(s2p, referenceBand='B2')
     s2p_metadata = gpt.get_metadata_S2(s2p)
-    pp = gpt.collocate(polmat, s2p)  # >> master=S1, slave=S2
+    pp = gpt.collocate(polmat, s2p)  # >> main=S1, subordinate=S2
     gpt.get_bandnames(pp, print_bands=0)
     pp = gpt.subset(pp, geoRegion=subset_wkt)
     prod2export_s2p = gpt.band_select(pp, sourceBands=['B2_S', 'B3_S', 'B4_S', 'B8_S', 'collocation_flags'])

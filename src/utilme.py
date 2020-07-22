@@ -191,10 +191,10 @@ class Database:
         if foreignkey is not None and foreignkey_ref is not None:
             # Syntax: FOREIGN KEY (foreignkey) REFERENCES foreignkey_ref
             #   where: foreignkey = colname, foreignkey_ref = dbref_name.tbref_name(colref_name)
-            # Example: FOREIGN KEY (ref_master) REFERENCES DB_ARCHIVE.etna(title)
+            # Example: FOREIGN KEY (ref_main) REFERENCES DB_ARCHIVE.etna(title)
             # Source: https://www.w3schools.com/sql/sql_foreignkey.asp
             # Usage: => The INNER JOIN keyword selects records that have matching values in both tables.
-            #   stmt = "SELECT acqstarttime_str FROM DB_ARCHIVE.ertaale INNER JOIN DB_RESULTS.ertaale ON DB_ARCHIVE.ertaale.title=DB_RESULTS.ertaale.ref_master;"
+            #   stmt = "SELECT acqstarttime_str FROM DB_ARCHIVE.ertaale INNER JOIN DB_RESULTS.ertaale ON DB_ARCHIVE.ertaale.title=DB_RESULTS.ertaale.ref_main;"
             #   rows = dbo.execute_query(stmt)
 
             if isinstance(foreignkey, str):
@@ -481,14 +481,14 @@ class Database:
     #     dicts = {'title': 'VARCHAR(100)',
     #              'abspath': 'TEXT',
     #              'type': 'TEXT',
-    #              'master_title': 'VARCHAR(100)',
-    #              'slave_title': 'VARCHAR(100)'}
+    #              'main_title': 'VARCHAR(100)',
+    #              'subordinate_title': 'VARCHAR(100)'}
     #
     #     self.create_tb(dbname='DB_RESULTS',
     #                    tbname=tbname,
     #                    dicts=dicts,
     #                    primarykey='title',
-    #                    foreignkey=['master_title', 'slave_title'],
+    #                    foreignkey=['main_title', 'subordinate_title'],
     #                    foreignkey_ref=['DB_ARCHIVE.' + tbname + '(title)', 'DB_ARCHIVE.' + tbname + '(title)']
     #                    )
 
@@ -600,12 +600,12 @@ class Database:
 
         return p_indb, p_nodb
 
-    def dbmounts_isproduct_processed(self, dat, check_masterID=1, check_slaveID=0, check_type=None):
+    def dbmounts_isproduct_processed(self, dat, check_mainID=1, check_subordinateID=0, check_type=None):
         """Check if product (or list of products) from archive have been processed.
         Args: 
             dat = list of products (Records instance)
-            check_masterID = 1|0    => check for DB_MOUNTS.results_img(id_master)
-            check_salveID = 1|0     => check for DB_MOUNTS.results_img(id_slave)
+            check_mainID = 1|0    => check for DB_MOUNTS.results_img(id_main)
+            check_salveID = 1|0     => check for DB_MOUNTS.results_img(id_subordinate)
         """
 
         p_indb = []
@@ -613,11 +613,11 @@ class Database:
         for k, r in enumerate(dat):
             print(str(k), r.title, r.id)
 
-            if check_masterID and not check_slaveID:
-                stmt = '''SELECT * FROM DB_MOUNTS.results_img WHERE id_master = "{}"
+            if check_mainID and not check_subordinateID:
+                stmt = '''SELECT * FROM DB_MOUNTS.results_img WHERE id_main = "{}"
                        '''.format(str(r.id))
-            elif check_slaveID and not check_masterID:
-                stmt = '''SELECT * FROM DB_MOUNTS.results_img WHERE id_slave = "{}"
+            elif check_subordinateID and not check_mainID:
+                stmt = '''SELECT * FROM DB_MOUNTS.results_img WHERE id_subordinate = "{}"
                        '''.format(str(r.id))
 
             if check_type:
@@ -643,19 +643,19 @@ class Database:
         msp_nodb = []
         for k, r in enumerate(msp):
 
-            master_title = msp[k][0].title
-            slave_title = msp[k][1].title
-            master_id = str(msp[k][0].id)
-            slave_id = str(msp[k][1].id)
+            main_title = msp[k][0].title
+            subordinate_title = msp[k][1].title
+            main_id = str(msp[k][0].id)
+            subordinate_id = str(msp[k][1].id)
 
             # print('- pair ' + str(k + 1) + '/' + str(len(msp)))
-            # print('MASTER = ' + master_title + ' (' + msp[k][0].orbitdirection + ')')
-            # print('SLAVE = ' + slave_title + ' (' + msp[k][1].orbitdirection + ')')
+            # print('MASTER = ' + main_title + ' (' + msp[k][0].orbitdirection + ')')
+            # print('SLAVE = ' + subordinate_title + ' (' + msp[k][1].orbitdirection + ')')
 
             stmt = '''SELECT * FROM DB_MOUNTS.results_img 
-                    WHERE id_master = "{}"
-                    AND id_slave = "{}"
-                    '''.format(master_id, slave_id)
+                    WHERE id_main = "{}"
+                    AND id_subordinate = "{}"
+                    '''.format(main_id, subordinate_id)
 
             df = pd.read_sql(stmt, self.dbe)
 

@@ -16,14 +16,14 @@ import snapme as gpt
 # DINSAR processing chain
 # =============================================
 
-# # --- read master product
-# master_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.zip'
-# m = gpt.read_product(path_and_file=master_abspath)
+# # --- read main product
+# main_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170111T152712_20170111T152739_014786_018145_5703.zip'
+# m = gpt.read_product(path_and_file=main_abspath)
 
-# # --- read slave product
-# # slave_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD.SAFE.zip'
-# slave_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD.zip'
-# s = gpt.read_product(path_and_file=slave_abspath)
+# # --- read subordinate product
+# # subordinate_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD.SAFE.zip'
+# subordinate_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SSV_20170204T152711_20170204T152738_015136_018C0E_12BD.zip'
+# s = gpt.read_product(path_and_file=subordinate_abspath)
 
 # # --- split product
 # subswath = 'IW2'
@@ -101,7 +101,7 @@ import snapme as gpt
 # gpt.plotBands_rgb(p)
 # gpt.plotBands_rgb(p, bname_red='B12', bname_green='B11', bname_blue='B8A')  # -> cf S2 image erta ale 2017-03-30
 
-# # --- collocate products (S1 geocoded = master, S2 not-geocoded = slave)
+# # --- collocate products (S1 geocoded = main, S2 not-geocoded = subordinate)
 # s1_abspath = '/home/sebastien/DATA/data_satellite/ertaale/S1A_IW_SLC__1SDV_20170410T030748_20170410T030815_016076_01A8A7_CF75.zip'
 # s1 = gpt.read_product(path_and_file=s1_abspath)
 # s1 = gpt.topsar_split(s1, subswath=subswath, polarisation=polarization)
